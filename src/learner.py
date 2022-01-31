@@ -5,7 +5,7 @@ from time import sleep
 from typing import List, Dict
 
 
-def soda(bidder: List, strategies: Dict, payoff_dict: Dict, max_iter: int, tol: float ):
+def dual_averaging(bidder: List, strategies: Dict, payoff_dict: Dict, max_iter: int, tol: float ):
     """
     Simultanous online dual averaging
 
