@@ -1,17 +1,25 @@
-import numpy as np
 from itertools import product
-from typing import List, Dict
-from src.mechanism import double_auction
+from typing import Dict, List
 
+import numpy as np
+
+from src.mechanism import double_auction
 
 # -------------------------------------------------------------------------------------------------------------------- #
 #                                      CLASS GAME : DISCRETIZED AUCTION GAME                                           #
 # -------------------------------------------------------------------------------------------------------------------- #
 
-class Game:
 
-    def __init__(self, mechanism: str, bidder: List, o_intervals: Dict, a_intervals: Dict,  n: int, m: int,
-                 param: Dict):
+class Game:
+    def __init__(
+        self,
+        mechanism: str,
+        bidder: List,
+        o_intervals: Dict,
+        a_intervals: Dict,
+        n: int,
+        m: int,
+    ):
 
         self.mechanism = mechanism
         self.bidder = bidder
@@ -26,33 +34,50 @@ class Game:
         # TODO: what about different observation and valuation spaces
 
         # marginal prior for bidder
-        self.prior = {i: discr_prior(self.o_discr[i], param) for i in self.set_bidder}
+        self.prior = {}
+        self.weights = None
         # TODO: include correlations
 
-        # utility
         self.utility = {}
 
-    def compute_utility(self, param):
+    def get_utility(self, param):
 
+        utility = {}
         for i in self.set_bidder:
 
             idx = self.bidder.index(i)
             # create all possible bids
-            bids = np.array([np.array([self.a_discr[self.bidder[k]][j[k]]
-                                       for j in product(range(self.m), repeat=self.n_bidder)])
-                             for k in range(self.n_bidder)])
+            bids = np.array(
+                [
+                    np.array(
+                        [
+                            self.a_discr[self.bidder[k]][j[k]]
+                            for j in product(range(self.m), repeat=self.n_bidder)
+                        ]
+                    )
+                    for k in range(self.n_bidder)
+                ]
+            )
             # all valuations
             valuations = self.o_discr[i]
 
             # compute utility
-            if self.mechanism == 'double_auction':
-                self.utility[i] = double_auction.util(valuations, bids, self.bidder, idx, param).transpose()\
-                    .reshape(tuple([self.m]*self.n_bidder+[self.n]))
+            if self.mechanism == "double_auction":
+                self.utility[i] = (
+                    double_auction.util(valuations, bids, self.bidder, idx, param)
+                    .transpose()
+                    .reshape(tuple([self.m] * self.n_bidder + [self.n]))
+                )
+
+    def get_prior(self, param):
+        for i in self.set_bidder:
+            self.prior[i] = discr_prior(self.o_discr[i], param)
 
 
 # -------------------------------------------------------------------------------------------------------------------- #
 #                                                 HELPERFUNCTIONS                                                      #
 # -------------------------------------------------------------------------------------------------------------------- #
+
 
 def discr_prior(o_discr, param):
     """
@@ -66,36 +91,35 @@ def discr_prior(o_discr, param):
     -------
     np.ndarray : prior distribution, shape similar to o_discr
     """
-    #TODO: Implement more complex priors
+    # TODO: Implement more complex priors
 
     # check if input is valid
-    if 'distribution' not in param.keys():
-        raise ValueError('Distribution for prior not defined')
+    if "distribution" not in param.keys():
+        raise ValueError("Distribution for prior not defined")
 
-    dist = param['distribution']
+    dist = param["distribution"]
 
-    if dist == 'uniform':
+    if dist == "uniform":
         p = np.ones(o_discr.shape)
 
-    elif dist == 'gaussian':
-        if ('mu' in param.keys()) & ('sigma' in param.keys()):
-            mu = param['mu']
-            sigma = param['sigma']
+    elif dist == "gaussian":
+        if ("mu" in param.keys()) & ("sigma" in param.keys()):
+            mu = param["mu"]
+            sigma = param["sigma"]
             p = np.exp(-1 / 2 * ((o_discr - mu) / sigma) ** 2)
         else:
-            raise ValueError('(mu, sigma) for Gaussian distribution not defined')
+            raise ValueError("(mu, sigma) for Gaussian distribution not defined")
 
-    elif dist == 'exponential':
-        if 'lambda' in param.keys():
-            lamb = param['lambda']
+    elif dist == "exponential":
+        if "lambda" in param.keys():
+            lamb = param["lambda"]
             p = lamb * np.exp(-lamb * o_discr)
         else:
-            raise ValueError('lambda for exponential distribution not defined')
+            raise ValueError("lambda for exponential distribution not defined")
     else:
-        raise ValueError('Unknown distribution for prior', dist)
+        raise ValueError("Unknown distribution for prior", dist)
 
     return p / p.sum()
-
 
 
 def discr_spaces(interval: List, n: int):
@@ -113,7 +137,9 @@ def discr_spaces(interval: List, n: int):
 
     # check dimension of observation space (if more dimensional, interval is nested list)
     if len(np.array(interval).shape) > 1:
-        return np.array([discr_interval(interv[0], interv[1], n) for interv in interval])
+        return np.array(
+            [discr_interval(interv[0], interv[1], n) for interv in interval]
+        )
     else:
         return discr_interval(interval[0], interval[1], n)
 
@@ -136,4 +162,4 @@ def discr_interval(a: float, b: float, n: int, midpoint: bool = True):
     if midpoint:
         return a + (0.5 + np.arange(n)) * (b - a) / n
     else:
-        return a + (np.arange(n+1)) * (b - a) / n
+        return a + (np.arange(n + 1)) * (b - a) / n
