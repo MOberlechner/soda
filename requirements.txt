@@ -1,0 +1,9 @@
+numpy
+scipy
+matplotlib
+tqdm
+product
+opt_einsum
+pre-commit
+black
+isort
