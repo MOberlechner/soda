@@ -4,7 +4,7 @@ New and better implementation of SODA ...
 
 ## Setup
 
-Note: These setup instructions assume a linux-based OS and uses python 3.8.10 (or higher).
+Note: These setup instructions assume a Linux-based OS and uses python 3.8.10 (or higher).
 
 Install virtualenv (or whatever you prefer for virtual envs)
 
@@ -12,13 +12,13 @@ Install virtualenv (or whatever you prefer for virtual envs)
 
 Create a virtual environment with virtual env (you can also choose your own name)
 
-`virtualenv soda_env`
+`virtualenv venv`
 
 You can specify the python version for the virtual environment via the -p flag. Note that this version already needs to be installed on the system (e.g. `virtualenv - p python3 find-sink-sccs` uses the standard python3 version from the system).
 
 activate the environment with
 
-`source ./soda_env/bin/activate`
+`source ./venv/bin/activate`
 
 Install all requirements
 
