@@ -91,7 +91,7 @@ celerybeat-schedule
 .env
 .venv
 env/
-venv/
+venv/w
 ENV/
 env.bak/
 venv.bak/
@@ -117,7 +117,9 @@ dmypy.json
 
 /src/test/
 /src/test/
-/experiments/Exp*
+/test/
+/experiment/
+
 
 # numpy (results)
 .npy
