@@ -3,48 +3,38 @@ from typing import Dict, List
 
 import numpy as np
 
-from src.mechanism import double_auction
-
 # -------------------------------------------------------------------------------------------------------------------- #
 #                                      CLASS GAME : DISCRETIZED AUCTION GAME                                           #
 # -------------------------------------------------------------------------------------------------------------------- #
 
 
 class Game:
-    def __init__(
-        self,
-        mechanism: str,
-        bidder: List,
-        o_intervals: Dict,
-        a_intervals: Dict,
-        n: int,
-        m: int,
-    ):
+    def __init__(self, mechanism, n: int, m: int):
 
-        self.mechanism = mechanism
-        self.bidder = bidder
-        self.set_bidder = list(set(bidder))
-        self.n_bidder = len(bidder)
+        self.bidder = mechanism.bidder
+        self.set_bidder = mechanism.set_bidder
+        self.n_bidder = mechanism.n_bidder
         self.n = n
         self.m = m
 
         # discrete action and observation space
-        self.a_discr = {i: discr_spaces(a_intervals[i], m) for i in self.set_bidder}
-        self.o_discr = {i: discr_spaces(o_intervals[i], n) for i in self.set_bidder}
-        # TODO: what about different observation and valuation spaces
+        self.o_discr = {
+            i: discr_spaces(mechanism.o_space[i], n) for i in self.set_bidder
+        }
+        self.a_discr = {
+            i: discr_spaces(mechanism.a_space[i], m, midpoint=False)
+            for i in self.set_bidder
+        }
 
         # marginal prior for bidder
-        self.prior = {}
+        self.prior = {i: self.get_prior(mechanism, i) for i in self.set_bidder}
         self.weights = None
-        # TODO: include correlations
 
         self.utility = {}
 
-    def get_utility(self, param):
+    def get_utility(self, mechanism):
 
-        utility = {}
         for i in self.set_bidder:
-
             idx = self.bidder.index(i)
             # create all possible bids
             bids = np.array(
@@ -62,16 +52,15 @@ class Game:
             valuations = self.o_discr[i]
 
             # compute utility
-            if self.mechanism == "double_auction":
-                self.utility[i] = (
-                    double_auction.util(valuations, bids, self.bidder, idx, param)
-                    .transpose()
-                    .reshape(tuple([self.m] * self.n_bidder + [self.n]))
-                )
+            self.utility[i] = (
+                mechanism.utility(valuations, bids, idx)
+                .transpose()
+                .reshape(tuple([self.m] * self.n_bidder + [self.n]))
+            )
 
-    def get_prior(self, param):
-        for i in self.set_bidder:
-            self.prior[i] = discr_prior(self.o_discr[i], param)
+    def get_prior(self, mechanism, agent):
+        p = mechanism.prior_pdf(self.o_discr[agent], agent)
+        return p / p.sum()
 
 
 # -------------------------------------------------------------------------------------------------------------------- #
@@ -79,55 +68,13 @@ class Game:
 # -------------------------------------------------------------------------------------------------------------------- #
 
 
-def discr_prior(o_discr, param):
-    """
-
-    Parameters
-    ----------
-    o_discr : np.ndarray, discretized observation/valuation space
-    param : dict, contains parameter such as distribution, ...
-
-    Returns
-    -------
-    np.ndarray : prior distribution, shape similar to o_discr
-    """
-    # TODO: Implement more complex priors
-
-    # check if input is valid
-    if "distribution" not in param.keys():
-        raise ValueError("Distribution for prior not defined")
-
-    dist = param["distribution"]
-
-    if dist == "uniform":
-        p = np.ones(o_discr.shape)
-
-    elif dist == "gaussian":
-        if ("mu" in param.keys()) & ("sigma" in param.keys()):
-            mu = param["mu"]
-            sigma = param["sigma"]
-            p = np.exp(-1 / 2 * ((o_discr - mu) / sigma) ** 2)
-        else:
-            raise ValueError("(mu, sigma) for Gaussian distribution not defined")
-
-    elif dist == "exponential":
-        if "lambda" in param.keys():
-            lamb = param["lambda"]
-            p = lamb * np.exp(-lamb * o_discr)
-        else:
-            raise ValueError("lambda for exponential distribution not defined")
-    else:
-        raise ValueError("Unknown distribution for prior", dist)
-
-    return p / p.sum()
-
-
-def discr_spaces(interval: List, n: int):
+def discr_spaces(interval: List, n: int, midpoint: bool):
     """
     Parameters
     ----------
     interval : dict, contains lists with observation intervals for each bidder
     n : number of discretization points
+    midpoint : take midpoints of discretization
 
     Returns
     -------
@@ -138,13 +85,13 @@ def discr_spaces(interval: List, n: int):
     # check dimension of observation space (if more dimensional, interval is nested list)
     if len(np.array(interval).shape) > 1:
         return np.array(
-            [discr_interval(interv[0], interv[1], n) for interv in interval]
+            [discr_interval(interv[0], interv[1], n, midpoint) for interv in interval]
         )
     else:
-        return discr_interval(interval[0], interval[1], n)
+        return discr_interval(interval[0], interval[1], n, midpoint)
 
 
-def discr_interval(a: float, b: float, n: int, midpoint: bool = True):
+def discr_interval(a: float, b: float, n: int, midpoint: bool):
     """
     Discretize interval [a,b] using n points
 
@@ -153,13 +100,15 @@ def discr_interval(a: float, b: float, n: int, midpoint: bool = True):
     a : float, lower bound interval
     b : float, upper bound interval
     n : int, number of discretization points
-    midpoint : bool, if True returns midpoints of n subintervals, else bounds of intervals (n+1 points)
+    midpoint : bool, if True returns midpoints of n subintervals, else a, b and n-2 points in between
 
     Returns
     -------
     array(n), discretized interval
     """
     if midpoint:
+        # split interval in n equally sized subintervals and take midpoints (observation/valuation)
         return a + (0.5 + np.arange(n)) * (b - a) / n
     else:
-        return a + (np.arange(n + 1)) * (b - a) / n
+        # take minimal and maximal value of interval and distribute n-2 remaining points equally in between (action)
+        return a + (np.arange(n)) * (b - a) / (n - 1)
