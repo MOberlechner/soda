@@ -5,28 +5,20 @@ import numpy as np
 
 
 class Strategy:
-    def __init__(
-        self,
-        name,
-        n: int,
-        m: int,
-        o_discr: np.ndarray,
-        a_discr: np.ndarray,
-        prior: np.ndarray,
-    ):
+    def __init__(self, agent, game):
         # name of the bidder
-        self.name = name
+        self.agent = agent
         # observation and action space
-        self.o_discr = o_discr
-        self.a_discr = a_discr
+        self.o_discr = game.o_discr[agent]
+        self.a_discr = game.a_discr[agent]
         # dimension of spaces
         self.dim_o = 1 if len(self.o_discr.shape) == 1 else self.o_discr.shape[0]
         self.dim_a = 1 if len(self.a_discr.shape) == 1 else self.a_discr.shape[0]
         # prior (marginal) distribution
-        self.prior = prior
+        self.prior = game.prior[agent]
         # strategy
         self.x = np.random.uniform(
-            0, 1, size=tuple([n] * self.dim_o + [m] * self.dim_a)
+            0, 1, size=tuple([game.n] * self.dim_o + [game.m] * self.dim_a)
         )
         # utility
         self.utility, self.utility_loss = [], []
@@ -170,9 +162,11 @@ class Strategy:
         Compute relative utility loss for current strategy and add to list self.utility
         """
         self.utility_loss += [
-            1
-            - (self.x * gradient).sum()
-            / (self.best_response(gradient) * gradient).sum()
+            np.abs(
+                1
+                - (self.x * gradient).sum()
+                / (self.best_response(gradient) * gradient).sum()
+            )
         ]
 
     # --------------------------------------- METHODS USED TO ANALYZE RESULTS ---------------------------------------- #
@@ -211,23 +205,43 @@ class Strategy:
             bids = np.zeros(idx_obs.shape)
             for d, c in zip(uniques, counts):
                 bids[idx_obs == d] = np.random.choice(
-                    a_discr, size=c, p=sigma[d] / sigma[d].sum()
+                    self.a_discr, size=c, p=self.x[d] / self.x[d].sum()
                 )
             return bids
 
         else:
             raise NotImplementedError
 
-    def plot(self):
+    def plot(self, more: bool = False, beta: np.ndarray = None):
         """
         Visualize current strategy
+
+        more : bool, if true, we also plot utility loss and distance to last iterate
+
         """
         # parameters
         label_size = 13
         title_size = 14
 
+        if more:
+
+            # compute distance to last iterate
+            dist = [np.linalg.norm(s - self.x) for s in self.history[:-1]]
+            # plot utility loss and distance
+            plt.figure(figsize=(10, 5))
+            plt.subplot(1, 2, 2)
+            plt.plot(self.utility_loss, label="utility loss", color="k")
+            plt.plot(dist, label="dist. last iterate", color="k", linestyle="--")
+            plt.yscale("log")
+            plt.grid(axis="y")
+            plt.legend()
+
+            # create subplit for strategy
+            plt.subplot(1, 2, 1)
+
         if self.dim_o == self.dim_a == 1:
 
+            # plot strategy
             plt.imshow(
                 self.x.T / self.margin(),
                 extent=(
@@ -244,10 +258,25 @@ class Strategy:
             plt.ylabel("bids b", fontsize=label_size)
             plt.xlabel("observations v", fontsize=label_size)
             plt.title(
-                'Distributional Strategy Player "' + self.name + '"',
+                'Distributional Strategy Player "' + self.agent + '"',
                 fontsize=title_size,
             )
+
+            # plot BNE
+            if beta is not None:
+                plt.plot(
+                    self.o_discr, beta, linestyle="--", color="r", label="analyt. BNE"
+                )
+                plt.legend()
+
+            plt.show()
 
         else:
             print("Plot for this strategy not available")
             raise NotImplementedError
+
+    def save(self):
+        pass
+
+    def load(self):
+        pass
