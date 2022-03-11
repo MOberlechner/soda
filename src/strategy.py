@@ -25,7 +25,7 @@ class Strategy:
         self.history = [self.x]
 
     def __str__(self):
-        return "Strategy Bidder " + self.name + " - shape: " + str(self.x.shape)
+        return "Strategy Bidder " + self.agent + " - shape: " + str(self.x.shape)
 
     def margin(self):
         """
@@ -275,8 +275,30 @@ class Strategy:
             print("Plot for this strategy not available")
             raise NotImplementedError
 
-    def save(self):
-        pass
+    def save(self, name: str, path: str):
+        """ Saves strategy in respective directory
 
-    def load(self):
-        pass
+        Parameters
+        ----------
+        name : str, name of strategy (without ending .npy)
+        path : str ,path to directory ( do not append strategies/)
+        """
+        np.save(path + "strategies/" + name + "_agent_" + self.agent + ".npy", self.x)
+
+    def load(self, name: str, path: str):
+        try:
+            self.x = np.load(
+                path + "strategies/" + name + "_agent_" + self.agent + ".npy"
+            )
+        except:
+            print(
+                'File: "'
+                + name
+                + "_agent_"
+                + self.agent
+                + ".npy"
+                + '" is not available in directory "'
+                + path
+                + "strategies/"
+                + '"'
+            )
