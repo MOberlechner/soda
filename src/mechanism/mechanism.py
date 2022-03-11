@@ -13,7 +13,6 @@ class Mechanism:
 
     A Mechanism object defines the continuous auction game. Are relevant properties of the incomplete information
     game G = (I, O, A, u , F) as well as some basic methods as draw_valuations, should be contained.
-
     """
 
     def __init__(
@@ -21,8 +20,17 @@ class Mechanism:
         bidder: List[str],
         o_space: Dict[str, List],
         a_space: Dict[str, List],
-        param_prior: Dict,
+        param_prior: Dict[str, Dict],
     ):
+        """
+
+        Parameters
+        ----------
+        bidder : list, of bidders, e.g. ['1', '2']
+        o_space : dict, that contains lists with lower and upper bounds of intervals ofr each bidder
+        a_space : dict, that contains lists with lower and uppejupr bounds of intervals ofr each bidder
+        param_prior : dict, that contains parameters in forms of dictionaries for each bidder
+        """
 
         self.bidder = bidder
         self.n_bidder = len(bidder)
@@ -33,19 +41,57 @@ class Mechanism:
         self.param_prior = param_prior
 
     def draw_values(self, n_vals: int):
+        """ Valuations are drawn according to the given prior. If agents have different kind of priors, i.e., not only
+        different intervals, than this has to be implemented separately in the corresponding mechanism
+
+        Parameters
+        ----------
+        n_vals :
+
+        Returns
+        -------
+
+        """
+        if isinstance(self.prior, dict):
+            raise NotImplementedError(
+                "Different priors for different bidders are not yet implemented"
+            )
 
         if self.prior == "uniform":
-            return np.array(
-                [
-                    uniform.rvs(
-                        loc=self.o_space[self.bidder[i]][0],
-                        scale=self.o_space[self.bidder[i]][-1]
-                        - self.o_space[self.bidder[i]][0],
-                        size=n_vals,
+            # independent prior
+            if "corr" not in self.param_prior:
+                return np.array(
+                    [
+                        uniform.rvs(
+                            loc=self.o_space[self.bidder[i]][0],
+                            scale=self.o_space[self.bidder[i]][-1]
+                            - self.o_space[self.bidder[i]][0],
+                            size=n_vals,
+                        )
+                        for i in range(self.n_bidder)
+                    ]
+                )
+            # correlated prior with Bernoulli Paramater (according to Ausubel & Baranov 2020)
+            else:
+                if self.n_bidder == 2 and "corr" in self.param_prior:
+                    gamma = self.param_prior["corr"]
+                    w = np.random.uniform(size=n_vals)
+                    u = uniform.rvs(
+                        loc=self.o_space[self.bidder[0]][0],
+                        scale=self.o_space[self.bidder[0]][-1]
+                        - self.o_space[self.bidder[0]][0],
+                        size=(3, n_vals),
                     )
-                    for i in range(self.n_bidder)
-                ]
-            )
+                    return np.array(
+                        [
+                            np.where(w < gamma, 1, 0) * u[2]
+                            + np.where(w < gamma, 0, 1) * u[0],
+                            np.where(w < gamma, 1, 0) * u[2]
+                            + np.where(w < gamma, 0, 1) * u[1],
+                        ]
+                    )
+                else:
+                    raise NotImplementedError()
 
         elif self.prior == "gaussian":
             pass
@@ -74,11 +120,11 @@ class Mechanism:
             return uniform.pdf(
                 obs,
                 loc=self.o_space[agent][0],
-                scale=self.o_space[agent[0]][-1] - self.o_space[agent][0],
+                scale=self.o_space[agent][-1] - self.o_space[agent][0],
             )
 
         elif self.prior == "powerlaw":
-            power = self.param_prior["power"]
+            power = self.param_prior["power"][agent]
             return powerlaw.pdf(
                 obs,
                 a=power,

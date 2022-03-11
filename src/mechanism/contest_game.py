@@ -16,7 +16,7 @@ class ContestGame(Mechanism):
         o_space: Dict[str, List],
         a_space: Dict[str, List],
         param_prior: Dict[str, str],
-        csf: str = "allpay",
+        csf: str = "ratio_form",
         param_csf: float = 0.0,
     ):
         super().__init__(bidder, o_space, a_space, param_prior)
@@ -25,11 +25,13 @@ class ContestGame(Mechanism):
 
     def utility(self, obs: np.ndarray, bids: np.ndarray, idx: int):
         """ We consider different contest success functions
+        Perfectly Discriminiating Contests
         - allpay: the winner (random tie breaking rule) gets the item and everyone pays own bid
+
 
         Parameters
         ----------
-        obs : obs corresponds to skill paramater
+        obs : obs corresponds to marginal cost
         bids : effort
         idx : agent
 
@@ -48,32 +50,28 @@ class ContestGame(Mechanism):
         if obs.shape != bids[idx].shape:
             obs = obs.reshape(len(obs), 1)
 
-        if self.csf == "allpay":
-            # determine allocation
-            win = np.where(bids[idx] > np.delete(bids, idx, 0).max(axis=0), 1, 0)
-            num_winner = (bids.max(axis=0) == bids).sum(axis=0)
-
-            if self.n_bidder == 2:
-                # using the homotopy between first-price (param=0) and second-price (param=1)
-                # from [Aumann&Leininger, 1996] for two bidders
-                return (
-                    1 / num_winner * win * obs
-                    - (1 - self.param_csf) * bids[idx]
-                    - self.param_csf * bids[1 - idx]
-                )
-            else:
-                return 1 / num_winner * win * obs - bids[idx]
-
-        elif self.csf == "ratio_form":
+        if self.csf == "ratio_form_cost":
             # determine probabilities
-            r = self.param_ratio_form
-            prob = bids[idx] ** r / (bids ** r).sum(axis=0)
-            return prob * obs - bids[idx]
+            r = self.param_csf
+            prob = (bids[idx] ** r + np.where(bids.sum(axis=0) == 0, 1, 0)) / (
+                (bids ** r).sum(axis=0)
+                + np.where(bids.sum(axis=0) == 0, self.n_bidder, 0)
+            )
+            return prob - obs * bids[idx]
 
-        elif self.csf == "logistic_ratio_form":
-            mu = self.param_ratio_form
+        elif self.csf == "ratio_form_valuation":
+            # determine probabilities
+            r = self.param_csf
+            prob = (bids[idx] ** r + np.where(bids.sum(axis=0) == 0, 1, 0)) / (
+                (bids ** r).sum(axis=0)
+                + np.where(bids.sum(axis=0) == 0, self.n_bidder, 0)
+            )
+            return obs * prob - bids[idx]
+
+        elif self.csf == "difference_form":
+            mu = self.param_csf
             prob = np.exp(mu * bids[idx]) / np.exp(mu * bids[idx]).sum(axis=0)
-            return prob * obs - bids[idx]
+            return prob - obs * bids[idx]
 
         else:
             raise ValueError(
@@ -81,17 +79,4 @@ class ContestGame(Mechanism):
             )
 
     def get_bne(self, agent: str, obs: np.ndarray):
-        if (self.n_bidder == 2) & (len(self.set_bidder) == 1):
-            # two player symmetric case
-            if self.csf == "allpay":
-                if (self.prior == "uniform") & (self.o_space[self.bidder[0]] == [0, 1]):
-                    return 1 / 2 * obs ** 2
-                elif (self.prior == "powerlaw") & (
-                    self.o_space[self.bidder[0]] == [0, 1]
-                ):
-                    power = self.param_prior["power"]
-                    return power / (power + 1) * obs ** (power + 1)
-            else:
-                return None
-        else:
-            return None
+        pass
