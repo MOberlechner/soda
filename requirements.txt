@@ -1,4 +1,5 @@
 numpy
+pandas
 scipy
 matplotlib
 tqdm
@@ -7,3 +8,4 @@ opt_einsum
 pre-commit
 black
 isort
+hydra-core
