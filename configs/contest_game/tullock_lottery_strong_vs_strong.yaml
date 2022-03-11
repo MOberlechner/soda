@@ -1,0 +1,9 @@
+name: 'tullock_lottery_weak_vs_weak'
+bidder: ['strong', 'strong']
+o_space: {'strong': [0.6 ,1.6]}
+a_space: {'strong': [0.0, 0.5]}
+param_prior: {'distribution':'uniform'}
+csf: 'ratio_form_valuation'
+param_csf: 1
+n: 128
+m: 128

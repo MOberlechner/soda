@@ -123,3 +123,4 @@ dmypy.json
 
 # numpy (results)
 .npy
+/experiment/contest_game/
