@@ -264,9 +264,8 @@ class Strategy:
 
             # plot BNE
             if beta is not None:
-                plt.plot(
-                    self.o_discr, beta, linestyle="--", color="r", label="analyt. BNE"
-                )
+                x = np.linspace(self.o_discr[0], self.o_discr[-1], len(beta))
+                plt.plot(x, beta, linestyle="--", color="r", label="analyt. BNE")
                 plt.legend()
 
             plt.show()
