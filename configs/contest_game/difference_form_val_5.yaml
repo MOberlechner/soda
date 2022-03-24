@@ -1,9 +1,9 @@
-name: 'difference_form_val_2'
+name: 'difference_form_val_5'
 bidder: ['1', '1']
 o_space: {'1': [0.1 ,1.1]}
-a_space: {'1': [0.0, 2.2]}
+a_space: {'1': [0.0, 0.5]}
 param_prior: {'distribution':'uniform'}
 csf: 'difference_form_valuation'
-param_csf: 2
+param_csf: 5
 n: 128
 m: 128

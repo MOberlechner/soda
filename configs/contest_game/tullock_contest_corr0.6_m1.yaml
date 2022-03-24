@@ -1,9 +1,9 @@
 name: 'tullock_contest_corr_convex'
 bidder: ['1', '1']
 o_space: {'1': [0.1 ,1.1]}
-a_space: {'1': [0.0, 1.0]}
-param_prior: {'distribution':'uniform', 'corr':0.5}
+a_space: {'1': [0.0, 0.3]}
+param_prior: {'distribution':'uniform', 'corr':0.6}
 csf: 'ratio_form_valuation'
 param_csf: 1
-n: 8
-m: 8
+n: 128
+m: 128

@@ -1,9 +1,9 @@
-name: 'tullock_contest_val_2'
+name: 'tullock_contest_cost_2'
 bidder: ['1', '1']
 o_space: {'1': [0.1 ,1.1]}
-a_space: {'1': [0.0, 0.5]}
+a_space: {'1': [0.0, 2.2]}
 param_prior: {'distribution':'uniform'}
-csf: 'ratio_form_valuation'
+csf: 'ratio_form_cost'
 param_csf: 2
 n: 128
 m: 128
