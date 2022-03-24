@@ -1,0 +1,9 @@
+name: 'tullock_contest_val_5'
+bidder: ['1', '1']
+o_space: {'1': [0.1 ,1.1]}
+a_space: {'1': [0.0, 0.5]}
+param_prior: {'distribution':'uniform'}
+csf: 'ratio_form_valuation'
+param_csf: 5
+n: 128
+m: 128
