@@ -1,0 +1,9 @@
+name: 'crowdsourcing_no_ties_5_price1.yaml'
+bidder: ['1', '1', '1]
+o_space: {'1': [0.5 ,1.0]}
+a_space: {'1': [0.0, 2.0]}
+param_prior: {'distribution':'uniform'}
+param_util: {'tiebreaking':'lose'}
+price = [1., 0.]
+n: 128
+m: 128
