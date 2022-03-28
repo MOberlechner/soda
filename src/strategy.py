@@ -11,18 +11,21 @@ class Strategy:
         # observation and action space
         self.o_discr = game.o_discr[agent]
         self.a_discr = game.a_discr[agent]
+        # number of discretization points
+        self.n = len(self.o_discr)
+        self.m = len(self.a_discr)
         # dimension of spaces
         self.dim_o = 1 if len(self.o_discr.shape) == 1 else self.o_discr.shape[0]
         self.dim_a = 1 if len(self.a_discr.shape) == 1 else self.a_discr.shape[0]
         # prior (marginal) distribution
         self.prior = game.prior[agent]
         # strategy
-        self.x = np.random.uniform(
-            0, 1, size=tuple([game.n] * self.dim_o + [game.m] * self.dim_a)
+        self.x = np.ones(tuple([game.n] * self.dim_o + [game.m] * self.dim_a)) / (
+            game.n ** self.dim_o * game.m * self.dim_a
         )
         # utility
         self.utility, self.utility_loss = [], []
-        self.history = [self.x]
+        self.history = []
 
     def __str__(self):
         return "Strategy Bidder " + self.agent + " - shape: " + str(self.x.shape)
@@ -86,6 +89,9 @@ class Strategy:
             list(self.prior.shape) + [1] * self.dim_a
         ) * sigma
 
+        # save initial strategy in history
+        self.update_history()
+
     # --------------------------------------- METHODS USED FOR COMPUTATION ------------------------------------------- #
 
     def best_response(self, gradient: np.ndarray):
@@ -117,7 +123,9 @@ class Strategy:
 
         return best_response
 
-    def update_strategy(self, gradient: np.ndarray, stepsize: np.ndarray):
+    def update_strategy(
+        self, gradient: np.ndarray, stepsize: np.ndarray, method: str = "dual_averaging"
+    ):
         """
         Update strategy (exponentiated gradient)
 
@@ -125,25 +133,33 @@ class Strategy:
         ----------
         gradient : np.ndarray,
         stepsize : np.ndarray, step size
+        method : str, allows us to switch between dual averaging and best response
 
         Returns
         -------
 
         """
-        # multiply with stepsize
-        step = gradient * stepsize.reshape(list(stepsize.shape) + [1] * self.dim_a)
-        xc_exp = self.x * np.exp(step)
-        xc_exp_sum = xc_exp.sum(
-            axis=tuple(range(self.dim_o, self.dim_o + self.dim_a))
-        ).reshape(list(self.margin().shape) + [1] * self.dim_a)
+        if method == "dual_averaging":
+            # multiply with stepsize
+            step = gradient * stepsize.reshape(list(stepsize.shape) + [1] * self.dim_a)
+            xc_exp = self.x * np.exp(step)
+            xc_exp_sum = xc_exp.sum(
+                axis=tuple(range(self.dim_o, self.dim_o + self.dim_a))
+            ).reshape(list(self.margin().shape) + [1] * self.dim_a)
 
-        # update strategy
-        self.x = (
-            1
-            / xc_exp_sum
-            * self.margin().reshape(list(self.margin().shape) + [1] * self.dim_a)
-            * xc_exp
-        )
+            # update strategy
+            self.x = (
+                1
+                / xc_exp_sum
+                * self.prior.reshape(list(self.prior.shape) + [1] * self.dim_a)
+                * xc_exp
+            )
+
+        elif method == "best_response":
+            self.x = self.best_response(gradient)
+
+        else:
+            raise ValueError("Error in update_strategy: method unknown")
 
     def update_history(self):
         """
@@ -160,12 +176,13 @@ class Strategy:
     def update_utility_loss(self, gradient: np.ndarray):
         """
         Compute relative utility loss for current strategy and add to list self.utility
+        Add 1e-50 so that we don't divide by zero
         """
         self.utility_loss += [
             np.abs(
                 1
                 - (self.x * gradient).sum()
-                / (self.best_response(gradient) * gradient).sum()
+                / ((self.best_response(gradient) * gradient).sum() + 1e-50)
             )
         ]
 
@@ -227,10 +244,10 @@ class Strategy:
 
             # compute distance to last iterate
             dist = [np.linalg.norm(s - self.x) for s in self.history[:-1]]
-            # plot utility loss and distance
+            # plot utility loss and distance (utility loss plot maximal until 100%)
             plt.figure(figsize=(10, 5))
             plt.subplot(1, 2, 2)
-            plt.plot(self.utility_loss, label="utility loss", color="k")
+            plt.plot(np.minimum(self.utility_loss, 1), label="utility loss", color="k")
             plt.plot(dist, label="dist. last iterate", color="k", linestyle="--")
             plt.yscale("log")
             plt.grid(axis="y")
