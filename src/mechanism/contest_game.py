@@ -20,6 +20,7 @@ class ContestGame(Mechanism):
         param_csf: float = 0.0,
     ):
         super().__init__(bidder, o_space, a_space, param_prior)
+        self.name = "contest_game"
         self.csf = csf
         self.param_csf = param_csf
 
@@ -68,10 +69,15 @@ class ContestGame(Mechanism):
             )
             return obs * prob - bids[idx]
 
-        elif self.csf == "difference_form":
+        elif self.csf == "difference_form_cost":
             mu = self.param_csf
-            prob = np.exp(mu * bids[idx]) / np.exp(mu * bids[idx]).sum(axis=0)
+            prob = np.exp(mu * bids[idx]) / np.exp(mu * bids).sum(axis=0)
             return prob - obs * bids[idx]
+
+        elif self.csf == "difference_form_valuation":
+            mu = self.param_csf
+            prob = np.exp(mu * bids[idx]) / np.exp(mu * bids).sum(axis=0)
+            return obs * prob - bids[idx]
 
         else:
             raise ValueError(

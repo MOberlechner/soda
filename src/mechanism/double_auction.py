@@ -33,7 +33,7 @@ class DoubleAuction(Mechanism):
         -------
         np.ndarray, shape depends on valuations and bids
         """
-        # TODO: tiebreaking rule is not yet implemented
+        # TODO: tie breaking rule is not yet implemented
 
         # deterimine parameter
         n_bidder, n_profiles = bids.shape
