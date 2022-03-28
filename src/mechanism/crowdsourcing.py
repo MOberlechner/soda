@@ -1,11 +1,12 @@
 from typing import Dict, List
 
 import numpy as np
+from scipy.special import binom
 
 from .mechanism import Mechanism
 
 # -------------------------------------------------------------------------------------------------------------------- #
-#                                                   CONTEST GAME                                                       #
+#                                                  CROWDSOURCING                                                       #
 # -------------------------------------------------------------------------------------------------------------------- #
 
 
@@ -25,12 +26,15 @@ class Crowdsourcing(Mechanism):
     ):
         super().__init__(bidder, o_space, a_space, param_prior)
         self.name = "crowdsourcing"
-        self.prices = (
+        self.prices = np.array(
             prices
             if len(prices) == len(bidder)
             else prices + [0] * (len(bidder) - len(prices))
         )
         self.param_util = param_util
+        self.own_gradient = (len(self.set_bidder) == 1) and (
+            self.param_util["tiebreaking"] == "lose"
+        )
 
     def utility(self, obs: np.ndarray, bids: np.ndarray, idx: int):
         """ Crowdsourcing Contest: Given Prices [p_1, p_2, ..., p_N] (in decrasing order with sum p_i = 1), the bidder
@@ -108,7 +112,38 @@ class Crowdsourcing(Mechanism):
             raise ValueError("tiebreaking rule unknown (random/index/lose/win)")
 
         # utility: type is marginal cost with linear cost function
-        return np.array(self.prices).dot(probs) - obs * bids[idx]
+        return self.prices.dot(probs) - obs * bids[idx]
+
+    def compute_gradient(self, strategies, game, agent: str):
+        """ Simplified computation of gradient for i.i.d. bidders and tie-breaking "lose"
+
+        Parameters
+        ----------
+        strategies :
+        game :
+        agent :
+
+        Returns
+        -------
+
+        """
+        pdf = strategies[agent].x.sum(axis=0)
+        cdf = np.insert(pdf, 0, 0.0).cumsum()
+        exp_win = np.array(
+            [
+                self.prices[r]
+                * binom(self.n_bidder - 1, r)
+                * cdf[:-1] ** (self.n_bidder - r - 1)
+                * (1 - cdf[1:]) ** r
+                for r in range(sum(self.prices > 0))
+            ]
+        ).sum(axis=0)
+        payment = (
+            strategies[agent]
+            .o_discr.reshape(strategies[agent].n, 1)
+            .dot(strategies[agent].a_discr.reshape(1, strategies[agent].m))
+        )
+        return exp_win - payment
 
     def get_bne(self, agent: str, obs: np.ndarray):
 

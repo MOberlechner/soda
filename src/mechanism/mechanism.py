@@ -1,7 +1,7 @@
 from typing import Dict, List
 
 import numpy as np
-from scipy.stats import powerlaw, uniform
+from scipy.stats import norm, powerlaw, uniform
 
 # -------------------------------------------------------------------------------------------------------------------- #
 #                                   CLASS MECHANISM : CONTINUOUS AUCTION GAME                                          #
@@ -39,6 +39,7 @@ class Mechanism:
         self.a_space = a_space
         self.prior = param_prior["distribution"]
         self.param_prior = param_prior
+        self.own_gradient = False
 
     def draw_values(self, n_vals: int):
         """ Valuations are drawn according to the given prior. If agents have different kind of priors, i.e., not only
@@ -94,7 +95,16 @@ class Mechanism:
                     raise NotImplementedError()
 
         elif self.prior == "gaussian":
-            pass
+            return np.array(
+                [
+                    norm.rvs(
+                        loc=self.param_prior["mu"],
+                        scale=self.param_prior["sigma"],
+                        size=n_vals,
+                    )
+                    for i in range(self.n_bidder)
+                ]
+            )
 
         elif self.prior == "powerlaw":
             power = self.param_prior["power"]
@@ -121,6 +131,11 @@ class Mechanism:
                 obs,
                 loc=self.o_space[agent][0],
                 scale=self.o_space[agent][-1] - self.o_space[agent][0],
+            )
+
+        elif self.prior == "gaussian":
+            return norm.pdf(
+                obs, loc=self.param_prior["mu"], scale=self.param_prior["sigma"]
             )
 
         elif self.prior == "powerlaw":
