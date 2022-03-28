@@ -23,12 +23,14 @@ class SODA:
         self.beta = beta
         self.path = {}
         self.indices = {}
+        self.grad = {}
 
-    def run(self, game, strategies: Dict):
+    def run(self, mechanism, game, strategies: Dict):
         """Run Simultanous Online Dual Averaging
 
         Parameters
         ----------
+        mechanism :
         game :
         strategies :
 
@@ -37,16 +39,13 @@ class SODA:
 
         """
 
-        # dont ask why, but it improves performance significantly
-        u_dict = game.utility.copy()
-
         # prepare gradients
-        self.prepare_grad(game, strategies)
-        gradients = {}
+        if not mechanism.own_gradient:
+            self.prepare_grad(game, strategies)
 
         # init variables
         convergence = False
-        min_max_util_loss = 1
+        min_max_util_loss, max_util_loss = 1, 1
         t_max = 0
 
         for t in tqdm(
@@ -57,20 +56,16 @@ class SODA:
 
             # compute gradients
             for i in game.set_bidder:
-                gradients[i] = self.compute_gradient(
-                    strategies,
-                    game.bidder,
-                    i,
-                    game.utility[i],
-                    game.weights,
-                    self.indices[i],
-                    self.path[i],
-                )
+                if mechanism.own_gradient:
+                    self.grad[i] = mechanism.compute_gradient(strategies, game, i)
+                else:
+                    self.grad[i] = self.compute_gradient(strategies, game, i)
 
-            # update utility, utility loss
+            # update utility, utility loss, history
             for i in game.set_bidder:
-                strategies[i].update_utility(gradients[i])
-                strategies[i].update_utility_loss(gradients[i])
+                strategies[i].update_utility(self.grad[i])
+                strategies[i].update_utility_loss(self.grad[i])
+                strategies[i].update_history()
 
             # check convergence
             max_util_loss = np.max(
@@ -88,15 +83,8 @@ class SODA:
 
             # update strategy
             for i in game.set_bidder:
-                stepsize = self.step_rule(
-                    self.steprule_bool,
-                    self.eta,
-                    self.beta,
-                    t,
-                    gradients[i],
-                    strategies[i].dim_o,
-                )
-                strategies[i].update_strategy(gradients[i], stepsize)
+                stepsize = self.step_rule(t, self.grad[i], strategies[i].dim_o)
+                strategies[i].update_strategy(self.grad[i], stepsize)
 
         # Print result
         if convergence:
@@ -133,14 +121,7 @@ class SODA:
             scale[scale < 1e-100] = 1e-100
             return self.eta / scale
 
-    def compute_gradient(
-        self,
-        strategies: Dict,
-        bidder: List,
-        player: str,
-        u_array: np.ndarray,
-        weights: np.ndarray,
-    ):
+    def compute_gradient(self, strategies: Dict, game, agent: str):
         """
         Compute gradient for player i given a strategy profile and utility array.
         This operation is based on an optimized version of np.einsum, namely contract
@@ -149,36 +130,36 @@ class SODA:
         Parameters
         ----------
         strategies : dict, contains strategies
-        bidder : list, of bidders
-        player : str, player i
-        u_array : array, utility array for player i
-        weights: array, contains interdependencies of valuations
+        game : Game, discretized auction game
+        agent : str, player i
 
         Returns
         -------
         array, gradient of player i
         """
 
-        opp = bidder.copy()
-        opp.remove(player)
+        opp = game.bidder.copy()
+        opp.remove(agent)
 
         # bidders observations/valuations are independent
-        if weights is None:
+        if game.weights is None:
             return contract(
-                self.indices[player],
-                *[u_array]
+                self.indices[agent],
+                *[game.utility[agent]]
                 + [
                     strategies[i].x.sum(axis=tuple(range(strategies[i].dim_o)))
                     for i in opp
                 ],
-                optimize=self.path[player]
+                optimize=self.path[agent]
             )
         # bidders observations/valuations are correlated
         else:
             return contract(
-                self.indices[player],
-                *[u_array] + [strategies[i].x for i in opp] + [weights],
-                optimize=self.path[player]
+                self.indices[agent],
+                *[game.utility[agent]]
+                + [strategies[i].x for i in opp]
+                + [game.weights],
+                optimize=self.path[agent]
             )
 
     def prepare_grad(self, game, strategies: Dict):
@@ -261,3 +242,6 @@ class SODA:
                     + [np.ones([game.n] * (dim_o * n_bidder))],
                     optimize="optimal"
                 )[0]
+
+
+# --------------------------------------- FIRST ORDER STATISTICS ----------------------------------------------------- #
