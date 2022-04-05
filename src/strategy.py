@@ -72,6 +72,19 @@ class Strategy:
                     ]
                 )
 
+        elif init_method == "truthful_inv":
+            if self.dim_o == self.dim_a == 1:
+                n, m = self.x.shape
+                sigma = np.array(
+                    [
+                        [
+                            np.exp(-1 / 2 * ((i - j) / 0.02) ** 2)
+                            for j in np.linspace(0, 1, m)
+                        ]
+                        for i in np.linspace(1, 0, n)
+                    ]
+                )
+
         elif init_method == "function":
             b = param["init_function"]
             n, m = self.x.shape
