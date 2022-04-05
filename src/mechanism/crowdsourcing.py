@@ -13,6 +13,9 @@ from .mechanism import Mechanism
 class Crowdsourcing(Mechanism):
     """ Crowdsourcing - All-Pay Auction with several prices. Valuations of all prices sum up to one.
 
+    prices: list,  of prices in decreasing order, number of prices <= number of bidders
+    param_util: dict, contains "tiebreaking"-rule and (optional) "util_type" (cost (default) or valuation)
+
     """
 
     def __init__(
@@ -32,9 +35,14 @@ class Crowdsourcing(Mechanism):
             else prices + [0] * (len(bidder) - len(prices))
         )
         self.param_util = param_util
+        self.type = param_util["type"] if "type" in param_util else "cost"
         self.own_gradient = (len(self.set_bidder) == 1) and (
             self.param_util["tiebreaking"] == "lose"
         )
+
+        # check input
+        if self.prices.sum() != 1:
+            raise ValueError("Prices have to add up to one")
 
     def utility(self, obs: np.ndarray, bids: np.ndarray, idx: int):
         """ Crowdsourcing Contest: Given Prices [p_1, p_2, ..., p_N] (in decrasing order with sum p_i = 1), the bidder
@@ -112,7 +120,12 @@ class Crowdsourcing(Mechanism):
             raise ValueError("tiebreaking rule unknown (random/index/lose/win)")
 
         # utility: type is marginal cost with linear cost function
-        return self.prices.dot(probs) - obs * bids[idx]
+        if self.type == "cost":
+            return self.prices.dot(probs) - obs * bids[idx]
+        elif self.type == "valuation":
+            return self.prices.dot(probs) * obs - bids[idx]
+        else:
+            raise ValueError("util_type in param_util unknown")
 
     def compute_gradient(self, strategies, game, agent: str):
         """ Simplified computation of gradient for i.i.d. bidders and tie-breaking "lose"
@@ -138,12 +151,28 @@ class Crowdsourcing(Mechanism):
                 for r in range(sum(self.prices > 0))
             ]
         ).sum(axis=0)
-        payment = (
-            strategies[agent]
-            .o_discr.reshape(strategies[agent].n, 1)
-            .dot(strategies[agent].a_discr.reshape(1, strategies[agent].m))
-        )
-        return exp_win - payment
+
+        if self.type == "cost":
+            payment = (
+                strategies[agent]
+                .o_discr.reshape(game.n, 1)
+                .dot(strategies[agent].a_discr.reshape(1, game.m))
+            )
+            return exp_win - payment
+
+        elif self.type == "valuation":
+            exp_win_val = (
+                strategies[agent]
+                .o_discr.reshape(strategies[agent].n, 1)
+                .dot(exp_win.reshape(1, game.m))
+            )
+            payment = np.ones((game.n, 1)).dot(
+                strategies[agent].a_discr.reshape(1, game.m)
+            )
+            return exp_win_val - payment
+
+        else:
+            raise ValueError("util_type in param_util unknown")
 
     def get_bne(self, agent: str, obs: np.ndarray):
 
