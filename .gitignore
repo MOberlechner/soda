@@ -95,6 +95,7 @@ venv/w
 ENV/
 env.bak/
 venv.bak/
+/venv/
 
 # Spyder project settings
 .spyderproject
@@ -120,7 +121,6 @@ dmypy.json
 /test/
 /experiment/
 
-
 # numpy (results)
 .npy
-/experiment/contest_game/
+
