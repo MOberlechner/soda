@@ -1,9 +1,0 @@
-name: 'crowdsourcing_no_ties_3_price3'
-bidder: ['1', '1', '1']
-o_space: {'1': [0.5 ,1.0]}
-a_space: {'1': [0.0, 2.0]}
-param_prior: {'distribution':'uniform'}
-param_util: {'tiebreaking':'lose'}
-price: [0.6, 0.4]
-n: 128
-m: 128
