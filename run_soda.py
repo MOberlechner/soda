@@ -3,13 +3,14 @@ from time import time
 import hydra
 
 from src.learner import SODA
-from src.util import create_setting, log_run
+from src.util.logging import log_run
+from src.util.setting import create_setting
 
 
 def run_soda(mechanism, game, strategies):
 
     # parameter learner
-    max_iter = int(1e4)
+    max_iter = 3000
     tol = 1e-4
     steprule_bool = True
     eta = 10
@@ -34,17 +35,22 @@ def run_soda(mechanism, game, strategies):
 
 if __name__ == "__main__":
 
-    setting = "crowdsourcing"
+    setting = "contest_game"
     experiments_list = [
-        "crowdsourcing_val2_no_ties_3_price1",
-        "crowdsourcing_val2_no_ties_3_price2",
-        "crowdsourcing_val2_no_ties_3_price3",
+        "tullock_contest_2_val_0.5",
+        "tullock_contest_2_val_1",
+        "tullock_contest_2_val_2",
+        "tullock_contest_2_val_5",
+        "tullock_contest_3_val_0.5",
+        "tullock_contest_3_val_1",
+        "tullock_contest_3_val_2",
+        "tullock_contest_3_val_5",
     ]
 
     path = "experiment/" + setting + "/"
     hydra.initialize(config_path="configs/" + setting, job_name="run")
     logging = True
-    runs = 1
+    runs = 10
 
     for experiment in experiments_list:
 

@@ -16,6 +16,7 @@ class DoubleAuction(Mechanism):
         risk: float = 1.0,
     ):
         super().__init__(bidder, o_space, a_space, prior)
+        self.name = "double_auction"
         self.payment_rule = payment_rule
         self.risk = risk
 

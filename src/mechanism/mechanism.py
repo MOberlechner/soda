@@ -133,9 +133,27 @@ class Mechanism:
                 scale=self.o_space[agent][-1] - self.o_space[agent][0],
             )
 
+        if self.prior == "uniform_bi":
+            eta = 0.9
+            return eta * uniform.pdf(
+                obs,
+                loc=self.o_space[agent][0],
+                scale=self.o_space[agent][-1] - self.o_space[agent][0],
+            ) + (1 - eta) * uniform.pdf(
+                obs,
+                loc=0.4 * (self.o_space[agent][0] + self.o_space[agent][-1]),
+                scale=0.2 * (self.o_space[agent][-1] - self.o_space[agent][0]),
+            )
+
         elif self.prior == "gaussian":
             return norm.pdf(
                 obs, loc=self.param_prior["mu"], scale=self.param_prior["sigma"]
+            )
+
+        elif self.prior == "gaussian_bimodal":
+            eta = 0.5
+            return eta * norm.pdf(obs, loc=0.25, scale=0.1) + (1 - eta) * norm.pdf(
+                obs, loc=0.75, scale=0.1
             )
 
         elif self.prior == "powerlaw":

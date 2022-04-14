@@ -1,5 +1,5 @@
 from itertools import product
-from typing import Dict, List
+from typing import List
 
 import numpy as np
 
@@ -11,6 +11,7 @@ import numpy as np
 class Game:
     def __init__(self, mechanism, n: int, m: int):
 
+        self.name = mechanism.name
         self.bidder = mechanism.bidder
         self.set_bidder = mechanism.set_bidder
         self.n_bidder = mechanism.n_bidder
@@ -19,7 +20,8 @@ class Game:
 
         # discrete action and observation space
         self.o_discr = {
-            i: discr_spaces(mechanism.o_space[i], n) for i in self.set_bidder
+            i: discr_spaces(mechanism.o_space[i], n, midpoint=False)
+            for i in self.set_bidder
         }
         self.a_discr = {
             i: discr_spaces(mechanism.a_space[i], m, midpoint=False)
@@ -28,8 +30,7 @@ class Game:
 
         # marginal prior for bidder
         self.prior = {i: self.get_prior(mechanism, i) for i in self.set_bidder}
-        self.weights = None
-
+        self.weights = self.get_weights(mechanism)
         self.utility = {}
 
     def get_utility(self, mechanism):
@@ -62,6 +63,42 @@ class Game:
         p = mechanism.prior_pdf(self.o_discr[agent], agent)
         return p / p.sum()
 
+    def get_weights(self, mechanism):
+        if "corr" in mechanism.param_prior:
+            if mechanism.prior == "uniform":
+                if mechanism.n_bidder == 2:
+                    # correlated prior with Bernoulli Paramater (according to Ausubel & Baranov 2020)
+                    gamma = mechanism.param_prior["corr"]
+                    weights = np.ones((self.n, self.n)) * (1 - gamma) * 1 / self.n
+                    weights[np.diag_indices(self.n, ndim=2)] = (
+                        gamma * 1 + (1 - gamma) * 1 / self.n
+                    )
+                    weights = weights * self.n
+
+                elif mechanism.name == "llg_auction":
+                    # correlated prior with Bernoulli Paramater (according to Ausubel & Baranov 2020)
+                    gamma = mechanism.param_prior["corr"]
+                    weights = np.ones((self.n, self.n)) * (1 - gamma) * 1 / self.n
+                    weights[np.diag_indices(self.n, ndim=2)] = (
+                        gamma * 1 + (1 - gamma) * 1 / self.n
+                    )
+                    weights = weights * self.n
+                    weights = np.repeat(weights, self.n).reshape(tuple([self.n] * 3))
+
+                else:
+                    raise NotImplementedError(
+                        "Correlation not implemented for this setting"
+                    )
+
+                return weights
+
+            else:
+                raise NotImplementedError(
+                    "Correlation only for uniform prior implemented"
+                )
+        else:
+            return None
+
 
 # -------------------------------------------------------------------------------------------------------------------- #
 #                                                 HELPERFUNCTIONS                                                      #
@@ -72,7 +109,7 @@ def discr_spaces(interval: List, n: int, midpoint: bool):
     """
     Parameters
     ----------
-    interval : dict, contains lists with observation intervals for each bidder
+    interval : List, contains lists with observation intervals for each bidder
     n : number of discretization points
     midpoint : take midpoints of discretization
 

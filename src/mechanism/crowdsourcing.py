@@ -176,4 +176,20 @@ class Crowdsourcing(Mechanism):
 
     def get_bne(self, agent: str, obs: np.ndarray):
 
-        pass
+        if (
+            self.o_space[agent] == [0, 1]
+            and self.type == "valuation"
+            and len(self.set_bidder) == 1
+            and (self.prices > 0).sum() <= 2
+        ):
+
+            bids_bne = self.prices[0] * (
+                self.n_bidder - 1
+            ) / self.n_bidder * obs ** self.n_bidder + self.prices[1] * (
+                (self.n_bidder - 2) * obs ** (self.n_bidder - 1)
+                - (self.n_bidder - 1) ** 2 / self.n_bidder * obs ** self.n_bidder
+            )
+            return bids_bne
+
+        else:
+            raise NotImplementedError("BNE for this setting not implemented")
