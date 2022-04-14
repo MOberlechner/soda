@@ -3,9 +3,19 @@ from itertools import product
 import matplotlib.pyplot as plt
 import numpy as np
 
+from src.game import discr_interval
+
 
 class Strategy:
     def __init__(self, agent, game):
+        """
+        Create strategy. Dimensions etc. is defined by game
+
+        Parameters
+        ----------
+        agent : str, name of repr. bidder
+        game : class Game, approximation game
+        """
         # name of the bidder
         self.agent = agent
         # observation and action space
@@ -247,6 +257,7 @@ class Strategy:
         Visualize current strategy
 
         more : bool, if true, we also plot utility loss and distance to last iterate
+        beta : array, equilibrium strategy to plot
 
         """
         # parameters
@@ -254,7 +265,6 @@ class Strategy:
         title_size = 14
 
         if more:
-
             # compute distance to last iterate
             dist = [np.linalg.norm(s - self.x) for s in self.history[:-1]]
             # plot utility loss and distance (utility loss plot maximal until 100%)
@@ -309,12 +319,23 @@ class Strategy:
 
         Parameters
         ----------
-        name : str, name of strategy (without ending .npy)
+        name : str, name of strategy
         path : str ,path to directory ( do not append strategies/)
         """
         np.save(path + "strategies/" + name + "_agent_" + self.agent + ".npy", self.x)
 
     def load(self, name: str, path: str):
+        """ Load strategy from respective directory, same naming convention as in save method
+
+        Parameters
+        ----------
+        name : str, name of strategy
+        path : str, path to directory (in which strategies/ is contained
+
+        Returns
+        -------
+
+        """
         try:
             self.x = np.load(
                 path + "strategies/" + name + "_agent_" + self.agent + ".npy"
@@ -331,3 +352,60 @@ class Strategy:
                 + "strategies/"
                 + '"'
             )
+
+    def load_scale(self, name: str, path: str, factor: int):
+        """ Load strategy from respective directory, same naming convention as in save method
+        Should be used if saved strategy has a lower discretization than the strategy we have
+
+        Parameters
+        ----------
+        name : str, name of strategy
+        path : str, path to directory (in which strategies/ is contained
+        factor: int, increase discretizations by factor
+
+        Returns
+        -------
+
+        """
+        try:
+            strat = np.load(
+                path + "strategies/" + name + "_agent_" + self.agent + ".npy"
+            )
+            bool_strat_loaded = True
+
+        except:
+            bool_strat_loaded = False
+            print(
+                'File: "'
+                + name
+                + "_agent_"
+                + self.agent
+                + ".npy"
+                + '" is not available in directory "'
+                + path
+                + "strategies/"
+                + '"'
+            )
+
+            # only for two dimensional strategies
+            if bool_strat_loaded:
+                if len(self.strat.shape) == 2:
+                    # idea: put probability measure of action two closest action in new discretization
+                    n, m = strat.shape
+                    a_discr = discr_interval(
+                        self.a_discr[0], self.a_discr[-1], m, midpoint=False
+                    )
+                    strat_new = np.zeros((n * factor, m * factor))
+                    for j in range(m):
+                        j_star = int(np.argmin(np.abs(a_discr[j] - self.a_discr)))
+                        strat_new[:, j_star] = np.repeat(strat[:, j], factor)
+
+                    strat_new_sum = strat_new.sum(axis=1)
+                    self.x = (1 / strat_new_sum * self.prior).reshape(
+                        (n * factor, 1)
+                    ) * strat_new
+
+                else:
+                    raise NotImplementedError(
+                        "Scaling is only implemented for 1-dim type and action space!"
+                    )
