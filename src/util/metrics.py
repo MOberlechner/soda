@@ -1,5 +1,7 @@
 import numpy as np
 
+from src.learner import SODA
+
 
 def compute_l2_norm(mechanism, strategies, n_obs):
     """ Compute L2 distance between computed strategies and BNE
@@ -13,7 +15,7 @@ def compute_l2_norm(mechanism, strategies, n_obs):
     Returns
     -------
     dict, l2 norm for each strategy
-
+ö
     """
 
     l2_norm = {}
@@ -60,8 +62,8 @@ def compute_utility(mechanism, strategies, n_obs):
         bids = strategies[i].bid(obs[idx])
         bne = np.array(
             [
-                mechanism.get_bne(i, obs[mechanism.bidder.index(i)])
-                for i in mechanism.bidder
+                mechanism.get_bne(mechanism.bidder[i], obs[i])
+                for i in range(mechanism.n_bidder)
             ]
         )
 
@@ -76,3 +78,28 @@ def compute_utility(mechanism, strategies, n_obs):
         util_loss = {i: 1 - util_vs_bne[i] / util_bne[i] for i in strategies}
 
         return util_bne, util_vs_bne, util_loss
+
+
+def compute_util_loss_scaled(mechanism_scaled, game_scaled, strategies_scaled):
+    """ Compute Utility Loss
+
+    Parameters
+    ----------
+    mechanism_scaled : class, mechanism
+    game_scaled : class, discretized game
+    strategies_scaled : class, strategy induced by lower dimensional strategy
+
+    Returns
+    -------
+    Dict, utility loss in larger (scaled) game
+    """
+
+    # create learner and run for zero iterations (to init gradient computation)
+    soda = SODA(max_iter=0, tol=0, steprule_bool=True, eta=1, beta=1)
+    soda.run(mechanism_scaled, game_scaled, strategies_scaled)
+
+    util_loss_scaled = {}
+    for i in mechanism_scaled.set_bidder:
+        grad = soda.compute_gradient(strategies_scaled, game_scaled, i)
+        strategies_scaled[i].update_utility_loss(grad)
+        util_loss_scaled[i] = strategies_scaled[i].utility_loss[-1]
