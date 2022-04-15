@@ -37,10 +37,6 @@ if __name__ == "__main__":
 
     setting = "contest_game"
     experiments_list = [
-        "tullock_contest_2_val_0.5",
-        "tullock_contest_2_val_1",
-        "tullock_contest_2_val_2",
-        "tullock_contest_2_val_5",
         "tullock_contest_3_val_0.5",
         "tullock_contest_3_val_1",
         "tullock_contest_3_val_2",
