@@ -29,7 +29,7 @@ def run_sim(
         mechanism_scaled, game_scaled, strategies_scaled = create_setting(setting, cfg)
         if not mechanism.own_gradient:
             game_scaled.get_utility(mechanism_scaled)
-            print("utilities for scaled game computed")
+            print('Utilties for experiments computed!')
 
     for r in range(runs):
 
@@ -83,11 +83,12 @@ if __name__ == "__main__":
     path = "experiment/" + setting + "/"
     hydra.initialize(config_path="configs/" + setting, job_name="run")
     logging = True
-    runs = 2
+    runs = 10
     n_obs = int(2 ** 22)
-    n_scaled = m_scaled = 128
+    n_scaled = m_scaled = 1024
 
     for experiment in experiments_list:
+        print('Simulation for experiments: "' + experiment + '" started!')
 
         # run simulation
         run_sim(setting, experiment, runs, n_obs, logging, n_scaled, m_scaled)
