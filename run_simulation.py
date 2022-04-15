@@ -85,7 +85,7 @@ if __name__ == "__main__":
     logging = True
     runs = 2
     n_obs = int(2 ** 22)
-    n_scaled = m_scaled = 128
+    n_scaled = m_scaled = 1024
 
     for experiment in experiments_list:
 

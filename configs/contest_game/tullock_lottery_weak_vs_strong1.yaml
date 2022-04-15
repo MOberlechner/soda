@@ -1,7 +1,7 @@
 name: 'tullock_lottery_weak_vs_strong1'
 bidder: ['weak', 'strong']
 o_space: {'weak': [0.0 ,1.0], 'strong': [1.0, 2.0]}
-a_space: {'weak': [0.0, 0.3], 'strong': [0.0, 0.5]}
+a_space: {'weak': [0.0, 0.3], 'strong': [0.0, 0.4]}
 param_prior: {'distribution':'uniform'}
 csf: 'ratio_form_valuation'
 param_csf: 1
