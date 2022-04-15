@@ -62,6 +62,8 @@ class Strategy:
         -------
 
         """
+        # new initializations deletes histories of strategies, utilities, etc
+        self.utility, self.utility_loss, self.history = [], [], []
 
         if init_method == "random":
             sigma = np.random.uniform(0, 1, size=self.x.shape)
@@ -353,7 +355,7 @@ class Strategy:
                 + '"'
             )
 
-    def load_scale(self, name: str, path: str, factor: int):
+    def load_scale(self, name: str, path: str, n_scaled: int, m_scaled):
         """ Load strategy from respective directory, same naming convention as in save method
         Should be used if saved strategy has a lower discretization than the strategy we have
 
@@ -361,7 +363,8 @@ class Strategy:
         ----------
         name : str, name of strategy
         path : str, path to directory (in which strategies/ is contained
-        factor: int, increase discretizations by factor
+        n_scaled: int, discretization (type) in the larger setting
+        m_scaled: int, discretization (action) in the larger setting
 
         Returns
         -------
@@ -395,14 +398,21 @@ class Strategy:
                 a_discr = discr_interval(
                     self.a_discr[0], self.a_discr[-1], m, midpoint=False
                 )
-                strat_new = np.zeros((n * factor, m * factor))
+                strat_new = np.zeros((n_scaled, m_scaled))
+                factor_n = int(n_scaled / n)
+
+                if factor_n * n != n_scaled:
+                    raise ValueError(
+                        "error in load_scale: n_scaled is not a multiple of n"
+                    )
+
                 for j in range(m):
                     j_star = int(np.argmin(np.abs(a_discr[j] - self.a_discr)))
-                    strat_new[:, j_star] = np.repeat(strat[:, j], factor)
+                    strat_new[:, j_star] = np.repeat(strat[:, j], factor_n)
 
                 strat_new_sum = strat_new.sum(axis=1)
                 self.x = (1 / strat_new_sum * self.prior).reshape(
-                    (n * factor, 1)
+                    (n_scaled, 1)
                 ) * strat_new
 
             else:

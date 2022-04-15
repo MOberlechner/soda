@@ -94,12 +94,15 @@ def compute_util_loss_scaled(mechanism_scaled, game_scaled, strategies_scaled):
     Dict, utility loss in larger (scaled) game
     """
 
-    # create learner and run for zero iterations (to init gradient computation)
+    # create learner and prepare gradient computation
     soda = SODA(max_iter=0, tol=0, steprule_bool=True, eta=1, beta=1)
-    soda.run(mechanism_scaled, game_scaled, strategies_scaled)
+    if not mechanism_scaled.own_gradient:
+        soda.prepare_grad(game_scaled, strategies_scaled)
 
     util_loss_scaled = {}
     for i in mechanism_scaled.set_bidder:
         grad = soda.compute_gradient(strategies_scaled, game_scaled, i)
         strategies_scaled[i].update_utility_loss(grad)
         util_loss_scaled[i] = strategies_scaled[i].utility_loss[-1]
+
+    return util_loss_scaled
