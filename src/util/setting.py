@@ -2,6 +2,7 @@ from src.game import Game
 from src.mechanism.all_pay import AllPay
 from src.mechanism.contest_game import ContestGame
 from src.mechanism.crowdsourcing import Crowdsourcing
+from src.mechanism.llg_auction import LLGAuction
 from src.strategy import Strategy
 
 
@@ -45,6 +46,11 @@ def create_setting(setting: str, cfg):
             cfg.param_prior,
             cfg.price,
             cfg.param_util,
+        )
+
+    elif setting == "llg_auction":
+        mechanism = LLGAuction(
+            cfg.bidder, cfg.o_space, cfg.a_space, cfg.param_prior, cfg.param_util
         )
 
     else:
