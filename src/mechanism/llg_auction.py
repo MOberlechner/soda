@@ -15,14 +15,28 @@ class LLGAuction(Mechanism):
         bidder: List[str],
         o_space: Dict[str, List],
         a_space: Dict[str, List],
-        prior: str,
+        param_prior: Dict[str, str],
         param_util: Dict,
     ):
-        super().__init__(bidder, o_space, a_space, prior)
+        """
+
+        Parameters
+        ----------
+        bidder : list, contains strings, use either ["L", "L", "G"] or ["L1", "L2", "G2]
+        o_space :
+        a_space :
+        param_prior :
+        param_util :    tie_breaking (bool), True = random, False = local always win
+                        payment_rule (str), chose core-selecting payment rule: NZ, NVCG, NB
+        """
+        super().__init__(bidder, o_space, a_space, param_prior)
         self.name = "llg_auction"
         self.param_util = param_util
         self.payment_rule = param_util["payment_rule"]
-        self.tie_breaking = param_util["tie_breaking"]
+        self.tie_breaking = (
+            param_util["tie_breaking"] if "tie_breaking" in param_util else None
+        )
+        self.gamma = param_prior["gamma"] if "gamma" in param_prior else 0.0
 
         # check input
         if self.bidder[2] != "G":
@@ -47,21 +61,32 @@ class LLGAuction(Mechanism):
             raise ValueError("wrong format of bids")
         elif idx >= self.n_bidder:
             raise ValueError("bidder with index " + str(idx) + " not avaible")
-        elif "tie_breaking" not in self.param_util:
+        elif self.tie_breaking is None:
             raise ValueError("specify tiebreaking rule")
+        elif self.tie_breaking not in ["random", "local", "lose"]:
+            raise ValueError("specified tiebreaking rule unkown")
 
         # if True: we want each outcome for every observation,  each outcome belongs to one observation
         if obs.shape != bids[idx].shape:
             obs = obs.reshape(len(obs), 1)
 
+        # tie-breaking rule
+        tie_local = (
+            bids[2]
+            == bids[:2].sum(axis=0)
+            * {"random": 1.0, "local": 0.0, "lose": 2.0}[self.tie_breaking]
+        )
+        tie_global = (
+            bids[2]
+            == bids[:2].sum(axis=0)
+            * {"random": 1.0, "local": 2.0, "lose": 2.0}[self.tie_breaking]
+        )
+
         # determine payoff - global bidder (idx = 2)
         if idx == 2:
             win = bids[2] >= bids[:2].sum(axis=0)
-            tie = bids[2] == bids[:2].sum(axis=0) if self.tie_breaking else 0 * win
+            return win * (1 - 0.5 * tie_global) * (obs - bids[:2].sum(axis=0))
 
-            return win * (1 - 0.5 * tie) * (obs - bids[:2].sum(axis=0))
-
-        # TODO: Fehler in Implementierung, Utilities überprüfen
         # determine payoff - local bidder (idx = 1,2)
         else:
             if self.payment_rule == "NZ":
@@ -70,21 +95,16 @@ class LLGAuction(Mechanism):
                 win_b = (2 * bids[:2].min(axis=0) < bids[2]) & (
                     bids[2] <= bids[:2].sum(axis=0)
                 )
-                tie = (
-                    bids[2] <= 2 * bids[:2].sum(axis=0)
-                    if self.tie_breaking
-                    else 0 * win_a
-                )
-
-                return (1 - 0.5 * tie) * (
+                return (1 - 0.5 * tie_local) * (
                     win_a * (obs - 0.5 * bids[2])
                     + win_b
                     * (
                         obs
                         - np.where(
-                            bids[idx] == bids[:2].min(axis=0), bids[idx], bids[2]
+                            bids[idx] == bids[:2].min(axis=0),
+                            bids[idx],
+                            bids[2] - bids[:2].min(axis=0),
                         )
-                        - bids[idx]
                     )
                 )
 
@@ -118,11 +138,39 @@ class LLGAuction(Mechanism):
                     + win_b * (obs - bids[idx] + delta)
                 )
 
-    def get_bne(self, obs: np.ndarray):
-        if self.prior == "uniform":
-            if (self.payment_rule == "first_price") & np.all(
-                [self.o_space[i] == [0, 1] for i in self.set_bidder]
-            ):
-                return (self.n_bidder - 1) / (self.n_bidder - 1 + self.risk) * obs
-            elif self.payment_rule == "second_price":
-                return obs
+    def get_bne(self, agent: str, obs: np.ndarray):
+        if agent == "G":
+            return obs
+        elif agent == "L":
+            if self.payment_rule == "NVCG":
+                if self.gamma == 1:
+                    return 2 / 3 * obs
+                else:
+                    obs_star = (3 - np.sqrt(9 - (1 - self.gamma) ** 2)) / (
+                        1 - self.gamma
+                    )
+                    return np.maximum(
+                        np.zeros(len(obs)), 2 / (2 + self.gamma) * (obs - obs_star)
+                    )
+
+            elif self.payment_rule == "NZ":
+                return np.maximum(
+                    np.zeros(len(obs)),
+                    np.log(self.gamma + (1 - self.gamma) * obs) / (1 - self.gamma) + 1,
+                )
+
+            elif self.payment_rule == "NB":
+                if self.gamma == 1:
+                    return 1 / 2 * obs
+                else:
+                    return (
+                        1
+                        / (1 - self.gamma)
+                        * (np.log(2) - np.log(2 - (1 - self.gamma) * obs))
+                    )
+
+            else:
+                raise ValueError("BNE not available: payment rule unknown")
+
+        else:
+            raise ValueError("BNE only for local (L) or global (G) bidder.")
