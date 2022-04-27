@@ -35,7 +35,7 @@ def compute_l2_norm(mechanism, strategies, n_obs):
         else:
             l2_norm[i] = np.sqrt(1 / n_obs * ((bids - bne) ** 2).sum())
 
-        return l2_norm
+    return l2_norm
 
 
 def compute_utility(mechanism, strategies, n_obs):
@@ -74,10 +74,10 @@ def compute_utility(mechanism, strategies, n_obs):
         bne[idx] = bids
         util_vs_bne[i] = mechanism.utility(obs[idx], bne, idx).mean()
 
-        # compute utility loss
-        util_loss = {i: 1 - util_vs_bne[i] / util_bne[i] for i in strategies}
+    # compute utility loss
+    util_loss = {i: 1 - util_vs_bne[i] / util_bne[i] for i in strategies}
 
-        return util_bne, util_vs_bne, util_loss
+    return util_bne, util_vs_bne, util_loss
 
 
 def compute_util_loss_scaled(mechanism_scaled, game_scaled, strategies_scaled):
