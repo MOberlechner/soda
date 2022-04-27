@@ -1,0 +1,8 @@
+name: 'llg_auction_nvcg_gamma1_lose'
+bidder: ['L', 'L', 'G']
+o_space: {'L': [0.0 ,1.0], 'G':[0.0, 2.0]}
+a_space: {'L': [0.0 ,1.0], 'G':[0.0, 2.0]}
+param_prior: {'distribution':'uniform', 'gamma': 0.1}
+param_util: {'payment_rule': 'NVCG', 'tie_breaking': 'lose'}
+n: 64
+m: 64
