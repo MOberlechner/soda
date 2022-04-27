@@ -57,6 +57,7 @@ if __name__ == "__main__":
         mechanism, game, strategies = create_setting(setting, cfg)
         time_init = time() - t0
 
+        print('Computations for experiment: "' + experiment + '" started!')
         # run soda
         for r in range(runs):
             t0 = time()
