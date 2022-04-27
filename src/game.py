@@ -10,6 +10,15 @@ import numpy as np
 
 class Game:
     def __init__(self, mechanism, n: int, m: int):
+        """Given a mechanism and number of discretization points, we can create approximation game by
+        discretizating the respective spaces.
+
+        Parameters
+        ----------
+        mechanism : class, mechanism defines auction game
+        n : int, number of discretization points in type space
+        m : int, number of discretization points in action space
+        """
 
         self.name = mechanism.name
         self.bidder = mechanism.bidder
@@ -20,7 +29,7 @@ class Game:
 
         # discrete action and observation space
         self.o_discr = {
-            i: discr_spaces(mechanism.o_space[i], n, midpoint=False)
+            i: discr_spaces(mechanism.o_space[i], n, midpoint=True)
             for i in self.set_bidder
         }
         self.a_discr = {

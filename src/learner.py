@@ -242,6 +242,3 @@ class SODA:
                     + [np.ones([game.n] * (dim_o * n_bidder))],
                     optimize="optimal"
                 )[0]
-
-
-# --------------------------------------- FIRST ORDER STATISTICS ----------------------------------------------------- #

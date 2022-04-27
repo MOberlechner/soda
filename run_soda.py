@@ -35,12 +35,11 @@ def run_soda(mechanism, game, strategies):
 
 if __name__ == "__main__":
 
-    setting = "contest_game"
+    setting = "llg_auction"
     experiments_list = [
-        "tullock_contest_3_val_0.5",
-        "tullock_contest_3_val_1",
-        "tullock_contest_3_val_2",
-        "tullock_contest_3_val_5",
+        "llg_auction_nz_gamma1_lose",
+        "llg_auction_nz_gamma2_lose",
+        "llg_auction_nz_gamma3_lose",
     ]
 
     path = "experiment/" + setting + "/"

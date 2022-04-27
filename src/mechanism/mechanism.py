@@ -20,7 +20,7 @@ class Mechanism:
         bidder: List[str],
         o_space: Dict[str, List],
         a_space: Dict[str, List],
-        param_prior: Dict[str, Dict],
+        param_prior: Dict[str, str],
     ):
         """
 

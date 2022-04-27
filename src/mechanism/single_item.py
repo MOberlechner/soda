@@ -15,10 +15,10 @@ class SingleItemAuction(Mechanism):
         bidder: List[str],
         o_space: Dict[str, List],
         a_space: Dict[str, List],
-        prior: str,
+        param_prior: Dict[str, str],
         param_util: Dict,
     ):
-        super().__init__(bidder, o_space, a_space, prior)
+        super().__init__(bidder, o_space, a_space, param_prior)
         self.name = "single_item"
         self.param_util = param_util
         self.payment_rule = param_util["payment_rule"]
