@@ -8,27 +8,32 @@ from src.game import discr_interval
 
 class Strategy:
     def __init__(self, agent, game):
-        """
-        Create strategy. Dimensions etc. is defined by game
+        """Create strategy. Parameters are given by respective game.
 
         Parameters
         ----------
         agent : str, name of repr. bidder
         game : class Game, approximation game
         """
+
         # name of the bidder
         self.agent = agent
+
         # observation and action space
         self.o_discr = game.o_discr[agent]
         self.a_discr = game.a_discr[agent]
+
         # number of discretization points
         self.n = len(self.o_discr)
         self.m = len(self.a_discr)
+
         # dimension of spaces
         self.dim_o = 1 if len(self.o_discr.shape) == 1 else self.o_discr.shape[0]
         self.dim_a = 1 if len(self.a_discr.shape) == 1 else self.a_discr.shape[0]
+
         # prior (marginal) distribution
         self.prior = game.prior[agent]
+
         # strategy
         self.x = np.ones(tuple([game.n] * self.dim_o + [game.m] * self.dim_a)) / (
             game.n ** self.dim_o * game.m * self.dim_a

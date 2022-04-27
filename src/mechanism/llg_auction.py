@@ -74,28 +74,29 @@ class LLGAuction(Mechanism):
         tie_local = (
             bids[2]
             == bids[:2].sum(axis=0)
-            * {"random": 1.0, "local": 0.0, "lose": 2.0}[self.tie_breaking]
+            * {"random": 0.5, "local": 0.0, "lose": 1.0}[self.tie_breaking]
         )
         tie_global = (
             bids[2]
             == bids[:2].sum(axis=0)
-            * {"random": 1.0, "local": 2.0, "lose": 2.0}[self.tie_breaking]
+            * {"random": 0.5, "local": 1.0, "lose": 1.0}[self.tie_breaking]
         )
 
         # determine payoff - global bidder (idx = 2)
         if idx == 2:
             win = bids[2] >= bids[:2].sum(axis=0)
-            return win * (1 - 0.5 * tie_global) * (obs - bids[:2].sum(axis=0))
+            return win * (1 - tie_global) * (obs - bids[:2].sum(axis=0))
 
         # determine payoff - local bidder (idx = 1,2)
         else:
+            # Nearest-Zero (Proxy Rule)
             if self.payment_rule == "NZ":
-                # Nearest-Zero (Proxy Rule)
+
                 win_a = bids[2] <= 2 * bids[:2].min(axis=0)
                 win_b = (2 * bids[:2].min(axis=0) < bids[2]) & (
                     bids[2] <= bids[:2].sum(axis=0)
                 )
-                return (1 - 0.5 * tie_local) * (
+                return (1 - tie_local) * (
                     win_a * (obs - 0.5 * bids[2])
                     + win_b
                     * (
@@ -108,31 +109,27 @@ class LLGAuction(Mechanism):
                     )
                 )
 
+            # Nearest-VCG Rule
             elif self.payment_rule == "NVCG":
-                # Nearest-VCG Rule
+
                 win = bids[2] <= bids[:2].sum(axis=0)
-                tie = bids[2] == bids[:2].sum(axis=0) if self.tie_breaking else 0 * win
-                # compute VCG payments
-                p_vcg = {
+                payments_vcg = {
                     0: -bids[1] + np.maximum(bids[1], bids[2]),
                     1: -bids[0] + np.maximum(bids[0], bids[2]),
                 }
+                delta = 0.5 * (bids[2] - payments_vcg[0] - payments_vcg[1])
+                return win * (1 - tie_local) * (obs - payments_vcg[idx] - delta)
 
-                delta = 0.5 * (bids[2] - p_vcg[0] - p_vcg[1])
-                return win * (1 - 0.5 * tie) * (obs - p_vcg[idx] - delta)
-
+            # Nearest-Bid Rule
             elif self.payment_rule == "NB":
-                # Nearest-Bid Rule
+
                 win_a = bids[2] <= bids[:2].max(axis=0) - bids[:2].min(axis=0)
                 win_b = (bids[2] > bids[:2].max(axis=0) - bids[:2].min(axis=0)) & (
                     bids[2] <= bids[:2].sum(axis=0)
                 )
-                tie = (
-                    bids[2] == bids[:2].sum(axis=0) if self.tie_breaking else 0 * win_a
-                )
 
                 delta = 0.5 * (bids[:2].sum(axis=0) - bids[2])
-                return (1 - 0.5 * tie) * (
+                return (1 - tie_local) * (
                     win_a
                     * (obs - np.where(bids[idx] == bids[:2].max(axis=0), bids[2], 0))
                     + win_b * (obs - bids[idx] + delta)

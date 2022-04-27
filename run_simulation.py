@@ -29,7 +29,7 @@ def run_sim(
         mechanism_scaled, game_scaled, strategies_scaled = create_setting(setting, cfg)
         if not mechanism.own_gradient:
             game_scaled.get_utility(mechanism_scaled)
-            print('Utilties for experiments computed!')
+            print("Utilties for experiments computed!")
 
     for r in range(runs):
 
@@ -67,17 +67,15 @@ def run_sim(
                     util_loss_approx,
                     path,
                 )
-    print(strategies_scaled[i].n)
 
 
 if __name__ == "__main__":
 
-    setting = "contest_game"
+    setting = "llg_auction"
     experiments_list = [
-        "tullock_contest_3_val_0.5",
-        "tullock_contest_3_val_1",
-        "tullock_contest_3_val_2",
-        "tullock_contest_3_val_5",
+        "llg_auction_nz_gamma1_lose",
+        "llg_auction_nz_gamma2_lose",
+        "llg_auction_nz_gamma3_lose",
     ]
 
     path = "experiment/" + setting + "/"
