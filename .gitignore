@@ -119,7 +119,6 @@ dmypy.json
 /src/test/
 /src/test/
 /test/
-/experiment/
 
 # numpy (results)
 .npy
