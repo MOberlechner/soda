@@ -43,7 +43,7 @@ class LLGAuction(Mechanism):
             raise ValueError('choose either ["L","L","G"] or  ["L1","L2","G"] ')
 
     def utility(self, obs: np.ndarray, bids: np.ndarray, idx: int):
-        """ Payoff function for first price sealed bid auctons
+        """Payoff function for first price sealed bid auctons
 
         Parameters
         ----------

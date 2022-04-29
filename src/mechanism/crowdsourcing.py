@@ -11,7 +11,7 @@ from .mechanism import Mechanism
 
 
 class Crowdsourcing(Mechanism):
-    """ Crowdsourcing - All-Pay Auction with several prices. Valuations of all prices sum up to one.
+    """Crowdsourcing - All-Pay Auction with several prices. Valuations of all prices sum up to one.
 
     prices: list,  of prices in decreasing order, number of prices <= number of bidders
     param_util: dict, contains "tiebreaking"-rule and (optional) "util_type" (cost (default) or valuation)
@@ -45,7 +45,7 @@ class Crowdsourcing(Mechanism):
             raise ValueError("Prices have to add up to one")
 
     def utility(self, obs: np.ndarray, bids: np.ndarray, idx: int):
-        """ Crowdsourcing Contest: Given Prices [p_1, p_2, ..., p_N] (in decrasing order with sum p_i = 1), the bidder
+        """Crowdsourcing Contest: Given Prices [p_1, p_2, ..., p_N] (in decrasing order with sum p_i = 1), the bidder
         wins the price corresponding to his or her rank. Tie-breaking rule is random
 
 
@@ -128,7 +128,7 @@ class Crowdsourcing(Mechanism):
             raise ValueError("util_type in param_util unknown")
 
     def compute_gradient(self, strategies, game, agent: str):
-        """ Simplified computation of gradient for i.i.d. bidders and tie-breaking "lose"
+        """Simplified computation of gradient for i.i.d. bidders and tie-breaking "lose"
 
         Parameters
         ----------
@@ -185,9 +185,9 @@ class Crowdsourcing(Mechanism):
 
             bids_bne = self.prices[0] * (
                 self.n_bidder - 1
-            ) / self.n_bidder * obs ** self.n_bidder + self.prices[1] * (
+            ) / self.n_bidder * obs**self.n_bidder + self.prices[1] * (
                 (self.n_bidder - 2) * obs ** (self.n_bidder - 1)
-                - (self.n_bidder - 1) ** 2 / self.n_bidder * obs ** self.n_bidder
+                - (self.n_bidder - 1) ** 2 / self.n_bidder * obs**self.n_bidder
             )
             return bids_bne
 

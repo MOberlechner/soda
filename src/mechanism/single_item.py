@@ -25,7 +25,7 @@ class SingleItemAuction(Mechanism):
         self.risk = param_util["risk"] if "risk" in param_util else 1.0
 
     def utility(self, obs: np.ndarray, bids: np.ndarray, idx: int):
-        """ Payoff function for first price sealed bid auctons
+        """Payoff function for first price sealed bid auctons
 
         Parameters
         ----------

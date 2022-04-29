@@ -42,7 +42,7 @@ class Mechanism:
         self.own_gradient = False
 
     def draw_values(self, n_vals: int):
-        """ Valuations are drawn according to the given prior. If agents have different kind of priors, i.e., not only
+        """Valuations are drawn according to the given prior. If agents have different kind of priors, i.e., not only
         different intervals, than this has to be implemented separately in the corresponding mechanism
 
         Parameters

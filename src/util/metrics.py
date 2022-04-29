@@ -4,18 +4,18 @@ from src.learner import SODA
 
 
 def compute_l2_norm(mechanism, strategies, n_obs):
-    """ Compute L2 distance between computed strategies and BNE
+    """Compute L2 distance between computed strategies and BNE
 
-    Parameters
-    ----------
-    mechanism : class
-    strategies : class
-    n_obs : int, number of observations sampled
+        Parameters
+        ----------
+        mechanism : class
+        strategies : class
+        n_obs : int, number of observations sampled
 
-    Returns
-    -------
-    dict, l2 norm for each strategy
-ö
+        Returns
+        -------
+        dict, l2 norm for each strategy
+    ö
     """
 
     l2_norm = {}
@@ -39,7 +39,7 @@ def compute_l2_norm(mechanism, strategies, n_obs):
 
 
 def compute_utility(mechanism, strategies, n_obs):
-    """ Compute utilities and utility loss when playing computed strategies against BNE
+    """Compute utilities and utility loss when playing computed strategies against BNE
 
     Parameters
     ----------
@@ -81,7 +81,7 @@ def compute_utility(mechanism, strategies, n_obs):
 
 
 def compute_util_loss_scaled(mechanism_scaled, game_scaled, strategies_scaled):
-    """ Compute Utility Loss
+    """Compute Utility Loss
 
     Parameters
     ----------

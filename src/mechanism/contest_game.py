@@ -25,7 +25,7 @@ class ContestGame(Mechanism):
         self.param_csf = param_csf
 
     def utility(self, obs: np.ndarray, bids: np.ndarray, idx: int):
-        """ We consider different contest success functions
+        """We consider different contest success functions
         Perfectly Discriminiating Contests
         - allpay: the winner (random tie breaking rule) gets the item and everyone pays own bid
 
@@ -55,7 +55,7 @@ class ContestGame(Mechanism):
             # determine probabilities
             r = self.param_csf
             prob = (bids[idx] ** r + np.where(bids.sum(axis=0) == 0, 1, 0)) / (
-                (bids ** r).sum(axis=0)
+                (bids**r).sum(axis=0)
                 + np.where(bids.sum(axis=0) == 0, self.n_bidder, 0)
             )
             return prob - obs * bids[idx]
@@ -64,7 +64,7 @@ class ContestGame(Mechanism):
             # determine probabilities
             r = self.param_csf
             prob = (bids[idx] ** r + np.where(bids.sum(axis=0) == 0, 1, 0)) / (
-                (bids ** r).sum(axis=0)
+                (bids**r).sum(axis=0)
                 + np.where(bids.sum(axis=0) == 0, self.n_bidder, 0)
             )
             return obs * prob - bids[idx]

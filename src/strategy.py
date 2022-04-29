@@ -36,7 +36,7 @@ class Strategy:
 
         # strategy
         self.x = np.ones(tuple([game.n] * self.dim_o + [game.m] * self.dim_a)) / (
-            game.n ** self.dim_o * game.m * self.dim_a
+            game.n**self.dim_o * game.m * self.dim_a
         )
         # utility
         self.utility, self.utility_loss = [], []
@@ -322,7 +322,7 @@ class Strategy:
             raise NotImplementedError
 
     def save(self, name: str, path: str):
-        """ Saves strategy in respective directory
+        """Saves strategy in respective directory
 
         Parameters
         ----------
@@ -332,7 +332,7 @@ class Strategy:
         np.save(path + "strategies/" + name + "_agent_" + self.agent + ".npy", self.x)
 
     def load(self, name: str, path: str):
-        """ Load strategy from respective directory, same naming convention as in save method
+        """Load strategy from respective directory, same naming convention as in save method
 
         Parameters
         ----------
@@ -361,7 +361,7 @@ class Strategy:
             )
 
     def load_scale(self, name: str, path: str, n_scaled: int, m_scaled):
-        """ Load strategy from respective directory, same naming convention as in save method
+        """Load strategy from respective directory, same naming convention as in save method
         Should be used if saved strategy has a lower discretization than the strategy we have
 
         Parameters

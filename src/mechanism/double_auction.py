@@ -108,9 +108,9 @@ class DoubleAuction(Mechanism):
         ):
             c = 2 ** (1 / self.risk) - 1 / 2
             if self.bidder[idx] == "S":
-                return (c - 1 / 2) / (2 * c ** 2 - 1 / 2) + (1 - 1 / (2 * c)) * val
+                return (c - 1 / 2) / (2 * c**2 - 1 / 2) + (1 - 1 / (2 * c)) * val
             else:
-                return (1 - 1 / (2 * c)) / (4 * c ** 2 - 1) + (1 - 1 / (2 * c)) * val
+                return (1 - 1 / (2 * c)) / (4 * c**2 - 1) + (1 - 1 / (2 * c)) * val
 
         elif self.payment_rule == "vcg":
             return val

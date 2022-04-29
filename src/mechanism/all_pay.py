@@ -10,7 +10,7 @@ from .mechanism import Mechanism
 
 
 class AllPay(Mechanism):
-    """ All-pay auction, with parameter param_allpay that determines the cost if bidder wins
+    """All-pay auction, with parameter param_allpay that determines the cost if bidder wins
     param_allpay = 0 : first-price
     param_allpay = 1 : second-price (war of attrition)
     param_allpay in (0,1) : convex combination of both
@@ -170,7 +170,7 @@ class AllPay(Mechanism):
         ):
 
             lamb = self.param_util["lambda"]
-            return 1 / 2 * 1 / (lamb - (lamb - 1) * obs) * obs ** 2
+            return 1 / 2 * 1 / (lamb - (lamb - 1) * obs) * obs**2
 
         else:
             return None

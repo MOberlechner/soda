@@ -82,7 +82,7 @@ if __name__ == "__main__":
     hydra.initialize(config_path="configs/" + setting, job_name="run")
     logging = True
     runs = 10
-    n_obs = int(2 ** 22)
+    n_obs = int(2**22)
     n_scaled = m_scaled = 1024
 
     for experiment in experiments_list:

@@ -7,7 +7,7 @@ from src.strategy import Strategy
 
 
 def create_setting(setting: str, cfg):
-    """ Initialize mechanism, discretized game and strategies
+    """Initialize mechanism, discretized game and strategies
 
     Parameters
     ----------
