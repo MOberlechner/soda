@@ -40,6 +40,7 @@ class Mechanism:
         self.prior = param_prior["distribution"]
         self.param_prior = param_prior
         self.own_gradient = False
+        self.private_values = True  # valuation depends only on own observation
 
     def draw_values(self, n_vals: int):
         """Valuations are drawn according to the given prior. If agents have different kind of priors, i.e., not only
@@ -121,46 +122,9 @@ class Mechanism:
                 ]
             )
 
+        elif self.prior == "affiliated_values":
+            w = np.uniform.rvs(loc=0, scale=1, size=(3, n_vals))
+            return np.array([w[0] + w[2], w[1] + w[2]])
+
         else:
             raise ValueError('prior "' + self.prior + '" not implement')
-
-    def prior_pdf(self, obs: np.ndarray, agent: str):
-
-        if self.prior == "uniform":
-            return uniform.pdf(
-                obs,
-                loc=self.o_space[agent][0],
-                scale=self.o_space[agent][-1] - self.o_space[agent][0],
-            )
-
-        if self.prior == "uniform_bi":
-            eta = 0.9
-            return eta * uniform.pdf(
-                obs,
-                loc=self.o_space[agent][0],
-                scale=self.o_space[agent][-1] - self.o_space[agent][0],
-            ) + (1 - eta) * uniform.pdf(
-                obs,
-                loc=0.4 * (self.o_space[agent][0] + self.o_space[agent][-1]),
-                scale=0.2 * (self.o_space[agent][-1] - self.o_space[agent][0]),
-            )
-
-        elif self.prior == "gaussian":
-            return norm.pdf(
-                obs, loc=self.param_prior["mu"], scale=self.param_prior["sigma"]
-            )
-
-        elif self.prior == "gaussian_bimodal":
-            eta = 0.5
-            return eta * norm.pdf(obs, loc=0.25, scale=0.1) + (1 - eta) * norm.pdf(
-                obs, loc=0.75, scale=0.1
-            )
-
-        elif self.prior == "powerlaw":
-            power = self.param_prior["power"][agent]
-            return powerlaw.pdf(
-                obs,
-                a=power,
-                loc=self.o_space[agent][0],
-                scale=self.o_space[agent[0]][-1] - self.o_space[agent][0],
-            )

@@ -99,7 +99,7 @@ class DoubleAuction(Mechanism):
             * np.abs(val - payment) ** self.risk
         )
 
-    def bids_bne(self, val: np.ndarray, idx: int):
+    def get_bne(self, agent: str, obs: np.ndarray):
         # check if
         if (
             (self.prior == "uniform")
@@ -107,12 +107,12 @@ class DoubleAuction(Mechanism):
             & (self.n_bidder == 2)
         ):
             c = 2 ** (1 / self.risk) - 1 / 2
-            if self.bidder[idx] == "S":
-                return (c - 1 / 2) / (2 * c**2 - 1 / 2) + (1 - 1 / (2 * c)) * val
+            if agent == "S":
+                return (c - 1 / 2) / (2 * c**2 - 1 / 2) + (1 - 1 / (2 * c)) * obs
             else:
-                return (1 - 1 / (2 * c)) / (4 * c**2 - 1) + (1 - 1 / (2 * c)) * val
+                return (1 - 1 / (2 * c)) / (4 * c**2 - 1) + (1 - 1 / (2 * c)) * obs
 
         elif self.payment_rule == "vcg":
-            return val
+            return obs
         else:
             raise NotImplementedError("No BNE for non-uniform prior implemented.")
