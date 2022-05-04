@@ -165,7 +165,7 @@ class SODA:
     def prepare_grad(self, game, strategies: Dict):
         """
 
-        Parameters<
+        Parameters
         ----------
         game  : class
         strategies : class
@@ -194,7 +194,15 @@ class SODA:
             idx_opp = [i for i in range(n_bidder) if i != idx]
 
             # indices of utility array
-            start = act + val[idx * dim_o : (idx + 1) * dim_o]
+            if game.private_values:
+                # utility depends only on own oversvation
+                start = act + val[idx * dim_o : (idx + 1) * dim_o]
+            elif (not game.private_values) and (not ind):
+                # utility depends on all observations
+                start = act + val
+            else:
+                raise NotImplementedError
+
             # indices of bidder i's strategy
             end = (
                 "->"
