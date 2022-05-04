@@ -3,6 +3,8 @@ from typing import List
 
 import numpy as np
 
+from src.prior import compute_weights, marginal_prior_pdf
+
 # -------------------------------------------------------------------------------------------------------------------- #
 #                                      CLASS GAME : DISCRETIZED AUCTION GAME                                           #
 # -------------------------------------------------------------------------------------------------------------------- #
@@ -26,6 +28,9 @@ class Game:
         self.n_bidder = mechanism.n_bidder
         self.n = n
         self.m = m
+        self.private_values = (
+            mechanism.private_values
+        )  # we distinguish between private and common values
 
         # discrete action and observation space
         self.o_discr = {
@@ -46,7 +51,8 @@ class Game:
 
         for i in self.set_bidder:
             idx = self.bidder.index(i)
-            # create all possible bids
+
+            # create all possible bids (action space is one-dimensional)
             bids = np.array(
                 [
                     np.array(
@@ -58,55 +64,33 @@ class Game:
                     for k in range(self.n_bidder)
                 ]
             )
-            # all valuations
-            valuations = self.o_discr[i]
 
-            # compute utility
-            self.utility[i] = (
-                mechanism.utility(valuations, bids, idx)
-                .transpose()
-                .reshape(tuple([self.m] * self.n_bidder + [self.n]))
-            )
+            if self.private_values:
+                # valuation only depends on own observation
+                valuations = self.o_discr[i]
+                self.utility[i] = (
+                    mechanism.utility(valuations, bids, idx)
+                    .transpose()
+                    .reshape(tuple([self.m] * self.n_bidder + [self.n]))
+                )
+
+            elif (not self.private_values) and (self.weights is not None):
+                # affiliated values model with correlated observations and common value
+                valuations = self.o_discr[i]
+                self.utility[i] = (
+                    mechanism.utility(valuations, bids, idx)
+                    .transpose()
+                    .reshape(tuple([self.m] * self.n_bidder + [self.n] * self.n_bidder))
+                )
+            else:
+                raise NotImplementedError
 
     def get_prior(self, mechanism, agent):
-        p = mechanism.prior_pdf(self.o_discr[agent], agent)
+        p = marginal_prior_pdf(mechanism, self.o_discr[agent], agent)
         return p / p.sum()
 
     def get_weights(self, mechanism):
-        if "corr" in mechanism.param_prior:
-            if mechanism.prior == "uniform":
-                if mechanism.n_bidder == 2:
-                    # correlated prior with Bernoulli Paramater (according to Ausubel & Baranov 2020)
-                    gamma = mechanism.param_prior["corr"]
-                    weights = np.ones((self.n, self.n)) * (1 - gamma) * 1 / self.n
-                    weights[np.diag_indices(self.n, ndim=2)] = (
-                        gamma * 1 + (1 - gamma) * 1 / self.n
-                    )
-                    weights = weights * self.n
-
-                elif mechanism.name == "llg_auction":
-                    # correlated prior with Bernoulli Paramater (according to Ausubel & Baranov 2020)
-                    gamma = mechanism.param_prior["corr"]
-                    weights = np.ones((self.n, self.n)) * (1 - gamma) * 1 / self.n
-                    weights[np.diag_indices(self.n, ndim=2)] = (
-                        gamma * 1 + (1 - gamma) * 1 / self.n
-                    )
-                    weights = weights * self.n
-                    weights = np.repeat(weights, self.n).reshape(tuple([self.n] * 3))
-
-                else:
-                    raise NotImplementedError(
-                        "Correlation not implemented for this setting"
-                    )
-
-                return weights
-
-            else:
-                raise NotImplementedError(
-                    "Correlation only for uniform prior implemented"
-                )
-        else:
-            return None
+        return compute_weights(self, mechanism)
 
 
 # -------------------------------------------------------------------------------------------------------------------- #

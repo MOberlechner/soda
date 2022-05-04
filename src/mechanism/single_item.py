@@ -23,6 +23,8 @@ class SingleItemAuction(Mechanism):
         self.param_util = param_util
         self.payment_rule = param_util["payment_rule"]
         self.risk = param_util["risk"] if "risk" in param_util else 1.0
+        if self.prior == "affiliated_values":
+            self.private_values = False
 
     def utility(self, obs: np.ndarray, bids: np.ndarray, idx: int):
         """Payoff function for first price sealed bid auctons
@@ -45,12 +47,20 @@ class SingleItemAuction(Mechanism):
             raise ValueError("bidder with index " + str(idx) + " not avaible")
         elif "tie_breaking" not in self.param_util:
             raise ValueError("specify tiebreaking rule")
+        elif "payment_rule" not in self.param_util:
+            raise ValueError("specify payment rule")
 
         # if True: we want each outcome for every observation,  each outcome belongs to one observation
         if obs.shape != bids[idx].shape:
-            obs = obs.reshape(len(obs), 1)
+            if self.private_values:
+                obs = obs.reshape(len(obs), 1)
+            elif self.prior == "affiliated_values":
+                # specifically for two symmetric bidders, TODO: generalize
+                obs = 0.5 * (
+                    obs.reshape(len(obs), 1) + obs.reshape(1, len(obs))
+                ).reshape(len(obs), len(obs), 1)
 
-        # paramater utility
+        # tie_breaking rule
         if "tie_breaking" not in self.param_util:
             self.param_util["tie_breaking"] = "random"
 
@@ -79,7 +89,7 @@ class SingleItemAuction(Mechanism):
         else:
             raise ValueError("payment rule " + self.payment_rule + " not available")
 
-    def get_bne(self, obs: np.ndarray):
+    def get_bne(self, agent: str, obs: np.ndarray):
         if self.prior == "uniform":
             if (self.payment_rule == "first_price") & np.all(
                 [self.o_space[i] == [0, 1] for i in self.set_bidder]
@@ -87,3 +97,10 @@ class SingleItemAuction(Mechanism):
                 return (self.n_bidder - 1) / (self.n_bidder - 1 + self.risk) * obs
             elif self.payment_rule == "second_price":
                 return obs
+        elif self.prior == "affiliated":
+            if (
+                (self.payment_rule == "first_price")
+                & np.all([self.o_space[i] == [0, 2] for i in self.set_bidder])
+                & (self.n_bidder == 2)
+            ):
+                return 2 / 3 * obs
