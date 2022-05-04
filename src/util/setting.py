@@ -21,6 +21,11 @@ def create_setting(setting: str, cfg):
     """
 
     if setting == "single_item":
+        mechanism = SingleItemAuction(
+            cfg.bidder, cfg.o_space, cfg.a_space, cfg.param_prior, cfg.param_util
+        )
+    
+    elif setting == "llg_auction":
         mechanism = LLGAuction(
             cfg.bidder, cfg.o_space, cfg.a_space, cfg.param_prior, cfg.param_util
         )
@@ -52,11 +57,6 @@ def create_setting(setting: str, cfg):
             cfg.param_prior,
             cfg.price,
             cfg.param_util,
-        )
-
-    elif setting == "llg_auction":
-        mechanism = LLGAuction(
-            cfg.bidder, cfg.o_space, cfg.a_space, cfg.param_prior, cfg.param_util
         )
 
     else:
