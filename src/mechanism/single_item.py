@@ -90,6 +90,7 @@ class SingleItemAuction(Mechanism):
             raise ValueError("payment rule " + self.payment_rule + " not available")
 
     def get_bne(self, agent: str, obs: np.ndarray):
+
         if self.prior == "uniform":
             if (self.payment_rule == "first_price") & np.all(
                 [self.o_space[i] == [0, 1] for i in self.set_bidder]
@@ -97,10 +98,14 @@ class SingleItemAuction(Mechanism):
                 return (self.n_bidder - 1) / (self.n_bidder - 1 + self.risk) * obs
             elif self.payment_rule == "second_price":
                 return obs
-        elif self.prior == "affiliated":
+
+        elif self.prior == "affiliated_values":
             if (
                 (self.payment_rule == "first_price")
                 & np.all([self.o_space[i] == [0, 2] for i in self.set_bidder])
                 & (self.n_bidder == 2)
             ):
                 return 2 / 3 * obs
+
+            else:
+                return None

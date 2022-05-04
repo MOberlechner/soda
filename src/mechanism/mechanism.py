@@ -123,7 +123,7 @@ class Mechanism:
             )
 
         elif self.prior == "affiliated_values":
-            w = np.uniform.rvs(loc=0, scale=1, size=(3, n_vals))
+            w = uniform.rvs(loc=0, scale=1, size=(3, n_vals))
             return np.array([w[0] + w[2], w[1] + w[2]])
 
         else:
