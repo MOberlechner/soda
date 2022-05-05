@@ -56,7 +56,6 @@ class SODA:
         # prepare gradients, i.e., compute path and indices
         if not mechanism.own_gradient:
             self.prepare_grad(game, strategies)
-
         # init variables
         convergence = False
         min_max_util_loss, max_util_loss = 1, 1
@@ -110,18 +109,17 @@ class SODA:
             print("Best relative utility loss", round(min_max_util_loss * 100, 3), "%")
 
     def step_rule(self, t: int, grad: np.ndarray, dim_o: int) -> np.ndarray:
-        """
-        Step sizes are not summable. but square-summable
+        """Compute step size:
+        if step_rule is True: step sizes are not summable, but square-summable
+        if step_rule is False: heuristic step size, scaled for each observation
 
-        Parameters
-        ----------
-        t : int, iteration
-        grad : array, gradient - only necessary for step size heuristic
-        dim_o : int, dimension of observation space - only necessary for step size heuristic
+        Args:
+            t (int): current iteration
+            grad (np.ndarray): gradient, necessary if steprule_bool is False (heuristic)
+            dim_o (int): dimension of type space
 
-        Returns
-        -------
-        eta : np.ndarray
+        Returns:
+            np.ndarray: step size eta (either scaler or for each valuation)
         """
 
         if self.steprule_bool:
