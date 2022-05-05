@@ -7,6 +7,25 @@ from tqdm import tqdm
 
 
 class SODA:
+    """Simultanoues Online Dual Averaging applied to discretized game
+
+    Attributes:
+        General
+            max_iter (int): maximal number of iterations
+            tol (float): algorithm stops if relative utility loss is less than tol
+            grad (Dict): contains last computed gradient (np.ndarray) for each agent
+
+        Steprule
+            step_rule (bool): if True we use decreasing, else heuristic step size
+            eta (float): parameter for step rule
+            beta (float): parameter for step rule (if True)
+
+        Gradient (opt_einsum)
+            path (Dict): path for einsum to compute gradient for each agent
+            indices (Dict): indices
+
+    """
+
     def __init__(
         self,
         max_iter: int,
@@ -25,21 +44,16 @@ class SODA:
         self.indices = {}
         self.grad = {}
 
-    def run(self, mechanism, game, strategies: Dict):
-        """Run Simultanous Online Dual Averaging
+    def run(self, mechanism, game, strategies: Dict) -> None:
+        """Runs SODA and updates strategies accordingly
 
-        Parameters
-        ----------
-        mechanism :
-        game :
-        strategies :
-
-        Returns
-        -------
-
+        Args:
+            mechanism: describes auction game
+            game: discretized mechanism
+            strategies (Dict): contains strategies for all agents
         """
 
-        # prepare gradients
+        # prepare gradients, i.e., compute path and indices
         if not mechanism.own_gradient:
             self.prepare_grad(game, strategies)
 
@@ -95,7 +109,7 @@ class SODA:
             print("Current relative utility loss", round(max_util_loss * 100, 3), "%")
             print("Best relative utility loss", round(min_max_util_loss * 100, 3), "%")
 
-    def step_rule(self, t: int, grad: np.ndarray, dim_o: int):
+    def step_rule(self, t: int, grad: np.ndarray, dim_o: int) -> np.ndarray:
         """
         Step sizes are not summable. but square-summable
 
@@ -121,21 +135,16 @@ class SODA:
             scale[scale < 1e-100] = 1e-100
             return self.eta / scale
 
-    def compute_gradient(self, strategies: Dict, game, agent: str):
-        """
-        Compute gradient for player i given a strategy profile and utility array.
-        This operation is based on an optimized version of np.einsum, namely contract
-        (but not sure if difference is significant)
+    def compute_gradient(self, strategies: Dict, game, agent: str) -> np.ndarray:
+        """Computes gradient for agent given a strategyprofile, utilities (and weights)
 
-        Parameters
-        ----------
-        strategies : dict, contains strategies
-        game : Game, discretized auction game
-        agent : str, player i
+        Args:
+            strategies (Dict): contains strategies for agents
+            game (_type_): approximation (discretized) game
+            agent (str): specifies agent
 
-        Returns
-        -------
-        array, gradient of player i
+        Returns:
+            np.ndarray: gradient
         """
 
         opp = game.bidder.copy()
@@ -162,19 +171,16 @@ class SODA:
                 optimize=self.path[agent]
             )
 
-    def prepare_grad(self, game, strategies: Dict):
+    def prepare_grad(self, game, strategies: Dict) -> None:
+        """Computes path and indices used in opt_einsum to compute gradients.
+        Respective attributes are updated.
+
+        Args:
+            game: discretized game
+            strategies (Dict): contains strategies for agents
+
         """
 
-        Parameters
-        ----------
-        game  : class
-        strategies : class
-
-        Returns
-        -------
-        indices : str, contains indices as strings for einsum/contract for each bidder
-        path : dict, contains path for
-        """
         ind = game.weights is None
 
         dim_o, dim_a = (
