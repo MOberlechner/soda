@@ -4,6 +4,7 @@ from src.mechanism.contest_game import ContestGame
 from src.mechanism.crowdsourcing import Crowdsourcing
 from src.mechanism.llg_auction import LLGAuction
 from src.mechanism.single_item import SingleItemAuction
+from src.mechanism.split_award import SplitAwardAuction
 from src.strategy import Strategy
 
 
@@ -24,7 +25,7 @@ def create_setting(setting: str, cfg):
         mechanism = SingleItemAuction(
             cfg.bidder, cfg.o_space, cfg.a_space, cfg.param_prior, cfg.param_util
         )
-    
+
     elif setting == "llg_auction":
         mechanism = LLGAuction(
             cfg.bidder, cfg.o_space, cfg.a_space, cfg.param_prior, cfg.param_util
@@ -57,6 +58,11 @@ def create_setting(setting: str, cfg):
             cfg.param_prior,
             cfg.price,
             cfg.param_util,
+        )
+
+    elif setting == "split_award":
+        mechanism = SplitAwardAuction(
+            cfg.bidder, cfg.o_space, cfg.a_space, cfg.param_prior, cfg.param_util
         )
 
     else:
