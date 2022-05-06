@@ -1,4 +1,5 @@
 from itertools import product
+from sys import implementation
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -88,6 +89,8 @@ class Strategy:
                         for i in np.linspace(0, 1, n)
                     ]
                 )
+            else:
+                raise NotImplementedError("truthful only implement for 1-dim case")
 
         elif init_method == "truthful_inv":
             if self.dim_o == self.dim_a == 1:
@@ -124,16 +127,14 @@ class Strategy:
 
     # --------------------------------------- METHODS USED FOR COMPUTATION ------------------------------------------- #
 
-    def best_response(self, gradient: np.ndarray):
-        """
+    def best_response(self, gradient: np.ndarray) -> np.ndarray:
+        """Compute Best response given the gradient
 
-        Parameters
-        ----------
-        gradient : np.ndarray
+        Args:
+            gradient (np.ndarray): gradient given current strategy profile
 
-        Returns
-        -------
-        np.ndarray, best response
+        Returns:
+            np.ndarray: best response
         """
         # number of discretization points observations
         n = self.x.shape[0]
@@ -257,7 +258,9 @@ class Strategy:
             return bids
 
         else:
-            raise NotImplementedError
+            raise NotImplementedError(
+                "Bids can only be sampled in the one-dimensional case"
+            )
 
     def plot(self, more: bool = False, beta: np.ndarray = None):
         """
@@ -271,55 +274,77 @@ class Strategy:
         label_size = 13
         title_size = 14
 
-        if more:
-            # compute distance to last iterate
-            dist = [np.linalg.norm(s - self.x) for s in self.history[:-1]]
-            # plot utility loss and distance (utility loss plot maximal until 100%)
-            plt.figure(figsize=(10, 5))
-            plt.subplot(1, 2, 2)
-            plt.plot(np.minimum(self.utility_loss, 1), label="utility loss", color="k")
-            plt.plot(dist, label="dist. last iterate", color="k", linestyle="--")
-            plt.yscale("log")
-            plt.grid(axis="y")
-            plt.legend()
-
-            # create subplit for strategy
-            plt.subplot(1, 2, 1)
-
-        if self.dim_o == self.dim_a == 1:
-
-            # plot strategy
-            plt.imshow(
-                self.x.T / self.margin(),
-                extent=(
-                    self.o_discr[0],
-                    self.o_discr[-1],
-                    self.a_discr[0],
-                    self.a_discr[-1],
-                ),
-                origin="lower",
-                vmin=0,
-                cmap="Greys",
-                aspect="auto",
-            )
-            plt.ylabel("bids b", fontsize=label_size)
-            plt.xlabel("observations v", fontsize=label_size)
-            plt.title(
-                'Distributional Strategy Player "' + self.agent + '"',
-                fontsize=title_size,
-            )
-
-            # plot BNE
-            if beta is not None:
-                x = np.linspace(self.o_discr[0], self.o_discr[-1], len(beta))
-                plt.plot(x, beta, linestyle="--", color="r", label="analyt. BNE")
+        if (self.dim_o == 1) and (self.dim_a <= 2):
+            if more:
+                num_plots = 1 + self.dim_a
+                # compute distance to last iterate
+                dist = [np.linalg.norm(s - self.x) for s in self.history[:-1]]
+                # plot utility loss and distance (utility loss plot maximal until 100%)
+                plt.figure(figsize=(5 * num_plots, 5))
+                plt.subplot(1, num_plots, num_plots)
+                plt.plot(
+                    np.minimum(self.utility_loss, 1), label="utility loss", color="k"
+                )
+                plt.plot(dist, label="dist. last iterate", color="k", linestyle="--")
+                plt.yscale("log")
+                plt.grid(axis="y")
                 plt.legend()
+            else:
+                num_plots = self.dim_a
+                plt.figure(figsize=(5 * num_plots, 5))
 
-            plt.show()
+            if self.dim_a == 1:
+
+                # plot strategy
+                plt.subplot(1, num_plots, 1)
+                plt.imshow(
+                    self.x.T / self.margin(),
+                    extent=(
+                        self.o_discr[0],
+                        self.o_discr[-1],
+                        self.a_discr[0],
+                        self.a_discr[-1],
+                    ),
+                    origin="lower",
+                    vmin=0,
+                    cmap="Greys",
+                    aspect="auto",
+                )
+                plt.ylabel("bids b", fontsize=label_size)
+                plt.xlabel("observations v", fontsize=label_size)
+                plt.title(
+                    'Distributional Strategy Player "' + self.agent + '"',
+                    fontsize=title_size,
+                )
+
+                # plot BNE
+                if beta is not None:
+                    x = np.linspace(self.o_discr[0], self.o_discr[-1], len(beta))
+                    plt.plot(x, beta, linestyle="--", color="r", label="analyt. BNE")
+                    plt.legend()
+
+                plt.show()
+
+            else:
+                for i in range(2):
+                    plt.subplot(1, num_plots, i + 1)
+                    s = self.x.sum(axis=2 - i)
+                    plt.imshow(
+                        s.T / s.sum(axis=1),
+                        extent=(
+                            self.o_discr[0],
+                            self.o_discr[-1],
+                            self.a_discr[i][0],
+                            self.a_discr[i][-1],
+                        ),
+                        origin="lower",
+                        vmin=0,
+                        cmap="Greys",
+                        aspect="auto",
+                    )
 
         else:
-            print("Plot for this strategy not available")
-            raise NotImplementedError
+            raise NotImplementedError("Plot not available for dim_o > 1 or dim_a > 2")
 
     def save(self, name: str, path: str):
         """Saves strategy in respective directory
