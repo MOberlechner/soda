@@ -84,4 +84,23 @@ class SplitAwardAuction(Mechanism):
         ) * win_single * 1 / num_winner_single * (bids_single[idx] - obs)
 
     def get_bne(self, agent: str, obs: np.ndarray):
-        pass
+        # only valid for standard setting (see configs)
+        split_bid_max = (1 - self.scale) * self.o_space[agent][0]
+        return np.array(
+            [
+                split_bid_max
+                + (
+                    split_bid_max
+                    - self.o_space[agent][1]
+                    * self.scale
+                    * (obs - self.o_space[agent][0])
+                    / (self.o_space[agent][1] - self.o_space[agent][0])
+                )
+                / (
+                    1
+                    - (obs - self.o_space[agent][0])
+                    / (self.o_space[agent][1] - self.o_space[agent][0])
+                ),
+                split_bid_max * np.ones(obs.shape),
+            ]
+        )
