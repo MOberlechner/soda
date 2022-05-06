@@ -59,8 +59,8 @@ class SingleItemAuction(Mechanism):
                 obs = obs.reshape(len(obs), 1)
             elif self.values == "affiliated":
                 obs = 0.5 * (
-                    obs.reshape(len(obs), 1) + obs.reshape(1, len(obs))
-                ).reshape(len(obs), len(obs), 1)
+                    obs[0].reshape(len(obs[0]), 1) + obs[1].reshape(1, len(obs[1]))
+                ).reshape(len(obs[0]), len(obs[1]), 1)
             else:
                 raise ValueError('value model "{}" unknown'.format(self.values))
 
@@ -104,15 +104,7 @@ class SingleItemAuction(Mechanism):
                 return obs
 
         elif self.prior == "affiliated_values":
-            if (
-                (self.payment_rule == "first_price")
-                & np.all([self.o_space[i] == [0, 2] for i in self.set_bidder])
-                & (self.n_bidder == 2)
-            ):
-                return 2 / 3 * obs
-
-            else:
-                return None
+            return 2 / 3 * obs
 
         elif self.prior == "common_value":
             return 2 * obs / (2 + obs)
