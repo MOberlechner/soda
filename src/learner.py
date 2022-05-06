@@ -44,18 +44,25 @@ class SODA:
         self.indices = {}
         self.grad = {}
 
-    def run(self, mechanism, game, strategies: Dict) -> None:
+    def run(self, mechanism, game, strategies: Dict, fast: bool) -> None:
         """Runs SODA and updates strategies accordingly
 
         Args:
             mechanism: describes auction game
             game: discretized mechanism
             strategies (Dict): contains strategies for all agents
+            fast (bool):
         """
 
         # prepare gradients, i.e., compute path and indices
         if not mechanism.own_gradient:
             self.prepare_grad(game, strategies)
+
+        # fast
+        if fast:
+            utility = game.utility.copy()
+            weights = game.weights.copy()
+
         # init variables
         convergence = False
         min_max_util_loss, max_util_loss = 1, 1
@@ -72,7 +79,12 @@ class SODA:
                 if mechanism.own_gradient:
                     self.grad[i] = mechanism.compute_gradient(strategies, game, i)
                 else:
-                    self.grad[i] = self.compute_gradient(strategies, game, i)
+                    if not fast:
+                        self.grad[i] = self.compute_gradient(strategies, game, i)
+                    else:
+                        self.grad[i] = self.compute_gradient_fast(
+                            mechanism.bidder, strategies, utility, weights, i
+                        )
 
             # update utility, utility loss, history
             for i in game.set_bidder:
@@ -166,6 +178,49 @@ class SODA:
                 *[game.utility[agent]]
                 + [strategies[i].x for i in opp]
                 + [game.weights],
+                optimize=self.path[agent]
+            )
+
+    def compute_gradient_fast(
+        self,
+        list_bidder: List,
+        strategies: Dict,
+        utility: Dict,
+        weights: np.ndarray,
+        agent: str,
+    ) -> np.ndarray:
+        """Computes gradient for agent given a strategyprofile, utilities (and weights)
+        Bc of reasons unknown to me, it seems to be faster utilities and weights are stored separately and put in, instead of using the class game with the attributes
+
+        Args:
+            strategies (Dict): contains strategies for agents
+            utility (Dict): contains utilities (np.ndarrays) for each agent
+            weights (np.ndarray): correlation weights
+            agent (str): specifies agent
+
+        Returns:
+            np.ndarray: gradient
+        """
+
+        opp = list_bidder.copy()
+        opp.remove(agent)
+
+        # bidders observations/valuations are independent
+        if weights is None:
+            return contract(
+                self.indices[agent],
+                *[utility[agent]]
+                + [
+                    strategies[i].x.sum(axis=tuple(range(strategies[i].dim_o)))
+                    for i in opp
+                ],
+                optimize=self.path[agent]
+            )
+        # bidders observations/valuations are correlated
+        else:
+            return contract(
+                self.indices[agent],
+                *[utility[agent]] + [strategies[i].x for i in opp] + [weights],
                 optimize=self.path[agent]
             )
 
