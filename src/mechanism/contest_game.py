@@ -19,7 +19,7 @@ class ContestGame(Mechanism):
         csf: str = "ratio_form",
         param_csf: float = 0.0,
     ):
-        super().__init__(bidder, o_space, a_space, param_prior)
+        super().__init__(bidder, o_space, a_space, param_prior, param_util)
         self.name = "contest_game"
         self.csf = csf
         self.param_csf = param_csf

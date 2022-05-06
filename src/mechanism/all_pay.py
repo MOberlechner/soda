@@ -26,10 +26,9 @@ class AllPay(Mechanism):
         util_setting: str,
         param_util: Dict[str, float],
     ):
-        super().__init__(bidder, o_space, a_space, param_prior)
+        super().__init__(bidder, o_space, a_space, param_prior, param_util)
         self.name = "all_pay"
         self.util_setting = util_setting
-        self.param_util = param_util
 
     def utility(self, obs: np.ndarray, bids: np.ndarray, idx: int):
         """

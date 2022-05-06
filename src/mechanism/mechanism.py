@@ -9,10 +9,20 @@ from scipy.stats import norm, powerlaw, uniform
 
 
 class Mechanism:
-    """Mechanism
+    """Mechanism defines the underlying continuous Bayesian (auction) game
 
-    A Mechanism object defines the continuous auction game. Are relevant properties of the incomplete information
-    game G = (I, O, A, u , F) as well as some basic methods as draw_valuations, should be contained.
+    Attributes:
+        General
+            bidder (List) : contains all agents (str)
+            set_bidder (List): contains all unique agents (model sharing)
+            o_space (Dict): contains limits of observation space [a,b] for agents
+            a_space (Dict): contains limits of action space [a,b] for agents
+            param_prior (Dict): contains parameters for prior, e.g., distribution and parameter
+
+        Speficiations of Mechanism
+            own_gradient (boolean): if true mechanism contains own function to compute gradient
+            private_values (boolean): u
+
     """
 
     def __init__(
@@ -20,40 +30,34 @@ class Mechanism:
         bidder: List[str],
         o_space: Dict[str, List],
         a_space: Dict[str, List],
-        param_prior: Dict[str, str],
+        param_prior: Dict,
+        param_util: Dict,
     ):
-        """
-
-        Parameters
-        ----------
-        bidder : list, of bidders, e.g. ['1', '2']
-        o_space : dict, that contains lists with lower and upper bounds of intervals ofr each bidder
-        a_space : dict, that contains lists with lower and uppejupr bounds of intervals ofr each bidder
-        param_prior : dict, that contains parameters in forms of dictionaries for each bidder
-        """
-
+        # bidder
         self.bidder = bidder
         self.n_bidder = len(bidder)
         self.set_bidder = list(set(bidder))
+        # type and action space
         self.o_space = o_space
         self.a_space = a_space
+        # prior
         self.prior = param_prior["distribution"]
         self.param_prior = param_prior
+        # further specifications
+        self.param_util = param_util
         self.own_gradient = False
         self.private_values = True  # valuation depends only on own observation
 
-    def draw_values(self, n_vals: int):
-        """Valuations are drawn according to the given prior. If agents have different kind of priors, i.e., not only
-        different intervals, than this has to be implemented separately in the corresponding mechanism
+    def draw_values(self, n_vals: int) -> np.ndarray:
+        """samples observations (and valuations) for each agent according to the prior
 
-        Parameters
-        ----------
-        n_vals :
+        Args:
+            n_vals (int): number of observations per agent
 
-        Returns
-        -------
-
+        Returns:
+            np.ndarray: array that contains observations for each bidder (optional: common value with highest index)
         """
+
         if isinstance(self.prior, dict):
             raise NotImplementedError(
                 "Different priors for different bidders are not yet implemented"
@@ -93,7 +97,7 @@ class Mechanism:
                         ]
                     )
                 else:
-                    raise NotImplementedError()
+                    raise NotImplementedError
 
         elif self.prior == "gaussian":
             return np.array(
@@ -125,6 +129,12 @@ class Mechanism:
         elif self.prior == "affiliated_values":
             w = uniform.rvs(loc=0, scale=1, size=(3, n_vals))
             return np.array([w[0] + w[2], w[1] + w[2]])
+
+        elif self.prior == "common_values":
+            w = uniform.rvs(loc=0, scale=1, size=(self.n_bidder + 1, n_vals))
+            return np.array(
+                [2 * w[i] * w[3] for i in range(self.n_bidder)] + [w[self.n_bidder]]
+            )
 
         else:
             raise ValueError('prior "' + self.prior + '" not implement')

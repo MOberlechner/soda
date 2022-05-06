@@ -27,7 +27,7 @@ class Crowdsourcing(Mechanism):
         prices: List[float],
         param_util: Dict[str, float],
     ):
-        super().__init__(bidder, o_space, a_space, param_prior)
+        super().__init__(bidder, o_space, a_space, param_prior, param_util)
         self.name = "crowdsourcing"
         self.prices = np.array(
             prices

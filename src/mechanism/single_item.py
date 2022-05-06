@@ -16,14 +16,14 @@ class SingleItemAuction(Mechanism):
         o_space: Dict[str, List],
         a_space: Dict[str, List],
         param_prior: Dict[str, str],
-        param_util: Dict,
+        param_util: Dict[str],
     ):
-        super().__init__(bidder, o_space, a_space, param_prior)
+        super().__init__(bidder, o_space, a_space, param_prior, param_util)
         self.name = "single_item"
-        self.param_util = param_util
+
         self.payment_rule = param_util["payment_rule"]
         self.risk = param_util["risk"] if "risk" in param_util else 1.0
-        if self.prior == "affiliated_values":
+        if self.prior == "affiliated_values" or self.prior == "common_value":
             self.private_values = False
 
     def utility(self, obs: np.ndarray, bids: np.ndarray, idx: int):
