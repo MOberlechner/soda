@@ -10,15 +10,11 @@ from src.util.setting import create_setting
 def run_soda(mechanism, game, strategies):
 
     # parameter learner
-    max_iter = 3000
-    tol = 1e-4
+    max_iter = 2000
+    tol = 5e-4
     steprule_bool = True
-    eta = 10
+    eta = 20
     beta = 1 / 20
-
-    # compute utilities
-    if not mechanism.own_gradient:
-        game.get_utility(mechanism)
 
     # create learner
     soda = SODA(max_iter, tol, steprule_bool, eta, beta)
@@ -28,19 +24,15 @@ def run_soda(mechanism, game, strategies):
         strategies[i].initialize("random")
 
     # run soda
-    soda.run(mechanism, game, strategies)
+    soda.run(mechanism, game, strategies, fast=False)
 
     return strategies
 
 
 if __name__ == "__main__":
 
-    setting = "llg_auction"
-    experiments_list = [
-        "llg_auction_nz_gamma1_lose",
-        "llg_auction_nz_gamma2_lose",
-        "llg_auction_nz_gamma3_lose",
-    ]
+    setting = "single_item"
+    experiments_list = ["affiliated_values"]
 
     path = "experiment/" + setting + "/"
     hydra.initialize(config_path="configs/" + setting, job_name="run")
@@ -52,12 +44,18 @@ if __name__ == "__main__":
         # get setting
         cfg = hydra.compose(config_name=experiment)
 
-        # create setting
+        # create setting & compute utilities
         t0 = time()
         mechanism, game, strategies = create_setting(setting, cfg)
+        if not mechanism.own_gradient:
+            print(
+                'Computations of Utilities for experiment: "'
+                + experiment
+                + '" started!'
+            )
+            game.get_utility(mechanism)
         time_init = time() - t0
 
-        print('Computations for experiment: "' + experiment + '" started!')
         # run soda
         for r in range(runs):
             t0 = time()
