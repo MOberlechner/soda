@@ -178,9 +178,7 @@ class SODA:
             strategies (Dict): contains strategies for agents
 
         """
-
         ind = game.weights is None
-
         dim_o, dim_a = (
             strategies[game.bidder[0]].dim_o,
             strategies[game.bidder[0]].dim_a,
@@ -188,9 +186,9 @@ class SODA:
         n_bidder = game.n_bidder
 
         # indices of all actions
-        act = "".join([chr(ord("a") + i) for i in range(n_bidder * dim_a)])
+        indices_act = "".join([chr(ord("a") + i) for i in range(n_bidder * dim_a)])
         # indices of all valuations
-        val = "".join([chr(ord("A") + i) for i in range(n_bidder * dim_o)])
+        indices_obs = "".join([chr(ord("A") + i) for i in range(n_bidder * dim_o)])
 
         for i in game.set_bidder:
 
@@ -198,20 +196,24 @@ class SODA:
             idx_opp = [i for i in range(n_bidder) if i != idx]
 
             # indices of utility array
-            if game.private_values:
+            if game.values == "private":
                 # utility depends only on own oversvation
-                start = act + val[idx * dim_o : (idx + 1) * dim_o]
-            elif (not game.private_values) and (not ind):
-                # utility depends on all observations
-                start = act + val
+                start = indices_act + indices_obs[idx * dim_o : (idx + 1) * dim_o]
+
+            elif game.values == "affiliated":
+                # utility depends on all observations (affiliated values model)
+                start = indices_act + indices_obs
+            elif game.values == "common":
+                # utility depends on common value, observations are independent (common value model)
+                start = indices_act + "V"
             else:
-                raise NotImplementedError
+                raise ValueError('value model "{}" unknown'.format(game.values))
 
             # indices of bidder i's strategy
             end = (
                 "->"
-                + val[idx * dim_o : (idx + 1) * dim_o]
-                + act[idx * dim_a : (idx + 1) * dim_a]
+                + indices_obs[idx * dim_o : (idx + 1) * dim_o]
+                + indices_act[idx * dim_a : (idx + 1) * dim_a]
             )
 
             if ind:
@@ -219,7 +221,9 @@ class SODA:
                 self.indices[i] = (
                     start
                     + ","
-                    + ",".join([act[j * dim_a : (j + 1) * dim_a] for j in idx_opp])
+                    + ",".join(
+                        [indices_act[j * dim_a : (j + 1) * dim_a] for j in idx_opp]
+                    )
                     + end
                 )
                 self.path[i] = contract_path(
@@ -232,25 +236,31 @@ class SODA:
                     optimize="optimal"
                 )[0]
             else:
+                # indices for weights
+                if game.values == "common":
+                    indices_weight = "V" + indices_obs
+                else:
+                    indices_weight = indices_obs
+
                 # valuations are correlated
                 self.indices[i] = (
                     start
                     + ","
                     + ",".join(
                         [
-                            val[j * dim_o : (j + 1) * dim_o]
-                            + act[j * dim_a : (j + 1) * dim_a]
+                            indices_obs[j * dim_o : (j + 1) * dim_o]
+                            + indices_act[j * dim_a : (j + 1) * dim_a]
                             for j in idx_opp
                         ]
                     )
                     + ","
-                    + val
+                    + indices_weight
                     + end
                 )
                 self.path[i] = contract_path(
                     self.indices[i],
                     *[game.utility[i]]
                     + [strategies[game.bidder[j]].x for j in idx_opp]
-                    + [np.ones([game.n] * (dim_o * n_bidder))],
+                    + [game.weights],
                     optimize="optimal"
                 )[0]

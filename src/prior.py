@@ -47,6 +47,17 @@ def marginal_prior_pdf(mechanism, obs: np.ndarray, agent: str):
         # we assume that the observations are modeled as sum of two rv ~ U([0,1])
         return np.where(obs <= 1, obs, 2 - obs)
 
+    elif mechanism.prior == "common_value":
+        # observations are distributed according to o ~ U([0, 2v]) where v ~ U([0,1])
+        n = len(obs)
+        idx = mechanism.bidder.index(agent)
+        common_prior = prior_pdf_common_value(obs)
+        return common_prior.sum(
+            axis=tuple(
+                list(range(0, idx)) + list(range(idx + 1, mechanism.n_bidder + 1))
+            )
+        )
+
 
 def compute_weights(game, mechanism):
 
@@ -100,12 +111,21 @@ def compute_weights(game, mechanism):
         )
         return weights
 
+    elif mechanism.prior == "common_value":
+        common_prior = prior_pdf_common_value(game.o_discr[game.bidder[0]])
+        weights = common_prior / (
+            common_prior.sum(axis=(0, 2, 3)).reshape(1, game.n, 1, 1)
+            * common_prior.sum(axis=(0, 1, 3)).reshape(1, 1, game.n, 1)
+            * common_prior.sum(axis=(0, 1, 2)).reshape(1, 1, 1, game.n)
+        )
+        return weights
+
     else:
         return None
 
 
 def prior_pdf_affiliated_values(x, y):
-    """density function of affialiated values model (Krishna, Ex. 6.1) for two symmetric bidders"""
+    """density function of affialiated values model (Krishna, Example 6.2) for two symmetric bidders"""
     if x <= 1:
         if y <= 1:
             return x if y > x else y
@@ -116,3 +136,13 @@ def prior_pdf_affiliated_values(x, y):
             return 1 + y - x if y > x - 1 else 0
         if y > 1:
             return 2 - y if y > x else 2 - x
+
+
+def prior_pdf_common_value(obs):
+    """density function for common value model (Krishna, Example 6.1) with 3 symmetric bidder"""
+    # we assume both spaces have equally many discretization points
+    n = len(obs)
+    prior = np.zeros((n, n, n, n))
+    for i in range(n):
+        prior[i][: i + 1, : i + 1, : i + 1] = 1 / (i + 1) ** 3 * 1 / n
+    return prior / prior.sum()

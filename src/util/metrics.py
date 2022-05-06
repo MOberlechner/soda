@@ -67,15 +67,14 @@ def compute_utility(mechanism, strategies, n_obs):
             ]
         )
 
-        if mechanism.private_values:
+        if mechanism.values == "private":
             valuations = obs[idx]
+        elif mechanism.values == "affiliated":
+            valuations = obs
+        elif mechanism.values == "common":
+            valuations = obs[mechanism.n_bidder]
         else:
-            if mechanism.prior == "affiliated values":
-                valuations = obs
-            elif mechanism.prior == "common_value":
-                pass
-            else:
-                raise NotImplementedError
+            raise NotImplementedError
 
         # get utility in bne
         util_bne[i] = mechanism.utility(valuations, bne, idx).mean()

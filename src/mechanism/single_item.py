@@ -23,8 +23,11 @@ class SingleItemAuction(Mechanism):
 
         self.payment_rule = param_util["payment_rule"]
         self.risk = param_util["risk"] if "risk" in param_util else 1.0
-        if self.prior == "affiliated_values" or self.prior == "common_value":
-            self.private_values = False
+        if self.prior == "affiliated_values":
+            self.values = "affiliated"
+        elif self.prior == "common_value":
+            self.values = "common"
+            self.v_space = {i: [0, o_space[i][1] / 2] for i in bidder}
 
     def utility(self, obs: np.ndarray, bids: np.ndarray, idx: int):
         """Payoff function for first price sealed bid auctons
@@ -52,13 +55,14 @@ class SingleItemAuction(Mechanism):
 
         # if True: we want each outcome for every observation,  each outcome belongs to one observation
         if obs.shape != bids[idx].shape:
-            if self.private_values:
+            if (self.values == "private") or (self.values == "common"):
                 obs = obs.reshape(len(obs), 1)
-            elif self.prior == "affiliated_values":
-                # specifically for two symmetric bidders, TODO: generalize
+            elif self.values == "affiliated":
                 obs = 0.5 * (
                     obs.reshape(len(obs), 1) + obs.reshape(1, len(obs))
                 ).reshape(len(obs), len(obs), 1)
+            else:
+                raise ValueError('value model "{}" unknown'.format(self.values))
 
         # tie_breaking rule
         if "tie_breaking" not in self.param_util:
@@ -109,3 +113,6 @@ class SingleItemAuction(Mechanism):
 
             else:
                 return None
+
+        elif self.prior == "common_value":
+            return 2 * obs / (2 + obs)

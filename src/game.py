@@ -29,10 +29,10 @@ class Game:
         self.n = n
         self.m = m
 
-        # we distinguish between private and common values
-        self.private_values = mechanism.private_values
+        # we distinguish between private, affiliated, common values ... model
+        self.values = mechanism.values
 
-        # discrete action and observation space
+        # discrete action and observation space (and optional valuation space)
         self.o_discr = {
             i: discr_spaces(mechanism.o_space[i], n, midpoint=True)
             for i in self.set_bidder
@@ -41,6 +41,12 @@ class Game:
             i: discr_spaces(mechanism.a_space[i], m, midpoint=False)
             for i in self.set_bidder
         }
+        if hasattr(mechanism, "v_space"):
+            self.v_discr = {
+                i: discr_spaces(mechanism.v_space[i], m, midpoint=True)
+                for i in self.set_bidder
+            }
+
         # dimension of spaces
         self.dim_o = (
             1
@@ -101,7 +107,7 @@ class Game:
                     ]
                 )
 
-            if self.private_values:
+            if self.values == "private":
                 # valuation only depends on own observation
                 valuations = self.o_discr[i]
                 self.utility[i] = (
@@ -115,7 +121,7 @@ class Game:
                     )
                 )
 
-            else:
+            elif self.values == "affiliated":
                 # affiliated values model with correlated observations and common value
                 valuations = self.o_discr[i]
                 self.utility[i] = (
@@ -123,6 +129,21 @@ class Game:
                     .transpose()
                     .reshape(tuple([self.m] * self.n_bidder + [self.n] * self.n_bidder))
                 )
+
+            elif self.values == "common":
+                valuations = self.v_discr[i]
+                self.utility[i] = (
+                    mechanism.utility(valuations, bids, idx)
+                    .transpose()
+                    .reshape(
+                        tuple(
+                            [self.m] * (self.dim_a * self.n_bidder)
+                            + [self.n] * self.dim_o
+                        )
+                    )
+                )
+            else:
+                raise ValueError
 
     def get_prior(self, mechanism, agent):
         p = marginal_prior_pdf(mechanism, self.o_discr[agent], agent)
