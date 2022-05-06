@@ -130,7 +130,7 @@ class Mechanism:
             w = uniform.rvs(loc=0, scale=1, size=(3, n_vals))
             return np.array([w[0] + w[2], w[1] + w[2]])
 
-        elif self.prior == "common_values":
+        elif self.prior == "common_value":
             w = uniform.rvs(loc=0, scale=1, size=(self.n_bidder + 1, n_vals))
             return np.array([2 * w[i] * w[3] for i in range(self.n_bidder)] + [w[3]])
 
