@@ -18,18 +18,8 @@ class LLGAuction(Mechanism):
         param_prior: Dict[str, str],
         param_util: Dict,
     ):
-        """
 
-        Parameters
-        ----------
-        bidder : list, contains strings, use either ["L", "L", "G"] or ["L1", "L2", "G2]
-        o_space :
-        a_space :
-        param_prior :
-        param_util :    tie_breaking (bool), True = random, False = local always win
-                        payment_rule (str), chose core-selecting payment rule: NZ, NVCG, NB
-        """
-        super().__init__(bidder, o_space, a_space, param_prior)
+        super().__init__(bidder, o_space, a_space, param_prior, param_util)
         self.name = "llg_auction"
         self.param_util = param_util
         self.payment_rule = param_util["payment_rule"]

@@ -46,7 +46,7 @@ class Mechanism:
         # further specifications
         self.param_util = param_util
         self.own_gradient = False
-        self.private_values = True  # valuation depends only on own observation
+        self.values = "private"  # valuation depends only on own observation
 
     def draw_values(self, n_vals: int) -> np.ndarray:
         """samples observations (and valuations) for each agent according to the prior
@@ -132,9 +132,7 @@ class Mechanism:
 
         elif self.prior == "common_values":
             w = uniform.rvs(loc=0, scale=1, size=(self.n_bidder + 1, n_vals))
-            return np.array(
-                [2 * w[i] * w[3] for i in range(self.n_bidder)] + [w[self.n_bidder]]
-            )
+            return np.array([2 * w[i] * w[3] for i in range(self.n_bidder)] + [w[3]])
 
         else:
             raise ValueError('prior "' + self.prior + '" not implement')

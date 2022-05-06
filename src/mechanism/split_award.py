@@ -5,7 +5,7 @@ import numpy as np
 from .mechanism import Mechanism
 
 # -------------------------------------------------------------------------------------------------------------------- #
-#                                          COMBINATORAL AUCTION - LLG                                                  #
+#                                               SPLIT AWARD AUCTION                                                    #
 # -------------------------------------------------------------------------------------------------------------------- #
 
 
@@ -84,23 +84,62 @@ class SplitAwardAuction(Mechanism):
         ) * win_single * 1 / num_winner_single * (bids_single[idx] - obs)
 
     def get_bne(self, agent: str, obs: np.ndarray):
-        # only valid for standard setting (see configs)
-        split_bid_max = (1 - self.scale) * self.o_space[agent][0]
-        return np.array(
-            [
-                split_bid_max
-                + (
+        return self.equilibrium_pooling(agent, obs, bound="upper")
+
+    def equilibrium_pooling(
+        self, agent: str, obs: np.ndarray, bound: str = "upper"
+    ) -> np.ndarray:
+        """Pooling-Equilibrium in standard setting. There is a continuum of equilibria.
+
+        Args:
+            agent (str): bidder
+            obs (np.ndarray): observation
+            bound (str, optional): upper or lower bound of equilibriums continuum
+
+        Returns:
+            np.ndarray: pooling_equilibrium (single, split)
+        """
+        if bound == "upper":
+            split_bid_max = (1 - self.scale) * self.o_space[agent][0]
+
+            return np.array(
+                [
                     split_bid_max
-                    - self.o_space[agent][1]
-                    * self.scale
-                    * (obs - self.o_space[agent][0])
-                    / (self.o_space[agent][1] - self.o_space[agent][0])
-                )
-                / (
-                    1
-                    - (obs - self.o_space[agent][0])
-                    / (self.o_space[agent][1] - self.o_space[agent][0])
-                ),
-                split_bid_max * np.ones(obs.shape),
+                    + (
+                        split_bid_max
+                        - self.o_space[agent][1]
+                        * self.scale
+                        * (obs - self.o_space[agent][0])
+                        / (self.o_space[agent][1] - self.o_space[agent][0])
+                    )
+                    / (
+                        1
+                        - (obs - self.o_space[agent][0])
+                        / (self.o_space[agent][1] - self.o_space[agent][0])
+                    ),
+                    split_bid_max * np.ones(obs.shape),
+                ]
+            )
+        elif bound == "lower":
+            pass
+        else:
+            raise ValueError('Choose "upper" or "lower" bound for pooling equilibria')
+
+    def equilibrium_wta(self, agent: str, obs: np.ndarray) -> np.ndarray:
+        """WTA (Winner-Takes-All) Equilibrium in standard setting
+
+        Args:
+            agent (str): bidder
+            obs (np.ndarray): observation
+
+        Returns:
+            np.ndarray: wta_equilibrium (single, split)
+        """
+
+        return np.ndarray(
+            [
+                1 / 2 * (obs + self.o_space[agent][1]),
+                0.5 * (obs + self.o_space[agent][1])
+                - self.scale * self.o_space[agent][0],
             ]
         )
