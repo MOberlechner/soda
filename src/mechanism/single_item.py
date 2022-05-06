@@ -53,16 +53,17 @@ class SingleItemAuction(Mechanism):
         elif "payment_rule" not in self.param_util:
             raise ValueError("specify payment rule")
 
-        # if True: we want each outcome for every observation,  each outcome belongs to one observation
-        if obs.shape != bids[idx].shape:
-            if (self.values == "private") or (self.values == "common"):
+        # if True: we want each outcome for every observation, else: each outcome belongs to one observation
+        if (self.values == "private") or (self.values == "common"):
+            if obs.shape != bids[idx].shape:
                 obs = obs.reshape(len(obs), 1)
-            elif self.values == "affiliated":
+        elif self.values == "affiliated":
+            if obs[idx].shape != bids[idx].shape:
                 obs = 0.5 * (
-                    obs[0].reshape(len(obs[0]), 1) + obs[1].reshape(1, len(obs[1]))
-                ).reshape(len(obs[0]), len(obs[1]), 1)
-            else:
-                raise ValueError('value model "{}" unknown'.format(self.values))
+                    obs.reshape(len(obs), 1) + obs.reshape(1, len(obs))
+                ).reshape(len(obs), len(obs), 1)
+        else:
+            raise ValueError('value model "{}" unknown'.format(self.values))
 
         # tie_breaking rule
         if "tie_breaking" not in self.param_util:
