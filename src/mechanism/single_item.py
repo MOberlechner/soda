@@ -16,7 +16,7 @@ class SingleItemAuction(Mechanism):
         o_space: Dict[str, List],
         a_space: Dict[str, List],
         param_prior: Dict[str, str],
-        param_util: Dict[str],
+        param_util: Dict,
     ):
         super().__init__(bidder, o_space, a_space, param_prior, param_util)
         self.name = "single_item"
