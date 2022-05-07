@@ -44,7 +44,7 @@ class SODA:
         self.indices = {}
         self.grad = {}
 
-    def run(self, mechanism, game, strategies: Dict, fast: bool) -> None:
+    def run(self, mechanism, game, strategies: Dict, fast: bool = False) -> None:
         """Runs SODA and updates strategies accordingly
 
         Args:
@@ -58,10 +58,10 @@ class SODA:
         if not mechanism.own_gradient:
             self.prepare_grad(game, strategies)
 
-        # fast
+        # fast (makes no sense)
         if fast:
             utility = game.utility.copy()
-            weights = game.weights.copy()
+            weights = game.weights.copy() if game.weights is not None else None
 
         # init variables
         convergence = False

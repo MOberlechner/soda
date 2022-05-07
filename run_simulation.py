@@ -71,11 +71,9 @@ def run_sim(
 
 if __name__ == "__main__":
 
-    setting = "llg_auction"
+    setting = "single_item"
     experiments_list = [
-        "llg_auction_nz_gamma1_lose",
-        "llg_auction_nz_gamma2_lose",
-        "llg_auction_nz_gamma3_lose",
+        "affiliated_values",
     ]
 
     path = "experiment/" + setting + "/"
