@@ -26,7 +26,11 @@ class LLGAuction(Mechanism):
         self.tie_breaking = (
             param_util["tie_breaking"] if "tie_breaking" in param_util else None
         )
-        self.gamma = param_prior["gamma"] if "gamma" in param_prior else 0.0
+        if "corr" in param_prior:
+            self.gamma = param_prior["corr"]
+        else:
+            self.gamma = 0.0
+            print("No correlation for LLG Auction defined (gamma=0).")
 
         # check input
         if self.bidder[2] != "G":

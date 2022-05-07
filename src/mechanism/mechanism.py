@@ -96,6 +96,31 @@ class Mechanism:
                             + np.where(w < gamma, 0, 1) * u[1],
                         ]
                     )
+                elif self.name == "llg_auction":
+                    w = uniform.rvs(loc=0, scale=1, size=n_vals)
+                    u = uniform.rvs(
+                        loc=self.o_space[self.bidder[0]][0],
+                        scale=self.o_space[self.bidder[0]][-1]
+                        - self.o_space[self.bidder[0]][0],
+                        size=(3, n_vals),
+                    )
+                    return np.array(
+                        [
+                            # local 1
+                            np.where(w < self.gamma, 1, 0) * u[2]
+                            + np.where(w < self.gamma, 0, 1) * u[0],
+                            # local 2
+                            np.where(w < self.gamma, 1, 0) * u[2]
+                            + np.where(w < self.gamma, 0, 1) * u[1],
+                            # global
+                            uniform.rvs(
+                                loc=self.o_space["G"][0],
+                                scale=self.o_space["G"][1] - self.o_space["G"][0],
+                                size=n_vals,
+                            ),
+                        ]
+                    )
+
                 else:
                     raise NotImplementedError
 

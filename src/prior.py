@@ -74,7 +74,7 @@ def compute_weights(game, mechanism):
 
             elif mechanism.name == "llg_auction":
                 # correlated prior with Bernoulli Paramater (according to Ausubel & Baranov 2020, 2 players correlated, 1 player uncorrelated)
-                gamma = mechanism.param_prior["corr"]
+                gamma = mechanism.gamma
                 weights = np.ones((game.n, game.n)) * (1 - gamma) * 1 / game.n
                 weights[np.diag_indices(game.n, ndim=2)] = (
                     gamma * 1 + (1 - gamma) * 1 / game.n
