@@ -25,8 +25,8 @@ class Strategy:
         self.a_discr = game.a_discr[agent]
 
         # number of discretization points
-        self.n = len(self.o_discr)
-        self.m = len(self.a_discr)
+        self.n = game.n
+        self.m = game.m
 
         # dimension of spaces
         self.dim_o = 1 if len(self.o_discr.shape) == 1 else self.o_discr.shape[0]
@@ -122,9 +122,6 @@ class Strategy:
             list(self.prior.shape) + [1] * self.dim_a
         ) * sigma
 
-        # save initial strategy in history
-        self.update_history()
-
     # --------------------------------------- METHODS USED FOR COMPUTATION ------------------------------------------- #
 
     def best_response(self, gradient: np.ndarray) -> np.ndarray:
@@ -217,6 +214,27 @@ class Strategy:
             )
         ]
 
+    def get_dist_last_iter(self) -> np.ndarray:
+        """compute distance to last iterate
+
+        Returns:
+            np.ndarray
+        """
+        return np.array([np.linalg.norm(s - self.x) for s in self.history[:-1]])
+
+    def get_dist_prev_iter(self) -> np.ndarray:
+        """compute distance to previous iterate
+
+        Returns:
+            np.ndarray
+        """
+        return np.array(
+            [
+                np.linalg.norm(self.history[t + 1] - self.history[t])
+                for t in range(len(self.history) - 1)
+            ]
+        )
+
     # --------------------------------------- METHODS USED TO ANALYZE RESULTS ---------------------------------------- #
 
     def bid(self, observation: np.ndarray):
@@ -235,8 +253,8 @@ class Strategy:
         # number of discretization points observations
         n = self.x.shape[0]
 
-        if self.dim_o == self.dim_a == 1:
-            # determine corresponding
+        if self.dim_o == 1:
+            # determine corresponding discrete observation
             idx_obs = np.floor(
                 (observation - self.o_discr[0])
                 / (self.o_discr[-1] - self.o_discr[0])
@@ -244,22 +262,44 @@ class Strategy:
             ).astype(int)
             idx_obs = np.maximum(0, np.minimum(n - 1, idx_obs))
 
-            # sample bids from induced mixed strategy (old, slower version)
-            # bids = np.array([np.random.choice(self.a_discr, p=self.x[i]/self.x[i].sum()) for i in idx_obs])
-
             uniques, counts = np.unique(
                 idx_obs, return_inverse=False, return_counts=True
             )
-            bids = np.zeros(idx_obs.shape)
-            for d, c in zip(uniques, counts):
-                bids[idx_obs == d] = np.random.choice(
-                    self.a_discr, size=c, p=self.x[d] / self.x[d].sum()
+
+            if self.dim_a == 1:
+
+                bids = np.zeros(idx_obs.shape)
+                for d, c in zip(uniques, counts):
+                    bids[idx_obs == d] = np.random.choice(
+                        self.a_discr, size=c, p=self.x[d] / self.x[d].sum()
+                    )
+                return bids
+
+            elif self.dim_a == 2:
+
+                bids = np.zeros((len(idx_obs), 2))
+                a_discr_2d = np.array(
+                    [(a1, a2) for a2 in self.a_discr[1] for a1 in self.a_discr[0]]
                 )
-            return bids
+
+                for d, c in zip(uniques, counts):
+                    idx_act = np.random.choice(
+                        range(self.m**2),
+                        size=c,
+                        p=self.x[d].reshape(-1) / self.x[d].sum(),
+                    )
+                    bids[idx_obs == d] = a_discr_2d[idx_act]
+
+                return bids
+
+            else:
+                raise NotImplementedError(
+                    "Bids can only be sampled for one- or two-dimensional actions"
+                )
 
         else:
             raise NotImplementedError(
-                "Bids can only be sampled in the one-dimensional case"
+                "Bids can only be sampled for one-dimensional observations"
             )
 
     def plot(self, more: bool = False, beta: np.ndarray = None):
@@ -275,17 +315,31 @@ class Strategy:
         title_size = 14
 
         if (self.dim_o == 1) and (self.dim_a <= 2):
+
             if more:
                 num_plots = 1 + self.dim_a
-                # compute distance to last iterate
-                dist = [np.linalg.norm(s - self.x) for s in self.history[:-1]]
+                # metric for convergence
+                distance_to_last_iterate = self.get_dist_last_iter()
+                distance_to_prev_iterate = self.get_dist_prev_iter()
+
                 # plot utility loss and distance (utility loss plot maximal until 100%)
                 plt.figure(figsize=(5 * num_plots, 5))
                 plt.subplot(1, num_plots, num_plots)
                 plt.plot(
                     np.minimum(self.utility_loss, 1), label="utility loss", color="k"
                 )
-                plt.plot(dist, label="dist. last iterate", color="k", linestyle="--")
+                plt.plot(
+                    distance_to_last_iterate,
+                    label="dist. last iterate",
+                    color="tab:blue",
+                    linestyle="--",
+                )
+                plt.plot(
+                    distance_to_prev_iterate,
+                    label="dist. prev. iterate",
+                    color="tab:red",
+                    linestyle="--",
+                )
                 plt.yscale("log")
                 plt.grid(axis="y")
                 plt.legend()
