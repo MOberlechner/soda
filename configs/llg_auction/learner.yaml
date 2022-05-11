@@ -1,0 +1,5 @@
+max_iter: 2000
+tol: 5e-4
+steprule_bool: True
+eta: 50
+beta: 1 / 20
