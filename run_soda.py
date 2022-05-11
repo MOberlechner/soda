@@ -7,17 +7,24 @@ from src.util.logging import log_run
 from src.util.setting import create_setting
 
 
-def run_soda(mechanism, game, strategies):
+def run_soda(mechanism, game, strategies, cfg_learner) -> None:
+    """Runs SODA given the specified setting.
 
-    # parameter learner
-    max_iter = 2000
-    tol = 5e-4
-    steprule_bool = True
-    eta = 20
-    beta = 1 / 20
+    Args:
+        mechanism: continuous auction game
+        game: approximation game
+        strategies: dict of strategies
+        cfg_soda: parameter for SODA
+    """
 
-    # create learner
-    soda = SODA(max_iter, tol, steprule_bool, eta, beta)
+    # init learner
+    soda = SODA(
+        cfg_learner.max_iter,
+        cfg_learner.tol,
+        cfg_learner.steprule_bool,
+        cfg_learner.eta,
+        cfg_learner.beta,
+    )
 
     # initialize strategies
     for i in game.set_bidder:
@@ -31,8 +38,8 @@ def run_soda(mechanism, game, strategies):
 
 if __name__ == "__main__":
 
-    setting = "single_item"
-    experiments_list = ["affiliated_values"]
+    setting = "llg_auction"
+    experiments_list = ["llg_auction_nb_gamma1"]
 
     path = "experiment/" + setting + "/"
     hydra.initialize(config_path="configs/" + setting, job_name="run")
@@ -41,10 +48,11 @@ if __name__ == "__main__":
 
     for experiment in experiments_list:
 
-        # get setting
+        # get parameter
+        cfg_learner = hydra.compose(config_name="learner")
         cfg = hydra.compose(config_name=experiment)
 
-        # create setting & compute utilities
+        # initialize setting and compute utility
         t0 = time()
         mechanism, game, strategies = create_setting(setting, cfg)
         if not mechanism.own_gradient:
@@ -59,7 +67,7 @@ if __name__ == "__main__":
         # run soda
         for r in range(runs):
             t0 = time()
-            strategies = run_soda(mechanism, game, strategies)
+            strategies = run_soda(mechanism, game, strategies, cfg_learner)
             time_run = time() - t0
 
             # log
