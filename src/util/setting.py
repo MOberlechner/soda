@@ -71,7 +71,7 @@ def create_setting(setting: str, cfg):
     # create approximation game
     game = Game(mechanism, cfg.n, cfg.m)
 
-    # create and initialize strategies
+    # create strategies
     strategies = {}
     for i in game.set_bidder:
         strategies[i] = Strategy(i, game)
