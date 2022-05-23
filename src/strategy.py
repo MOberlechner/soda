@@ -279,7 +279,7 @@ class Strategy:
 
                 bids = np.zeros((len(idx_obs), 2))
                 a_discr_2d = np.array(
-                    [(a1, a2) for a2 in self.a_discr[1] for a1 in self.a_discr[0]]
+                    [(a2, a1) for a1 in self.a_discr[0] for a2 in self.a_discr[1]]
                 )
 
                 for d, c in zip(uniques, counts):
@@ -288,9 +288,10 @@ class Strategy:
                         size=c,
                         p=self.x[d].reshape(-1) / self.x[d].sum(),
                     )
-                    bids[idx_obs == d] = a_discr_2d[idx_act]
+                    # we have to switch order back (first single, second split)
+                    bids[idx_obs == d] = np.array(a_discr_2d[idx_act])[0][[1, 0]]
 
-                return bids
+                return bids.T
 
             else:
                 raise NotImplementedError(

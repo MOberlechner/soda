@@ -2,7 +2,7 @@ from time import time
 
 import hydra
 
-from src.learner import SODA
+from src.learner.soda import SODA
 from src.util.logging import log_run
 from src.util.setting import create_setting
 
@@ -31,20 +31,20 @@ def run_soda(mechanism, game, strategies, cfg_learner) -> None:
         strategies[i].initialize("random")
 
     # run soda
-    soda.run(mechanism, game, strategies, fast=False)
+    soda.run(mechanism, game, strategies)
 
     return strategies
 
 
 if __name__ == "__main__":
 
-    setting = "llg_auction"
-    experiments_list = ["llg_auction_nb_gamma1"]
+    setting = "single_item"
+    experiments_list = ["affiliated_values"]
 
     path = "experiment/" + setting + "/"
     hydra.initialize(config_path="configs/" + setting, job_name="run")
-    logging = True
-    runs = 10
+    logging = False
+    runs = 1
 
     for experiment in experiments_list:
 
@@ -70,13 +70,12 @@ if __name__ == "__main__":
             strategies = run_soda(mechanism, game, strategies, cfg_learner)
             time_run = time() - t0
 
-            # log
+            # log and save
             if logging is True:
                 log_run(strategies, experiment, r, time_init, time_run, path)
 
-            # save strategies
-            for i in game.set_bidder:
-                name = experiment + ("_run_" + str(r) if runs > 1 else "")
-                strategies[i].save(name, path)
+                for i in game.set_bidder:
+                    name = experiment + ("_run_" + str(r) if runs > 1 else "")
+                    strategies[i].save(name, path)
 
         print('Experiment: "' + experiment + '" finished!')

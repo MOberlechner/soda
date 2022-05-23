@@ -71,9 +71,9 @@ def run_sim(
 
 if __name__ == "__main__":
 
-    setting = "single_item"
+    setting = "split_award"
     experiments_list = [
-        "affiliated_values",
+        "split_award_64",
     ]
 
     path = "experiment/" + setting + "/"
