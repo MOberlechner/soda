@@ -51,7 +51,7 @@ class SplitAwardAuction(Mechanism):
             raise ValueError("bidder with index {idx} not avaible".format(idx))
 
         # if True: we want each outcome for every observation,  each outcome belongs to one observation
-        if obs.shape != bids[idx].shape:
+        if obs.shape != bids[idx][0].shape:
             obs = obs.reshape(len(obs), 1)
 
         idx_single, idx_split = 0, 1
@@ -121,7 +121,12 @@ class SplitAwardAuction(Mechanism):
                 ]
             )
         elif bound == "lower":
-            pass
+            return np.array(
+                [
+                    2 * self.scale * self.o_space[agent][1] * np.ones(len(obs)),
+                    self.scale * self.o_space[agent][1] * np.ones(len(obs)),
+                ]
+            )
         else:
             raise ValueError('Choose "upper" or "lower" bound for pooling equilibria')
 
@@ -136,9 +141,9 @@ class SplitAwardAuction(Mechanism):
             np.ndarray: wta_equilibrium (single, split)
         """
 
-        return np.ndarray(
+        return np.array(
             [
-                1 / 2 * (obs + self.o_space[agent][1]),
+                0.5 * (obs + self.o_space[agent][1]),
                 0.5 * (obs + self.o_space[agent][1])
                 - self.scale * self.o_space[agent][0],
             ]
