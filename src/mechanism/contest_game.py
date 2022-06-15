@@ -16,13 +16,12 @@ class ContestGame(Mechanism):
         o_space: Dict[str, List],
         a_space: Dict[str, List],
         param_prior: Dict[str, str],
-        csf: str = "ratio_form",
-        param_csf: float = 0.0,
+        param_util: Dict,
     ):
         super().__init__(bidder, o_space, a_space, param_prior, param_util)
         self.name = "contest_game"
-        self.csf = csf
-        self.param_csf = param_csf
+        self.csf = param_util["csf"]
+        self.param_csf = param_util["param_csf"]
 
     def utility(self, obs: np.ndarray, bids: np.ndarray, idx: int):
         """We consider different contest success functions
