@@ -3,7 +3,9 @@ bidder: ['1', '1']
 o_space: {'1': [0.1 ,1.1]}
 a_space: {'1': [0.0, 0.6]}
 param_prior: {'distribution':'uniform', 'corr':0.3}
-csf: 'ratio_form_valuation'
-param_csf: 2
+param_util : {
+  'csf': 'ratio_form_valuation',
+  'param_csf': 2,
+}
 n: 128
 m: 128
