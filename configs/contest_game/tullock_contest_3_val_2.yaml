@@ -3,8 +3,10 @@ bidder: ['1', '1', '1']
 o_space: {'1': [0.0 ,1.0]}
 a_space: {'1': [0.0, 0.5]}
 param_prior: {'distribution':'uniform'}
-csf: 'ratio_form_valuation'
-param_csf: 2
+param_util : {
+  'csf': 'ratio_form_valuation'
+  'param_csf': 2
+}
 n: 64
 m: 64
 bne_known: False
