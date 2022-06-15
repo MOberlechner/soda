@@ -37,8 +37,7 @@ def create_setting(setting: str, cfg):
             cfg.o_space,
             cfg.a_space,
             cfg.param_prior,
-            cfg.csf,
-            cfg.param_csf,
+            cfg.param_util,
         )
     elif setting == "all_pay":
         mechanism = AllPay(
