@@ -84,4 +84,5 @@ class ContestGame(Mechanism):
             )
 
     def get_bne(self, agent: str, obs: np.ndarray):
+
         pass
