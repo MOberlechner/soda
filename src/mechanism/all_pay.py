@@ -23,12 +23,13 @@ class AllPay(Mechanism):
         o_space: Dict[str, List],
         a_space: Dict[str, List],
         param_prior: Dict[str, str],
-        util_setting: str,
         param_util: Dict[str, float],
     ):
         super().__init__(bidder, o_space, a_space, param_prior, param_util)
         self.name = "all_pay"
-        self.util_setting = util_setting
+        self.util_setting = (
+            param_util["util_setting"] if "util_setting" in param_util else "valuation"
+        )
 
     def utility(self, obs: np.ndarray, bids: np.ndarray, idx: int):
         """
