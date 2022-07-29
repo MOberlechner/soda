@@ -115,10 +115,12 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-
+# Directories
 /src/test/
 /src/test/
 /test/
+/experiment/
+/notebooks/
 
 # numpy (results)
 .npy
