@@ -8,6 +8,19 @@ from src.game import discr_interval
 
 
 class Strategy:
+    """
+    Strategies of the discretized game
+
+    - n,m (int) dimensions of the strategy (discretization parameter)
+    - dim_o, dim_a (int) dimensions of the observation/action space
+    - o_discr, a_discr (array) discretized observation/action space
+    - prior (array) vector with marginal prior
+    - x (array) current strategy
+    - utility, utility loss (list)
+    - history (list) all intermediate strategies
+
+    """
+
     def __init__(self, agent, game):
         """Create strategy. Parameters are given by respective game.
 
@@ -368,7 +381,7 @@ class Strategy:
                 plt.ylabel("bids b", fontsize=label_size)
                 plt.xlabel("observations v", fontsize=label_size)
                 plt.title(
-                    'Distributional Strategy Player "' + self.agent + '"',
+                    'Distributional Strategy Player "' + str(self.agent) + '"',
                     fontsize=title_size,
                 )
 
