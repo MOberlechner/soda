@@ -55,6 +55,8 @@ class SODA:
         if not mechanism.own_gradient:
             gradient = Gradient()
             gradient.prepare(game, strategies)
+        else:
+            gradient = Gradient()
 
         # init variables
         convergence = False
