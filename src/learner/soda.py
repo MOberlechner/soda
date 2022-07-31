@@ -99,7 +99,7 @@ class SODA:
             # update strategy
             for i in game.set_bidder:
                 stepsize = self.step_rule(t, gradient.x[i], strategies[i].dim_o)
-                strategies[i].update_strategy(gradient.x[i], stepsize)
+                self.update_strategy(strategies[i], gradient.x[i], stepsize)
 
         # Print result
         if convergence:
@@ -109,6 +109,38 @@ class SODA:
             print("No convergence")
             print("Current relative utility loss", round(max_util_loss * 100, 3), "%")
             print("Best relative utility loss", round(min_max_util_loss * 100, 3), "%")
+
+    def update_strategy(self, strategy, gradient: np.ndarray, stepsize: np.ndarray):
+        """
+        Update strategy:
+        Depending on the learner, different updates can be performed
+
+        Parameters
+        ----------
+        strategy : class Strategy
+        gradient : np.ndarray,
+        stepsize : np.ndarray, step size
+        method : str, allows us to switch between dual averaging and best response
+
+        Returns
+        -------
+
+        """
+
+        # multiply with stepsize
+        step = gradient * stepsize.reshape(list(stepsize.shape) + [1] * strategy.dim_a)
+        xc_exp = strategy.x * np.exp(step)
+        xc_exp_sum = xc_exp.sum(
+            axis=tuple(range(strategy.dim_o, strategy.dim_o + strategy.dim_a))
+        ).reshape(list(strategy.margin().shape) + [1] * strategy.dim_a)
+
+        # update strategy
+        strategy.x = (
+            1
+            / xc_exp_sum
+            * strategy.prior.reshape(list(strategy.prior.shape) + [1] * strategy.dim_a)
+            * xc_exp
+        )
 
     def step_rule(self, t: int, grad: np.ndarray, dim_o: int) -> np.ndarray:
         """Compute step size:

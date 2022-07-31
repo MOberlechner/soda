@@ -9,7 +9,8 @@ from src.game import discr_interval
 
 class Strategy:
     """
-    Strategies of the discretized game
+    Strategies of the discretized game -> discrete distributional strategies
+    Basically these are n x m matrices where each entry x[i,j] corresponds to the probability of playing action a[j] with valuation/observation o[i]
 
     - n,m (int) dimensions of the strategy (discretization parameter)
     - dim_o, dim_a (int) dimensions of the observation/action space
@@ -22,7 +23,8 @@ class Strategy:
     """
 
     def __init__(self, agent, game):
-        """Create strategy. Parameters are given by respective game.
+        """Create strategy for agent.
+        Parameters are given by respective game.
 
         Parameters
         ----------
@@ -69,7 +71,11 @@ class Strategy:
         self, init_method: str, param: dict = {}, lower_bound: float = 1e-50
     ):
         """
-        Initializt strategy
+        Initialize strategy according to different methods. The sum of probabilities over all actions given a valuation is determined by the prior.
+        But the probability P(bid|val) can be set arbitrarily:
+        - equal: for a given valuation, all actions are played with equal probability.
+        - random: for a given valuation, all actions are played with a random probability p ~ U([0,1]), which are scaled accordingly
+        - ...
 
         Parameters
         ----------
@@ -138,7 +144,10 @@ class Strategy:
     # --------------------------------------- METHODS USED FOR COMPUTATION ------------------------------------------- #
 
     def best_response(self, gradient: np.ndarray) -> np.ndarray:
-        """Compute Best response given the gradient
+        """Compute Best response given the gradient.
+        The best response given the opponents strategies is the solution of a LP.
+        Due to the simple structure it can be computed directly:
+        pick for each valuation the action with the highest expected utility.
 
         Args:
             gradient (np.ndarray): gradient given current strategy profile
@@ -164,43 +173,7 @@ class Strategy:
 
         return best_response
 
-    def update_strategy(
-        self, gradient: np.ndarray, stepsize: np.ndarray, method: str = "dual_averaging"
-    ):
-        """
-        Update strategy (exponentiated gradient)
-
-        Parameters
-        ----------
-        gradient : np.ndarray,
-        stepsize : np.ndarray, step size
-        method : str, allows us to switch between dual averaging and best response
-
-        Returns
-        -------
-
-        """
-        if method == "dual_averaging":
-            # multiply with stepsize
-            step = gradient * stepsize.reshape(list(stepsize.shape) + [1] * self.dim_a)
-            xc_exp = self.x * np.exp(step)
-            xc_exp_sum = xc_exp.sum(
-                axis=tuple(range(self.dim_o, self.dim_o + self.dim_a))
-            ).reshape(list(self.margin().shape) + [1] * self.dim_a)
-
-            # update strategy
-            self.x = (
-                1
-                / xc_exp_sum
-                * self.prior.reshape(list(self.prior.shape) + [1] * self.dim_a)
-                * xc_exp
-            )
-
-        elif method == "best_response":
-            self.x = self.best_response(gradient)
-
-        else:
-            raise ValueError("Error in update_strategy: method unknown")
+    # --------------------------------------- METHODS USED TO DURING ITERATIONS ---------------------------------------- #
 
     def update_history(self):
         """
