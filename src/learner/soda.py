@@ -1,5 +1,5 @@
 from time import sleep, time
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 import numpy as np
 from tqdm import tqdm
@@ -58,9 +58,8 @@ class SODA:
         else:
             gradient = Gradient()
 
-        # init variables
-        convergence = False
-        min_max_util_loss, max_util_loss = 1, 1
+        # init parameters
+        min_max_util_loss = 1
         t_max = 0
 
         for t in tqdm(
@@ -83,17 +82,11 @@ class SODA:
                 strategies[i].update_history()
 
             # check convergence
-            max_util_loss = np.max(
-                [strategies[i].utility_loss[-1] for i in game.set_bidder]
+            convergence, min_max_util_loss = self.check_convergence(
+                strategies, min_max_util_loss
             )
-            min_max_util_loss = (
-                max_util_loss
-                if max_util_loss < min_max_util_loss
-                else min_max_util_loss
-            )
-            if max_util_loss < self.tol:
+            if convergence:
                 t_max = t
-                convergence = True
                 break
 
             # update strategy
@@ -104,27 +97,37 @@ class SODA:
         # Print result
         if convergence:
             print("Convergence after", t_max, "iterations")
-            print("Relative utility loss", round(max_util_loss * 100, 3), "%")
+            print("Relative utility loss", round(min_max_util_loss * 100, 3), "%")
         else:
+            max_util_loss = np.max([strategies[i].utility_loss[-1] for i in strategies])
             print("No convergence")
             print("Current relative utility loss", round(max_util_loss * 100, 3), "%")
             print("Best relative utility loss", round(min_max_util_loss * 100, 3), "%")
 
+    def check_convergence(self, strategies, min_max_util_loss: float) -> Tuple:
+        """check if the maximal relative utility loss (over all agents) is less than the tolerance"""
+        max_util_loss = np.max([strategies[i].utility_loss[-1] for i in strategies])
+        # update minimal max_util_loss (over all iterations)
+        min_max_util_loss = min(min_max_util_loss, max_util_loss)
+
+        # check if smaller than tolerance
+        convergence = max_util_loss < self.tol
+
+        return convergence, min_max_util_loss
+
     def update_strategy(self, strategy, gradient: np.ndarray, stepsize: np.ndarray):
         """
-        Update strategy:
-        Depending on the learner, different updates can be performed
+        Update strategy: dual avering with entropic regularizer
 
         Parameters
         ----------
         strategy : class Strategy
         gradient : np.ndarray,
         stepsize : np.ndarray, step size
-        method : str, allows us to switch between dual averaging and best response
 
         Returns
         -------
-
+        np.ndarray : updated strategy
         """
 
         # multiply with stepsize
