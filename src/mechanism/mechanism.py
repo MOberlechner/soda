@@ -4,7 +4,7 @@ import numpy as np
 from scipy.stats import norm, powerlaw, uniform
 
 # -------------------------------------------------------------------------------------------------------------------- #
-#                                   CLASS MECHANISM : CONTINUOUS AUCTION GAME                                          #
+#                                         MECHANISM : CONTINUOUS AUCTION GAME                                          #
 # -------------------------------------------------------------------------------------------------------------------- #
 
 
@@ -13,15 +13,15 @@ class Mechanism:
 
     Attributes:
         General
-            bidder (List) : contains all agents (str)
-            set_bidder (List): contains all unique agents (model sharing)
-            o_space (Dict): contains limits of observation space [a,b] for agents
-            a_space (Dict): contains limits of action space [a,b] for agents
-            param_prior (Dict): contains parameters for prior, e.g., distribution and parameter
+            bidder          List: contains all agents (str)
+            set_bidder      List: contains all unique agents (model sharing)
+            o_space         Dict: contains limits of observation space [a,b] for agents
+            a_space         Dict: contains limits of action space [a,b] for agents
+            param_prior     Dict: contains parameters for prior, e.g., distribution and parameter
 
         Speficiations of Mechanism
-            own_gradient (boolean): if true mechanism contains own function to compute gradient
-            private_values (boolean): u
+            own_gradient    boolean: if true mechanism contains own function to compute gradient
+            private_values  boolean:
 
     """
 

@@ -9,3 +9,4 @@ pre-commit
 black
 isort
 hydra-core
+pathlib

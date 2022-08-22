@@ -33,8 +33,9 @@ def run_sim(
 
     for r in range(runs):
 
-        # import strategies
+        # import strategies: naming convention now includes learner !!!
         name = experiment + ("_run_" + str(r) if runs > 1 else "")
+
         for i in strategies:
             if cfg.bne_known:
                 strategies[i].load(name, path_dir)
@@ -76,7 +77,9 @@ if __name__ == "__main__":
         "split_award_64",
     ]
 
+    # specify path for experiments
     path = "experiment/" + setting + "/"
+
     hydra.initialize(config_path="configs/" + setting, job_name="run")
     logging = True
     runs = 10
