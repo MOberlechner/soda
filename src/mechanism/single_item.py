@@ -10,6 +10,23 @@ from .mechanism import Mechanism
 
 
 class SingleItemAuction(Mechanism):
+    """Single-Item Auction
+
+    Parameter Mechanism
+        bidder, o_space, a_space - standard input for all mechanism (see class Mechanism)
+
+
+    Parameter Prior (param_prior)
+        distribution    str: "affiliated_values" and "common_value" are available
+
+
+    Parameter Utility (param_util)
+        tiebreaking     str: specifies tiebreaking rule: "random" (default), "lose"
+
+        payment_rule    str: choose betweem "first_price" and "second_price"
+
+    """
+
     def __init__(
         self,
         bidder: List[str],
@@ -29,8 +46,9 @@ class SingleItemAuction(Mechanism):
             self.values = "common"
             self.v_space = {i: [0, o_space[i][1] / 2] for i in bidder}
 
-    def utility(self, obs: np.ndarray, bids: np.ndarray, idx: int):
-        """Payoff function for first price sealed bid auctons
+    def utility(self, obs: np.ndarray, bids: np.ndarray, idx: int) -> None:
+        """
+        Payoff function for first price sealed bid auctons
 
         Parameters
         ----------
@@ -40,6 +58,7 @@ class SingleItemAuction(Mechanism):
 
         Returns
         -------
+        np.ndarray : payoff vector for agent idx
 
         """
 
@@ -95,6 +114,19 @@ class SingleItemAuction(Mechanism):
             raise ValueError("payment rule " + self.payment_rule + " not available")
 
     def get_bne(self, agent: str, obs: np.ndarray):
+        """
+        Returns BNE for some predefined settings
+
+        Parameters
+        ----------
+        agent : specficies bidder (important in asymmetric settings)
+        obs :  observation/valuation of agent
+
+        Returns
+        -------
+        np.ndarray : bids to corresponding observation
+
+        """
 
         if self.prior == "uniform":
             if (self.payment_rule == "first_price") & np.all(

@@ -5,16 +5,33 @@ import numpy as np
 from .mechanism import Mechanism
 
 # -------------------------------------------------------------------------------------------------------------------- #
-#                                                  ALL-PAY AUCTION                                                     #
+#                                                ALL-PAY AUCTION                                                       #
 # -------------------------------------------------------------------------------------------------------------------- #
 
 
 class AllPay(Mechanism):
-    """All-pay auction, with parameter param_allpay that determines the cost if bidder wins
-    param_allpay = 0 : first-price
-    param_allpay = 1 : second-price (war of attrition)
-    param_allpay in (0,1) : convex combination of both
+    """All-pay Auction
 
+    Parameter Mechanism
+        bidder, o_space, a_space - standard input for all mechanism (see class Mechanism)
+
+
+    Parameter Prior (param_prior)
+        distribution
+
+
+    Parameter Utility (param_util)
+        tiebreaking     str: specifies tiebreaking rule: "random", "index" or "lose"
+
+        util_setting    str: first_price (standard), generalized (mixture of first and second price)
+                        or all-pay auction with loss aversion
+
+        type            str: agent's type can be interpreted as "valuation" or "cost"
+
+        price_rule      float:  relevant if util_setting = generalized:
+                        parameter to go between first-price (lambda=0) to second-price (lambda=1) all-pay auction
+
+        lambda, eta     float, float: relevant if util_setting = loss aversion
     """
 
     def __init__(
@@ -28,14 +45,14 @@ class AllPay(Mechanism):
         super().__init__(bidder, o_space, a_space, param_prior, param_util)
         self.name = "all_pay"
         self.util_setting = (
-            param_util["util_setting"] if "util_setting" in param_util else "valuation"
+            param_util["util_setting"]
+            if "util_setting" in param_util
+            else "first_price"
         )
 
-    def utility(self, obs: np.ndarray, bids: np.ndarray, idx: int):
+    def utility(self, obs: np.ndarray, bids: np.ndarray, idx: int) -> np.ndarray:
         """
-        - allpay: the winner (random tie breaking rule) gets the item and pays either his own bid (first price),
-         the second highest bid (second price) or a convex combination of those two. The loster pay their own bid.
-
+        Payoff function for all-pay auction
 
         Parameters
         ----------
@@ -45,6 +62,7 @@ class AllPay(Mechanism):
 
         Returns
         -------
+        np.ndarray : payoff vector for agent idx
 
         """
 
@@ -64,11 +82,10 @@ class AllPay(Mechanism):
         if obs.shape != bids[idx].shape:
             obs = obs.reshape(len(obs), 1)
 
-        # determine allocation (random tie breaking rule)
+        # determine allocation
         if self.param_util["tiebreaking"] == "random":
             win = np.where(bids[idx] >= bids.max(axis=0), 1, 0)
             num_winner = (bids.max(axis=0) == bids).sum(axis=0)
-
         elif self.param_util["tiebreaking"] == "index":
             if idx == 0:
                 win = np.where(bids[idx] >= np.delete(bids, idx, 0).max(axis=0), 1, 0)
@@ -76,13 +93,13 @@ class AllPay(Mechanism):
             else:
                 win = np.where(bids[idx] > np.delete(bids, idx, 0).max(axis=0), 1, 0)
                 num_winner = np.ones(win.shape)
-
         elif self.param_util["tiebreaking"] == "lose":
             win = bids[idx] > np.delete(bids, idx, 0).max(axis=0)
             num_winner = np.ones(win.shape)
         else:
             raise ValueError("tiebreaking rule unknown (random/index/lose)")
 
+        # determine payoff
         if self.util_setting == "first_price":
             if self.param_util["type"] == "valuation":
                 return obs * win * 1 / num_winner - bids[idx]
@@ -108,7 +125,6 @@ class AllPay(Mechanism):
                 )
 
         elif self.util_setting == "loss_aversion":
-
             lamb = self.param_util["lambda"]
             eta = self.param_util["eta"]
 
@@ -137,6 +153,18 @@ class AllPay(Mechanism):
             raise ValueError('util_setting "' + self.util_setting + '" unknown')
 
     def get_bne(self, agent: str, obs: np.ndarray):
+        """
+        Returns BNE for some predefined settings
+
+        Parameters
+        ----------
+        agent : specficies bidder (important in asymmetric settings)
+        obs :  observation/valuation of agent
+
+        Returns
+        -------
+        np.ndarray : bids to corresponding observation
+        """
 
         if (self.n_bidder == 2) & (len(self.set_bidder) == 1):
             pass
