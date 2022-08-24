@@ -52,9 +52,9 @@ if __name__ == "__main__":
     # SPECIFY THIS FOR EACH EXPERIMENT
     learn_alg = "frank_wolfe"
     setting = "single_item"
-    experiments_list = ["affiliated_values"]
-    logging = False
-    runs = 1
+    experiments_list = ["common_value"]
+    logging = True
+    runs = 5
     path = "experiment/" + setting + "/test_frank_wolfe/"
 
     # prepare stuff

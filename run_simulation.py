@@ -72,9 +72,9 @@ def run_sim(
 
 if __name__ == "__main__":
 
-    setting = "split_award"
+    setting = "single_iteam"
     experiments_list = [
-        "split_award_64",
+        "affiliated_values",
     ]
 
     # specify path for experiments
