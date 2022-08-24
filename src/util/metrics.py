@@ -1,6 +1,6 @@
 import numpy as np
 
-from src.learner import SODA
+from src.learner.soda import SODA
 
 
 def compute_l2_norm(mechanism, strategies, n_obs):
