@@ -3,8 +3,11 @@ bidder: ['1', '1', '1', '1', '1', '1', '1', '1', '1', '1']
 o_space: {'1': [0.0 ,1.0]}
 a_space: {'1': [0.0, 1.0]}
 param_prior: {'distribution':'uniform'}
-param_util: {'tiebreaking':'lose', 'type':'valuation'}
-price: [0.8, 0.2]
+param_util: {
+  'tiebreaking':'lose', 
+  'type':'valuation',
+  'price': [0.8, 0.2],
+  }
 n: 128
 m: 128
 bne_known: True
