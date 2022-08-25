@@ -15,7 +15,7 @@ class LLGAuction(Mechanism):
         bidder: List[str],
         o_space: Dict[str, List],
         a_space: Dict[str, List],
-        param_prior: Dict[str, str],
+        param_prior: Dict,
         param_util: Dict,
     ):
 
