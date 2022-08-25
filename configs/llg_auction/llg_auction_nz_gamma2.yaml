@@ -1,4 +1,5 @@
 name: 'llg_auction_nz_gamma2'
+mechanism: 'llg_auction'
 bidder: ['L', 'L', 'G']
 o_space: {'L': [0.0 ,1.0], 'G':[0.0, 2.0]}
 a_space: {'L': [0.0 ,1.0], 'G':[0.0, 2.0]}

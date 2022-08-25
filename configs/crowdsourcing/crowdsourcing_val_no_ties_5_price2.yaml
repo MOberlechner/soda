@@ -1,4 +1,5 @@
 name: 'crowdsourcing_val_no_ties_5_price2'
+mechanism: 'crowdsourcing'
 bidder: ['1', '1', '1', '1', '1']
 o_space: {'1': [0.0 ,1.0]}
 a_space: {'1': [0.0, 1.0]}
