@@ -69,13 +69,10 @@ def run_sim(
                     util_loss_approx,
                     path,
                 )
+    print('Simulation for experiments: "' + experiment + '" finished!')
 
 
-def aggregate_results(logging: bool):
-    if logging:
-        pass
-        # TODO: aggregate results from run_learner and run_simulation
-
+# -------------------------------------------------------------------------------------------------- #
 
 if __name__ == "__main__":
 
@@ -100,9 +97,4 @@ if __name__ == "__main__":
     n_scaled = m_scaled = 1024
 
     for experiment in experiments_list:
-        print('Simulation for experiments: "' + experiment + '" started!')
-
-        # run simulation
         run_sim(setting, experiment, runs, n_obs, logging, n_scaled, m_scaled)
-
-        print('Simulation for experiments: "' + experiment + '" finished!')
