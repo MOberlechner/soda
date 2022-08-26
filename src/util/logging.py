@@ -4,12 +4,15 @@ from os.path import exists
 import pandas as pd
 
 
-def log_run(strategies, experiment: str, run: int, time_init, time_run, path: str):
+def log_run(
+    strategies, experiment: str, setting: str, run: int, time_init, time_run, path: str
+):
 
     # create new entry for each agent
     rows = [
         {
             "experiment": experiment,
+            "mechanism": setting,
             "run": run,
             "agent": agent,
             "utility": strategies[agent].utility[-1],
