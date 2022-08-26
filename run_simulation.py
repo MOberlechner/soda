@@ -16,6 +16,7 @@ def run_sim(
 ):
 
     # get setting
+    hydra.initialize(config_path="configs/" + setting, job_name="run")
     cfg = hydra.compose(config_name=experiment)
     mechanism, game, strategies = create_setting(setting, cfg)
 
@@ -53,7 +54,7 @@ def run_sim(
                 tag_labels = ["l2_norm", "util_in_bne", "util_vs_bne", "util_loss"]
                 values = [l2_norm, util_bne, util_vs_bne, util_loss]
                 for tag, val in zip(tag_labels, values):
-                    log_sim(strategies, experiment, r, tag, val, path)
+                    log_sim(strategies, experiment, setting, r, tag, val, path)
         else:
             util_loss_approx = compute_util_loss_scaled(
                 mechanism_scaled, game_scaled, strategies_scaled
@@ -70,17 +71,29 @@ def run_sim(
                 )
 
 
+def aggregate_results(logging: bool):
+    if logging:
+        pass
+        # TODO: aggregate results from run_learner and run_simulation
+
+
 if __name__ == "__main__":
 
-    setting = "single_iteam"
+    setting = "llg_auction"
     experiments_list = [
-        "affiliated_values",
+        "llg_auction_nb_gamma1",
+        "llg_auction_nb_gamma2",
+        "llg_auction_nb_gamma3",
+        "llg_auction_nvcg_gamma1",
+        "llg_auction_nvcg_gamma2",
+        "llg_auction_nvcg_gamma3",
+        "llg_auction_nz_gamma1",
+        "llg_auction_nz_gamma2",
+        "llg_auction_nz_gamma3",
     ]
 
     # specify path for experiments
-    path = "experiment/" + setting + "/"
-
-    hydra.initialize(config_path="configs/" + setting, job_name="run")
+    path = "experiment/" + setting + "/test_frank_wolfe/"
     logging = True
     runs = 10
     n_obs = int(2**22)
