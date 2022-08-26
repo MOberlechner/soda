@@ -39,12 +39,15 @@ def log_run(
     log.to_csv(path + "log.csv", index=False)
 
 
-def log_sim(strategies, experiment: str, run: int, tag, values, path: str):
+def log_sim(
+    strategies, experiment: str, setting: str, run: int, tag, values, path: str
+):
 
     # create new entry for each agent
     rows = [
         {
             "experiment": experiment,
+            "mechanism": setting,
             "run": run,
             "agent": agent,
             "tag": tag,
