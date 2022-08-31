@@ -3,10 +3,8 @@ from time import time
 
 import hydra
 
-from src.learner.frank_wolfe import FrankWolfe
-from src.learner.soda import SODA
 from src.util.logging import log_run
-from src.util.setting import create_setting
+from src.util.setup import create_learner, create_setting
 
 
 def learn_strategies(mechanism, game, strategies, cfg_learner) -> None:
@@ -20,22 +18,7 @@ def learn_strategies(mechanism, game, strategies, cfg_learner) -> None:
     """
 
     # init learner
-    if cfg_learner.name == "soda":
-        learner = SODA(
-            cfg_learner.max_iter,
-            cfg_learner.tol,
-            cfg_learner.steprule_bool,
-            cfg_learner.eta,
-            cfg_learner.beta,
-        )
-    elif cfg_learner.name == "frank_wolfe":
-        learner = FrankWolfe(
-            cfg_learner.max_iter,
-            cfg_learner.tol,
-            cfg_learner.steprule_bool,
-        )
-    else:
-        raise ValueError("Learner {} unknown.".format(cfg_learner.name))
+    learner = create_learner(cfg_learner)
 
     # initialize strategies
     init_method = cfg_learner.init_method if "init" in cfg_learner else "random"

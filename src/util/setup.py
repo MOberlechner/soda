@@ -1,4 +1,6 @@
 from src.game import Game
+from src.learner.frank_wolfe import FrankWolfe
+from src.learner.soda import SODA
 from src.mechanism.all_pay import AllPay
 from src.mechanism.contest_game import ContestGame
 from src.mechanism.crowdsourcing import Crowdsourcing
@@ -76,3 +78,32 @@ def create_setting(setting: str, cfg):
         strategies[i] = Strategy(i, game)
 
     return mechanism, game, strategies
+
+
+def create_learner(cfg_learner):
+    """Initialize learner
+
+    Parameters
+    ----------
+    cfg_learner : config for learning algorithm
+
+    Returns
+    -------
+    learner
+    """
+    if cfg_learner.name == "soda":
+        return SODA(
+            cfg_learner.max_iter,
+            cfg_learner.tol,
+            cfg_learner.steprule_bool,
+            cfg_learner.eta,
+            cfg_learner.beta,
+        )
+    elif cfg_learner.name == "frank_wolfe":
+        return FrankWolfe(
+            cfg_learner.max_iter,
+            cfg_learner.tol,
+            cfg_learner.steprule_bool,
+        )
+    else:
+        raise ValueError("Learner {} unknown.".format(cfg_learner.name))
