@@ -120,7 +120,8 @@ dmypy.json
 /src/test/
 /test/
 /experiment/
-/notebooks/
+/notebooks/visualizations
+/notebooks/tests
 
 # numpy (results)
 .npy
