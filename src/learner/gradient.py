@@ -5,12 +5,23 @@ from opt_einsum import contract, contract_path
 
 
 class Gradient:
-    """Class that handles the computation of the gradient for the discretized game"""
+    """Class that handles the computation of the gradient for the discretized game
+
+    Attributes
+        General
+            x (dict): current gradient for all agents
+
+        Computation of Gradient (opt_einsum)
+            indices (dict): indices used as input for einsum
+            path (dict): used in opt_einsum to increase speed of computation
+
+    """
 
     def __init__(self) -> None:
+        self.x = {}
+        self.mc = []
         self.path = {}
         self.indices = {}
-        self.x = {}
 
     def compute(self, strategies: Dict, game, agent: str) -> None:
         """Computes gradient for agent given a strategyprofile, utilities (and weights)
