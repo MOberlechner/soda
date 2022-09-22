@@ -54,9 +54,10 @@ class Strategy:
         self.x = np.ones(tuple([game.n] * self.dim_o + [game.m] * self.dim_a)) / (
             game.n**self.dim_o * game.m * self.dim_a
         )
-        # utility
+        # utility, history, gradients
         self.utility, self.utility_loss = [], []
         self.history = []
+        self.history_gradient = []
 
     def __str__(self):
         return "Strategy Bidder " + self.agent + " - shape: " + str(self.x.shape)
@@ -180,6 +181,12 @@ class Strategy:
         Add current strategy in list
         """
         self.history += [self.x]
+
+    def update_history_gradient(self, gradient: np.ndarray):
+        """
+        Add current gradient to history of gradients
+        """
+        self.history += [gradient]
 
     def update_utility(self, gradient: np.ndarray):
         """
