@@ -186,7 +186,7 @@ class Strategy:
         """
         Add current gradient to history of gradients
         """
-        self.history += [gradient]
+        self.history_gradient += [gradient]
 
     def update_utility(self, gradient: np.ndarray):
         """
