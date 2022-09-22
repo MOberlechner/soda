@@ -19,7 +19,6 @@ class Gradient:
 
     def __init__(self) -> None:
         self.x = {}
-        self.mc = []
         self.path = {}
         self.indices = {}
 

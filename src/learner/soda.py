@@ -80,6 +80,7 @@ class SODA:
                 strategies[i].update_utility(gradient.x[i])
                 strategies[i].update_utility_loss(gradient.x[i])
                 strategies[i].update_history()
+                strategies[i].update_history_gradient(gradient.x[i])
 
             # check convergence
             convergence, min_max_util_loss = self.check_convergence(
