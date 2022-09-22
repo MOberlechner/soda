@@ -2,6 +2,10 @@
 New and better implementation of SODA ...
 
 
+### References:
+- **package opt_einsum:** Daniel G. A. Smith and Johnnie Gray, opt_einsum - A Python package for optimizing contraction order for einsum-like expressions. Journal of Open Source Software, 2018, 3(26), 753
+
+
 ## Setup
 
 Note: These setup instructions assume a Linux-based OS and uses python 3.8.10 (or higher).
