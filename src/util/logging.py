@@ -1,12 +1,16 @@
 from datetime import datetime
 from os.path import exists
 
+import numpy as np
 import pandas as pd
 
+from src.util.metrics import monotonicity, variational_stability
 
-def log_run(
+
+def log_strat(
     strategies,
-    learn_alg,
+    cfg_learner,
+    learn_alg: str,
     experiment: str,
     setting: str,
     run: int,
@@ -15,6 +19,10 @@ def log_run(
     conv: bool,
     path: str,
 ):
+    """
+    log results for each agent of the computation of strategies
+    """
+
     # filename
     filename = "log.csv"
 
@@ -33,6 +41,51 @@ def log_run(
             "iter/sec": round(len(strategies[agent].utility) / time_run, 2),
             "time_init": round(time_init, 2),
             "time_run": round(time_run, 2),
+            "timestamp": str(datetime.now())[:-7],
+        }
+        for agent in strategies
+    ]
+    # create DataFrame with entries
+    df = pd.DataFrame(rows)
+
+    if exists(path + filename):
+        # import existing dataframe
+        log = pd.read_csv(path + filename)
+        log = pd.concat([log, df])
+    else:
+        log = df
+
+    # save data
+    log.to_csv(path + filename, index=False)
+
+
+def log_run(
+    strategies,
+    learn_alg: str,
+    experiment: str,
+    setting: str,
+    run: int,
+    path: str,
+):
+    """
+    log variational stability and monotonicity for each run
+    """
+
+    # file name
+    filename = "log_vs.csv"
+
+    # create new entry for each agent
+    rows = [
+        {
+            "experiment": experiment,
+            "mechanism": setting,
+            "learner": learn_alg,
+            "run": run,
+            "iterations": len(strategies[agent].utility),
+            "var_stab_iter": np.sum(variational_stability(strategies) <= 0),
+            "var_stab_bool": np.all(variational_stability(strategies) <= 0),
+            "monotone_iter": np.sum(monotonicity(strategies) <= 0),
+            "monotone_bool": np.all(monotonicity(strategies) <= 0),
             "timestamp": str(datetime.now())[:-7],
         }
         for agent in strategies
