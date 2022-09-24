@@ -24,15 +24,14 @@ class Crowdsourcing(Mechanism):
         o_space: Dict[str, List],
         a_space: Dict[str, List],
         param_prior: Dict[str, str],
-        prices: List[float],
         param_util: Dict[str, float],
     ):
         super().__init__(bidder, o_space, a_space, param_prior, param_util)
         self.name = "crowdsourcing"
         self.prices = np.array(
-            prices
-            if len(prices) == len(bidder)
-            else prices + [0] * (len(bidder) - len(prices))
+            param_util["prices"]
+            if len(param_util["prices"]) == len(bidder)
+            else param_util["prices"] + [0] * (len(bidder) - len(param_util["prices"]))
         )
         self.param_util = param_util
         self.type = param_util["type"] if "type" in param_util else "cost"
