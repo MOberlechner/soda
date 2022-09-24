@@ -99,6 +99,16 @@ class Strategy:
         if init_method == "random":
             sigma = np.random.uniform(0, 1, size=self.x.shape)
 
+        if init_method == "random_no_overbid":
+            if self.dim_o == self.dim_a == 1:
+                aa, oo = np.meshgrid(self.a_discr, self.o_discr)
+                sigma = np.random.uniform(0, 1, size=self.x.shape)
+                sigma[np.array(oo <= aa)] = lower_bound
+            else:
+                raise NotImplementedError(
+                    "random_no_overbid only available for 1-dim action and observation space"
+                )
+
         elif init_method == "equal":
             sigma = np.ones(self.x.shape)
 
