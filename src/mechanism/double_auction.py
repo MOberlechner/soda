@@ -8,18 +8,17 @@ from .mechanism import Mechanism
 class DoubleAuction(Mechanism):
     def __init__(
         self,
-        bidder: List[str],
-        o_space: Dict[List],
-        a_space: Dict[List],
-        prior: str,
-        payment_rule: str = "average",
-        risk: float = 1.0,
+        bidder: List,
+        o_space: Dict,
+        a_space: Dict,
+        param_prior: Dict,
+        param_util: Dict,
     ):
         # TODO: Fix Implementation for Double Auction
         super().__init__(bidder, o_space, a_space, param_prior, param_util)
         self.name = "double_auction"
-        self.payment_rule = payment_rule
-        self.risk = risk
+        self.payment_rule = param_util["payment_rule"]
+        self.risk = param_util["risk"] if "risk" in param_util else 1.0
 
     def utility(self, val: np.ndarray, bids: np.ndarray, idx: int):
         """
@@ -35,7 +34,6 @@ class DoubleAuction(Mechanism):
         -------
         np.ndarray, shape depends on valuations and bids
         """
-        # TODO: tie breaking rule is not yet implemented
 
         # deterimine parameter
         n_bidder, n_profiles = bids.shape
@@ -50,6 +48,10 @@ class DoubleAuction(Mechanism):
         if self.bidder != ["S"] * n_seller + ["B"] * n_buyer:
             raise ValueError(
                 "bidder must by given by a list of the form [S,...,S,B,...,B]"
+            )
+        if self.n_bidder > 2:
+            raise NotImplementedError(
+                "Implementation so far only for 1 Bidder and 1 Seller"
             )
 
         # determine where trade takes place
