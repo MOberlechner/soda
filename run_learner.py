@@ -63,7 +63,7 @@ def run_experiment(learn_alg, setting, experiment, logging, runs, path, path_con
         if logging is True:
             log_run(
                 strategies,
-                cfg_learner,
+                lean_alg,
                 experiment,
                 setting,
                 r,
@@ -82,6 +82,7 @@ def run_experiment(learn_alg, setting, experiment, logging, runs, path, path_con
                 strategies[i].save(name, path)
 
     print('Experiment: "' + experiment + '" finished!')
+    return mechanism, game, strategies
 
 
 # -------------------------------------------------------------------------------------------------- #
@@ -89,17 +90,9 @@ def run_experiment(learn_alg, setting, experiment, logging, runs, path, path_con
 if __name__ == "__main__":
 
     learn_alg = "frank_wolfe"
-    setting = "llg_auction"
+    setting = "single_item"
     experiments_list = [
-        "llg_auction_nb_gamma1",
-        "llg_auction_nb_gamma2",
-        "llg_auction_nb_gamma3",
-        "llg_auction_nvcg_gamma1",
-        "llg_auction_nvcg_gamma2",
-        "llg_auction_nvcg_gamma3",
-        "llg_auction_nz_gamma1",
-        "llg_auction_nz_gamma2",
-        "llg_auction_nz_gamma3",
+        "fpsb",
     ]
     logging = True
     runs = 10
