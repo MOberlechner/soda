@@ -89,7 +89,12 @@ class Strategy:
 
         """
         # new initializations deletes histories of strategies, utilities, etc
-        self.utility, self.utility_loss, self.history = [], [], []
+        self.utility, self.utility_loss, self.history, self.history_gradient = (
+            [],
+            [],
+            [],
+            [],
+        )
 
         if init_method == "random":
             sigma = np.random.uniform(0, 1, size=self.x.shape)
@@ -296,20 +301,36 @@ class Strategy:
                 "Bids can only be sampled for one-dimensional observations"
             )
 
-    def plot(self, more: bool = False, beta: np.ndarray = None):
+    def plot(
+        self,
+        more: bool = False,
+        beta: np.ndarray = None,
+        iter: int = None,
+        grad: bool = False,
+    ):
         """
         Visualize current strategy
 
         more : bool, if true, we also plot utility loss and distance to last iterate
         beta : array, equilibrium strategy to plot
+        iter : int, plot strategy at iteration iter
 
+        If iteration is specified, we only plot strategy and gradient at that iteration, but no additional metrics (i.e. more=Fa
         """
+
+        # check input
+        if more + grad == 2:
+            raise NotImplementedError("Choose either more or grad, not both")
+        elif grad and self.dim_a > 1:
+            raise NotImplementedError("Gradient only for 1-dim action space available")
+
         # parameters
         label_size = 13
         title_size = 14
 
         if (self.dim_o == 1) and (self.dim_a <= 2):
 
+            # -------------------- PLOT METRICS -------------------- #
             if more:
                 num_plots = 1 + self.dim_a
                 # metric for convergence
@@ -337,16 +358,63 @@ class Strategy:
                 plt.yscale("log")
                 plt.grid(axis="y")
                 plt.legend()
+
+            # -------------------- PLOT GRADIENT -------------------- #
+            elif grad:
+
+                num_plots = 1 + self.dim_a
+                plt.figure(figsize=(5 * num_plots, 5))
+                plt.subplot(1, num_plots, num_plots)
+
+                # plot gradient
+                grad = (
+                    self.history_gradient[-1]
+                    if iter is None
+                    else self.history_gradient[iter]
+                )
+                plt.imshow(
+                    grad.T,
+                    extent=(
+                        self.o_discr[0],
+                        self.o_discr[-1],
+                        self.a_discr[0],
+                        self.a_discr[-1],
+                    ),
+                    origin="lower",
+                    cmap="viridis",
+                    aspect="auto",
+                )
+
+                # plot best response
+                index_max = grad.argmax(axis=1)
+                br = self.a_discr[index_max]
+                plt.plot(
+                    self.o_discr,
+                    br,
+                    linestyle="--",
+                    linewidth=3,
+                    color="orange",
+                    label="best response",
+                )
+                plt.ylabel("bids b", fontsize=label_size)
+                plt.xlabel("observations v", fontsize=label_size)
+                plt.legend(fontsize=label_size, loc=2)
+                plt.title(
+                    'Gradient Player "' + str(self.agent) + '"',
+                    fontsize=title_size,
+                )
+
             else:
                 num_plots = self.dim_a
                 plt.figure(figsize=(5 * num_plots, 5))
 
+            # -------------------- PLOT STRATEGIES -------------------- #
             if self.dim_a == 1:
-
                 # plot strategy
+                strat = self.x if iter is None else self.history[iter]
                 plt.subplot(1, num_plots, 1)
                 plt.imshow(
-                    self.x.T / self.margin(),
+                    strat.T / self.margin(),
                     extent=(
                         self.o_discr[0],
                         self.o_discr[-1],
