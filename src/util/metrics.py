@@ -115,3 +115,66 @@ def compute_util_loss_scaled(mechanism_scaled, game_scaled, strategies_scaled):
         util_loss_scaled[i] = strategies_scaled[i].utility_loss[-1]
 
     return util_loss_scaled
+
+
+def variational_stability(game, strategies):
+    """Check all iterates for variational stability w.r.t. last iterate
+    < v(s), s-s* > <= 0
+
+    Parameters
+    ----------
+    mechanism : class
+    strategies : class
+
+    Returns
+    -------
+    np.ndarray, result for each iteration
+    """
+    iter = len(strategies[game.bidder[0]].history)
+    return np.array(
+        [
+            sum(
+                [
+                    (
+                        strategies[i].history_gradient[t]
+                        * (strategies[i].history[t] - strategies[i].history[-1])
+                    ).sum()
+                    for i in game.bidder
+                ]
+            )
+            for t in range(iter)
+        ]
+    )
+
+
+def monotonicity(game, strategies):
+    """Check all iterates for monotonicity w.r.t. previous iterate
+    < v(s)-v(s'), s-s' > <= 0
+
+    Parameters
+    ----------
+    mechanism : class
+    strategies : class
+
+    Returns
+    -------
+    np.ndarray, result for each iteration
+    """
+    iter = len(strategies[game.bidder[0]].history)
+    return np.array(
+        [
+            sum(
+                [
+                    (
+                        (
+                            strategies[i].history_gradient[t]
+                            - strategies[i].history_gradient[t + 1]
+                        )
+                        * (strategies[i].history[t] - strategies[i].history[t + 1])
+                    ).sum()
+                    for i in game.bidder
+                ]
+            )
+            for t in range(iter - 1)
+        ]
+    )
