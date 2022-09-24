@@ -6,7 +6,7 @@ import pandas as pd
 
 def log_run(
     strategies,
-    cfg_learner,
+    learn_alg,
     experiment: str,
     setting: str,
     run: int,
@@ -15,12 +15,15 @@ def log_run(
     conv: bool,
     path: str,
 ):
+    # filename
+    filename = "log.csv"
 
     # create new entry for each agent
     rows = [
         {
             "experiment": experiment,
             "mechanism": setting,
+            "learner": learn_alg,
             "run": run,
             "agent": agent,
             "utility": strategies[agent].utility[-1],
@@ -37,21 +40,22 @@ def log_run(
     # create DataFrame with entries
     df = pd.DataFrame(rows)
 
-    if exists(path + "log.csv"):
+    if exists(path + filename):
         # import existing dataframe
-        log = pd.read_csv(path + "log.csv")
+        log = pd.read_csv(path + filename)
         log = pd.concat([log, df])
     else:
         log = df
 
     # save data
-    log.to_csv(path + "log.csv", index=False)
+    log.to_csv(path + filename, index=False)
 
 
 def log_sim(
     strategies, experiment: str, setting: str, run: int, tag, values, path: str
 ):
-    """ """
+    # filename
+    filename = "log_sim.csv"
 
     # create new entry for each agent
     rows = [
@@ -69,15 +73,15 @@ def log_sim(
     # create DataFrame with entries
     df = pd.DataFrame(rows)
 
-    if exists(path + "log_sim.csv"):
+    if exists(path + filename):
         # import existing dataframe
-        log = pd.read_csv(path + "log_sim.csv")
+        log = pd.read_csv(path + filename)
         log = pd.concat([log, df])
     else:
         log = df
 
     # save data
-    log.to_csv(path + "log_sim.csv", index=False)
+    log.to_csv(path + filename, index=False)
 
 
 def agg_log_sim(path, decimal=4):
