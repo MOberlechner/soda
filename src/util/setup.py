@@ -4,6 +4,7 @@ from src.learner.soda import SODA
 from src.mechanism.all_pay import AllPay
 from src.mechanism.contest_game import ContestGame
 from src.mechanism.crowdsourcing import Crowdsourcing
+from src.mechanism.double_auction import DoubleAuction
 from src.mechanism.llg_auction import LLGAuction
 from src.mechanism.single_item import SingleItemAuction
 from src.mechanism.split_award import SplitAwardAuction
@@ -63,6 +64,11 @@ def create_setting(setting: str, cfg):
 
     elif setting == "split_award":
         mechanism = SplitAwardAuction(
+            cfg.bidder, cfg.o_space, cfg.a_space, cfg.param_prior, cfg.param_util
+        )
+
+    elif setting == "double_auction":
+        mechanism = DoubleAuction(
             cfg.bidder, cfg.o_space, cfg.a_space, cfg.param_prior, cfg.param_util
         )
 
