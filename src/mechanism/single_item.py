@@ -39,12 +39,18 @@ class SingleItemAuction(Mechanism):
         self.name = "single_item"
 
         self.payment_rule = param_util["payment_rule"]
-        self.risk = param_util["risk"] if "risk" in param_util else 1.0
+        self.risk = (
+            param_util["risk"] if "risk" in param_util else [1.0] * self.n_bidder
+        )
         if self.prior == "affiliated_values":
             self.values = "affiliated"
         elif self.prior == "common_value":
             self.values = "common"
             self.v_space = {i: [0, o_space[i][1] / 2] for i in bidder}
+
+        # check input
+        if type(self.risk) is float:
+            self.risk = [self.risk] * self.n_bidder
 
     def utility(self, obs: np.ndarray, bids: np.ndarray, idx: int) -> None:
         """
@@ -105,11 +111,23 @@ class SingleItemAuction(Mechanism):
         # determine payoff
         if self.payment_rule == "first_price":
             payoff = obs - bids[idx]
-            return 1 / num_winner * win * np.sign(payoff) * np.abs(payoff) ** self.risk
+            return (
+                1
+                / num_winner
+                * win
+                * np.sign(payoff)
+                * np.abs(payoff) ** self.risk[idx]
+            )
 
         elif self.payment_rule == "second_price":
             payoff = obs - np.delete(bids, idx, 0).max(axis=0)
-            return 1 / num_winner * win * np.sign(payoff) * np.abs(payoff) ** self.risk
+            return (
+                1
+                / num_winner
+                * win
+                * np.sign(payoff)
+                * np.abs(payoff) ** self.risk[idx]
+            )
         else:
             raise ValueError("payment rule " + self.payment_rule + " not available")
 
@@ -132,7 +150,7 @@ class SingleItemAuction(Mechanism):
             if (self.payment_rule == "first_price") & np.all(
                 [self.o_space[i] == [0, 1] for i in self.set_bidder]
             ):
-                return (self.n_bidder - 1) / (self.n_bidder - 1 + self.risk) * obs
+                return (self.n_bidder - 1) / (self.n_bidder - 1 + self.risk[0]) * obs
             elif self.payment_rule == "second_price":
                 return obs
 
