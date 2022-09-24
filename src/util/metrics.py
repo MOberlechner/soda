@@ -117,20 +117,19 @@ def compute_util_loss_scaled(mechanism_scaled, game_scaled, strategies_scaled):
     return util_loss_scaled
 
 
-def variational_stability(game, strategies):
+def variational_stability(strategies):
     """Check all iterates for variational stability w.r.t. last iterate
     < v(s), s-s* > <= 0
 
     Parameters
     ----------
-    mechanism : class
     strategies : class
 
     Returns
     -------
     np.ndarray, result for each iteration
     """
-    iter = len(strategies[game.bidder[0]].history)
+    iter = len(strategies[list(strategies.keys())[0]].history)
     return np.array(
         [
             sum(
@@ -139,7 +138,7 @@ def variational_stability(game, strategies):
                         strategies[i].history_gradient[t]
                         * (strategies[i].history[t] - strategies[i].history[-1])
                     ).sum()
-                    for i in game.bidder
+                    for i in strategies
                 ]
             )
             for t in range(iter)
@@ -147,20 +146,19 @@ def variational_stability(game, strategies):
     )
 
 
-def monotonicity(game, strategies):
+def monotonicity(strategies):
     """Check all iterates for monotonicity w.r.t. previous iterate
     < v(s)-v(s'), s-s' > <= 0
 
     Parameters
     ----------
-    mechanism : class
     strategies : class
 
     Returns
     -------
     np.ndarray, result for each iteration
     """
-    iter = len(strategies[game.bidder[0]].history)
+    iter = len(strategies[list(strategies.keys())[0]].history)
     return np.array(
         [
             sum(
@@ -172,7 +170,7 @@ def monotonicity(game, strategies):
                         )
                         * (strategies[i].history[t] - strategies[i].history[t + 1])
                     ).sum()
-                    for i in game.bidder
+                    for i in strategies
                 ]
             )
             for t in range(iter - 1)
