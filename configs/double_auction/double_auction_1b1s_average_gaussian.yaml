@@ -1,0 +1,10 @@
+name: 'double_auction_1b1s_average_gaussian'
+mechanism: 'double_auction'
+bidder: ['S', 'B']
+o_space: {'S': [0.0 ,30.0], 'B':[0.0, 30.0]}
+a_space: {'S': [0.0 ,30.0], 'B':[0.0, 30.0]}
+param_prior: {'distribution':'gaussian', 'mu': 15.0, 'sigma': 5.0}
+param_util: {'payment_rule': 'average', 'risk': 1.0}
+n: 64
+m: 64
+bne_known: False

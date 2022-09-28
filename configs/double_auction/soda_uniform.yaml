@@ -1,0 +1,6 @@
+name: 'soda'
+max_iter: 2000
+tol: 1e-5
+steprule_bool: True
+eta: 200.
+beta: 0.05
