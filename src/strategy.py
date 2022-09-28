@@ -56,8 +56,7 @@ class Strategy:
         )
         # utility, history, gradients
         self.utility, self.utility_loss = [], []
-        self.history = []
-        self.history_gradient = []
+        self.history, self.history_gradient, self.history_best_response = [], [], []
 
     def __str__(self):
         return "Strategy Bidder " + self.agent + " - shape: " + str(self.x.shape)
@@ -203,6 +202,12 @@ class Strategy:
         """
         self.history_gradient += [gradient]
 
+    def update_history_best_response(self, gradient: np.ndarray):
+        """
+        Add current best response to history of response
+        """
+        self.history_best_response += [self.best_response(gradient)]
+
     def update_utility(self, gradient: np.ndarray):
         """
         Compute utility for current strategy and add to list self.utility
@@ -221,6 +226,16 @@ class Strategy:
                 / ((self.best_response(gradient) * gradient).sum() + 1e-50)
             )
         ]
+
+    def update_all(self, gradient: np.ndarray):
+        """
+        Call all update functions: history, gradient, best response, utility, utility loss
+        """
+        self.update_history()
+        self.update_history_gradient(gradient)
+        self.update_history_best_response(gradient)
+        self.update_utility(gradient)
+        self.update_utility_loss(gradient)
 
     def get_dist_last_iter(self) -> np.ndarray:
         """compute distance to last iterate
@@ -472,22 +487,47 @@ class Strategy:
         else:
             raise NotImplementedError("Plot not available for dim_o > 1 or dim_a > 2")
 
-    def save(self, name: str, path: str):
+    def save(self, name: str, setting: str, path: str, save_init: bool = False):
         """Saves strategy in respective directory
 
         Parameters
         ----------
         name : str, name of strategy
-        path : str ,path to directory ( do not append strategies/)
+        path : str ,path to directory (where directory strategies is contained)
+        setting : str, subdirectory in strategies
+        save_init: bool, save initial strategy as well
         """
-        np.save(path + "strategies/" + name + "_agent_" + self.agent + ".npy", self.x)
+        np.save(
+            path
+            + "strategies/"
+            + setting
+            + "/"
+            + name
+            + "_agent_"
+            + self.agent
+            + ".npy",
+            self.x,
+        )
+        if save_init:
+            np.save(
+                path
+                + "strategies/"
+                + setting
+                + "/"
+                + name
+                + "_agent_"
+                + self.agent
+                + "_init.npy",
+                self.history[0],
+            )
 
-    def load(self, name: str, path: str):
+    def load(self, name: str, setting: str, path: str):
         """Load strategy from respective directory, same naming convention as in save method
 
         Parameters
         ----------
         name : str, name of strategy
+        setting : str, subdirectory of strategies, mechanism
         path : str, path to directory (in which strategies/ is contained
 
         Returns
@@ -496,7 +536,14 @@ class Strategy:
         """
         try:
             self.x = np.load(
-                path + "strategies/" + name + "_agent_" + self.agent + ".npy"
+                path
+                + "strategies/"
+                + setting
+                + "/"
+                + name
+                + "_agent_"
+                + self.agent
+                + ".npy"
             )
         except:
             print(
@@ -511,13 +558,14 @@ class Strategy:
                 + '"'
             )
 
-    def load_scale(self, name: str, path: str, n_scaled: int, m_scaled):
+    def load_scale(self, name: str, setting: str, path: str, n_scaled: int, m_scaled):
         """Load strategy from respective directory, same naming convention as in save method
         Should be used if saved strategy has a lower discretization than the strategy we have
 
         Parameters
         ----------
         name : str, name of strategy
+        setting: str, name of setting (subdirectory in strategies)
         path : str, path to directory (in which strategies/ is contained
         n_scaled: int, discretization (type) in the larger setting
         m_scaled: int, discretization (action) in the larger setting
@@ -528,7 +576,14 @@ class Strategy:
         """
         try:
             strat = np.load(
-                path + "strategies/" + name + "_agent_" + self.agent + ".npy"
+                path
+                + "strategies/"
+                + setting
+                + "/"
+                + name
+                + "_agent_"
+                + self.agent
+                + ".npy"
             )
             bool_strat_loaded = True
 
