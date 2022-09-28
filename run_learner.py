@@ -3,7 +3,7 @@ from time import time
 
 import hydra
 
-from src.util.logging import log_run
+from src.util.logging import log_run, log_strat
 from src.util.setup import create_learner, create_setting
 
 
@@ -31,7 +31,9 @@ def learn_strategies(mechanism, game, strategies, cfg_learner) -> None:
     return strategies
 
 
-def run_experiment(learn_alg, setting, experiment, logging, runs, path, path_config):
+def run_experiment(
+    learn_alg, setting, experiment, logging, num_runs, path, path_config
+):
     """
     Run experiments specified in experiments_list (only single setting possible)
     with specified learning algorithm.
@@ -54,21 +56,31 @@ def run_experiment(learn_alg, setting, experiment, logging, runs, path, path_con
     time_init = time() - t0
 
     # run soda
-    for r in range(runs):
+    for run in range(num_runs):
         t0 = time()
         strategies = learn_strategies(mechanism, game, strategies, cfg_learner)
         time_run = time() - t0
 
         # log and save
         if logging is True:
-            log_run(
+            log_strat(
                 strategies,
-                lean_alg,
+                cfg_learner,
+                learn_alg,
                 experiment,
                 setting,
-                r,
+                run,
                 time_init,
                 time_run,
+                path,
+            )
+
+            log_run(
+                strategies,
+                learn_alg,
+                experiment,
+                setting,
+                run,
                 path,
             )
 
@@ -77,12 +89,11 @@ def run_experiment(learn_alg, setting, experiment, logging, runs, path, path_con
                     cfg_learner.name
                     + "_"
                     + experiment
-                    + ("_run_" + str(r) if runs > 1 else "")
+                    + ("_run_" + str(run) if num_runs > 1 else "")
                 )
-                strategies[i].save(name, path)
-
+                strategies[i].save(name, setting, path, save_init=True)
+    hydra.core.global_hydra.GlobalHydra().clear()
     print('Experiment: "' + experiment + '" finished!')
-    return mechanism, game, strategies
 
 
 # -------------------------------------------------------------------------------------------------- #
