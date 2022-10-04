@@ -1,0 +1,13 @@
+name: 'all_pay_loss_avers_1'
+bidder: ['1', '1']
+o_space: {'1': [0.0 ,1.0]}
+a_space: {'1': [0.0, 0.7]}
+param_prior: {'distribution': 'uniform'}
+param_util: {
+  'tiebreaking': 'lose',
+  'util_setting': 'generalized',
+  'price_rule': 1.0,
+
+  }
+n: 64
+m: 64
