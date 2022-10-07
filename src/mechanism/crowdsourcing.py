@@ -126,7 +126,7 @@ class Crowdsourcing(Mechanism):
         else:
             raise ValueError("util_type in param_util unknown")
 
-    def compute_gradient(self, strategies, game, agent: str):
+    def compute_gradient(self, game, strategies, agent: str):
         """Simplified computation of gradient for i.i.d. bidders and tie-breaking "lose"
 
         Parameters
