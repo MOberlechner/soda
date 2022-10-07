@@ -118,7 +118,7 @@ def compute_util_loss_scaled(mechanism_scaled, game_scaled, strategies_scaled):
 
 
 def variational_stability(strategies):
-    """Check all iterates for variational stability w.r.t. last iterate
+    """Check all iterates for variational stability w.r.t. equilibrium (i.e., last iterate)
     < v(s), s-s* > <= 0
 
     Parameters
@@ -169,6 +169,67 @@ def monotonicity(strategies):
                             - strategies[i].history_gradient[t + 1]
                         )
                         * (strategies[i].history[t] - strategies[i].history[t + 1])
+                    ).sum()
+                    for i in strategies
+                ]
+            )
+            for t in range(iter - 1)
+        ]
+    )
+
+
+def condition_best_response(strategies):
+    """Check if br points towards equilibrium (i.e., last iterate)
+    < s-br(s), s-s* > <= 0
+
+    Parameters
+    ----------
+    strategies : class
+
+    Returns
+    -------
+    np.ndarray, result for each iteration
+    """
+    iter = len(strategies[list(strategies.keys())[0]].history)
+    return np.array(
+        [
+            sum(
+                [
+                    (
+                        (
+                            strategies[i].history_best_response[t]
+                            - strategies[i].history[t]
+                        )
+                        * (strategies[i].history[t] - strategies[i].history[-1])
+                    ).sum()
+                    for i in strategies
+                ]
+            )
+            for t in range(iter)
+        ]
+    )
+
+
+def condition_next_iterate(strategies):
+    """Check if update points towards equilibrium (i.e., last iterate)
+    < s-br(s), s-s* > <= 0
+
+    Parameters
+    ----------
+    strategies : class
+
+    Returns
+    -------
+    np.ndarray, result for each iteration
+    """
+    iter = len(strategies[list(strategies.keys())[0]].history)
+    return np.array(
+        [
+            sum(
+                [
+                    (
+                        (strategies[i].history[t + 1] - strategies[i].history[t])
+                        * (strategies[i].history[t] - strategies[i].history[-1])
                     ).sum()
                     for i in strategies
                 ]
