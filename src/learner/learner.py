@@ -5,7 +5,6 @@ import numpy as np
 from tqdm import tqdm
 
 from src.learner.gradient import Gradient
-from src.learner.update import *
 
 
 class Learner:
