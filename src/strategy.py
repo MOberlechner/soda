@@ -202,7 +202,7 @@ class Strategy:
 
     # --------------------------------------- METHODS USED TO DURING ITERATIONS ---------------------------------------- #
 
-    def update_history(self):
+    def update_history_strategy(self):
         """
         Add current strategy in list
         """
@@ -239,11 +239,11 @@ class Strategy:
             )
         ]
 
-    def update_all(self, gradient: np.ndarray):
+    def update_history(self, gradient: np.ndarray):
         """
         Call all update functions: history, gradient, best response, utility, utility loss
         """
-        self.update_history()
+        self.update_history_strategy()
         self.update_history_gradient(gradient)
         self.update_history_best_response(gradient)
         self.update_utility(gradient)
