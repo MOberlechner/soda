@@ -145,8 +145,21 @@ class Game:
             else:
                 raise ValueError
 
-    def get_prior(self, mechanism, agent):
-        p = marginal_prior_pdf(mechanism, self.o_discr[agent], agent)
+    def get_prior(self, mechanism, agent: str) -> np.ndarray:
+        """Given prior distribution specified in mechanism, returns discretized prior
+        If discretized observation space has only one entry, it corresponds to the complete information setting and the probability is equal to 1
+
+        Args:
+            mechanism: auction mechanism
+            agent (str): agent
+
+        Returns:
+            np.ndarray: discretized prior for agent
+        """
+        if self.o_discr[agent].size == 1:
+            p = np.array([1])
+        else:
+            p = marginal_prior_pdf(mechanism, self.o_discr[agent], agent)
         return p / p.sum()
 
     def get_weights(self, mechanism):
@@ -202,6 +215,13 @@ def discr_interval(
             + (0.5 + np.arange(n_discrete)) * (upper_bound - lower_bound) / n_discrete
         )
     else:
-        return lower_bound + (np.arange(n_discrete)) * (upper_bound - lower_bound) / (
-            n_discrete - 1
-        )
+        if (lower_bound == upper_bound) & (n_discrete > 2):
+            raise ValueError(
+                "Discretized interval with n_discrete > 1 cannot have same lower and upper bound"
+            )
+        elif (lower_bound == upper_bound) & (n_discrete == 1):
+            return np.array([lower_bound])
+        else:
+            return lower_bound + (np.arange(n_discrete)) * (
+                upper_bound - lower_bound
+            ) / (n_discrete - 1)

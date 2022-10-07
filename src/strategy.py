@@ -55,8 +55,13 @@ class Strategy:
             game.n**self.dim_o * game.m * self.dim_a
         )
         # utility, history, gradients
-        self.utility, self.utility_loss = [], []
-        self.history, self.history_gradient, self.history_best_response = [], [], []
+        (
+            self.utility,
+            self.utility_loss,
+            self.history,
+            self.history_gradient,
+            self.history_best_response,
+        ) = ([], [], [], [], [])
 
     def __str__(self):
         return "Strategy Bidder " + self.agent + " - shape: " + str(self.x.shape)
@@ -88,7 +93,14 @@ class Strategy:
 
         """
         # new initializations deletes histories of strategies, utilities, etc
-        self.utility, self.utility_loss, self.history, self.history_gradient = (
+        (
+            self.utility,
+            self.utility_loss,
+            self.history,
+            self.history_gradient,
+            history_best_response,
+        ) = (
+            [],
             [],
             [],
             [],
@@ -345,7 +357,7 @@ class Strategy:
 
         # check input
         if more + grad == 2:
-            raise NotImplementedError("Choose either more or grad, not both")
+            raise NotImplementedError('Choose either "more" or "grad", not both')
         elif grad and self.dim_a > 1:
             raise NotImplementedError("Gradient only for 1-dim action space available")
 
@@ -397,11 +409,19 @@ class Strategy:
                     if iter is None
                     else self.history_gradient[iter]
                 )
+
                 plt.imshow(
                     grad.T,
                     extent=(
                         self.o_discr[0],
                         self.o_discr[-1],
+                        self.a_discr[0],
+                        self.a_discr[-1],
+                    )
+                    if self.n > 1
+                    else (
+                        self.a_discr[0],
+                        self.a_discr[-1],
                         self.a_discr[0],
                         self.a_discr[-1],
                     ),
@@ -410,17 +430,31 @@ class Strategy:
                     aspect="auto",
                 )
 
+                if self.n == 1:
+                    plt.xticks(
+                        [0.5 * (self.a_discr[0] + self.a_discr[-1])], self.o_discr
+                    )
+
                 # plot best response
                 index_max = grad.argmax(axis=1)
                 br = self.a_discr[index_max]
-                plt.plot(
-                    self.o_discr,
-                    br,
-                    linestyle="--",
-                    linewidth=3,
-                    color="orange",
-                    label="best response",
-                )
+                if self.n > 1:
+                    plt.plot(
+                        self.o_discr,
+                        br,
+                        linestyle="--",
+                        linewidth=3,
+                        color="orange",
+                        label="best response",
+                    )
+                else:
+                    plt.axhline(
+                        br,
+                        linestyle="--",
+                        linewidth=3,
+                        color="orange",
+                        label="best response",
+                    )
                 plt.ylabel("bids b", fontsize=label_size)
                 plt.xlabel("observations v", fontsize=label_size)
                 plt.legend(fontsize=label_size, loc=2)
@@ -434,15 +468,23 @@ class Strategy:
                 plt.figure(figsize=(5 * num_plots, 5))
 
             # -------------------- PLOT STRATEGIES -------------------- #
+            strat = self.x if iter is None else self.history[iter]
+
             if self.dim_a == 1:
                 # plot strategy
-                strat = self.x if iter is None else self.history[iter]
                 plt.subplot(1, num_plots, 1)
                 plt.imshow(
                     strat.T / self.margin(),
                     extent=(
                         self.o_discr[0],
                         self.o_discr[-1],
+                        self.a_discr[0],
+                        self.a_discr[-1],
+                    )
+                    if self.n > 1
+                    else (
+                        self.a_discr[0],
+                        self.a_discr[-1],
                         self.a_discr[0],
                         self.a_discr[-1],
                     ),
@@ -457,19 +499,30 @@ class Strategy:
                     'Distributional Strategy Player "' + str(self.agent) + '"',
                     fontsize=title_size,
                 )
+                if self.n == 1:
+                    plt.xticks(
+                        [0.5 * (self.a_discr[0] + self.a_discr[-1])], self.o_discr
+                    )
 
                 # plot BNE
                 if beta is not None:
                     x = np.linspace(self.o_discr[0], self.o_discr[-1], len(beta))
-                    plt.plot(x, beta, linestyle="--", color="r", label="analyt. BNE")
-                    plt.legend()
+                    if self.n > 1:
+                        plt.plot(
+                            x, beta, linestyle="--", color="r", label="analyt. BNE"
+                        )
+                        plt.legend()
+                    else:
+                        plt.axhline(
+                            beta, linestyle="--", color="r", label="analyt. BNE"
+                        )
 
                 plt.show()
 
             else:
                 for i in range(2):
                     plt.subplot(1, num_plots, i + 1)
-                    s = self.x.sum(axis=2 - i)
+                    s = strat.sum(axis=2 - i)
                     plt.imshow(
                         s.T / s.sum(axis=1),
                         extent=(
@@ -483,7 +536,6 @@ class Strategy:
                         cmap="Greys",
                         aspect="auto",
                     )
-
         else:
             raise NotImplementedError("Plot not available for dim_o > 1 or dim_a > 2")
 
