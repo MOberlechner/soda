@@ -1,30 +1,19 @@
-from time import sleep, time
-from typing import Dict, List, Tuple
-
 import numpy as np
-from tqdm import tqdm
 
-from src.learner.gradient import Gradient
+from .learner import Learner
 
 
-class SODA:
-    """Simultanoues Online Dual Averaging applied to discretized game
+class SODA(Learner):
+    """SODA - Dual Averaging with entropic regularizer
 
     Attributes:
-        General
-            max_iter (int): maximal number of iterations
-            tol (float): algorithm stops if relative utility loss is less than tol
-            grad (Dict): contains last computed gradient (np.ndarray) for each agent
+        method (str): specify learning algorithm
+        max_iter (int): maximal number of iterations
+        tol (float): stopping criterion (relative utility loss)
 
-        Steprule
-            step_rule (bool): if True we use decreasing, else heuristic step size
-            eta (float): parameter for step rule
-            beta (float): parameter for step rule (if True)
-
-        Gradient (opt_einsum)
-            path (Dict): path for einsum to compute gradient for each agent
-            indices (Dict): indices
-
+        step_rule (bool): if True we use decreasing, else heuristic step size
+        eta (float): factor for stepsize
+        beta (float): rate the stepsize decreases with each iteration
     """
 
     def __init__(
@@ -35,88 +24,10 @@ class SODA:
         eta: float,
         beta: float = 1 / 20,
     ):
+        super().__init__(max_iter, tol)
+        self.learner = "soda"
 
-        self.max_iter = max_iter
-        self.tol = tol
-        self.steprule_bool = steprule_bool
-        self.eta = eta
-        self.beta = beta
-
-    def run(self, mechanism, game, strategies: Dict) -> None:
-        """Runs SODA and updates strategies accordingly
-
-        Args:
-            mechanism: describes auction game
-            game: discretized mechanism
-            strategies (Dict): contains strategies for all agents
-        """
-
-        # prepare gradients, i.e., compute path and indices
-        if not mechanism.own_gradient:
-            gradient = Gradient()
-            gradient.prepare(game, strategies)
-        else:
-            gradient = Gradient()
-
-        # init parameters
-        min_max_util_loss = 1
-        t_max = 0
-
-        for t in tqdm(
-            range(self.max_iter),
-            unit_scale=True,
-            bar_format="{l_bar}{bar:20}{r_bar}{bar:-10b}",
-        ):
-
-            # compute gradients
-            for i in game.set_bidder:
-                if mechanism.own_gradient:
-                    gradient.x[i] = mechanism.compute_gradient(strategies, game, i)
-                else:
-                    gradient.compute(strategies, game, i)
-
-            # update utility, utility loss, history
-            for i in game.set_bidder:
-                strategies[i].update_utility(gradient.x[i])
-                strategies[i].update_utility_loss(gradient.x[i])
-                strategies[i].update_history()
-                strategies[i].update_history_gradient(gradient.x[i])
-
-            # check convergence
-            convergence, min_max_util_loss = self.check_convergence(
-                strategies, min_max_util_loss
-            )
-            if convergence:
-                t_max = t
-                break
-
-            # update strategy
-            for i in game.set_bidder:
-                stepsize = self.step_rule(t, gradient.x[i], strategies[i].dim_o)
-                self.update_strategy(strategies[i], gradient.x[i], stepsize)
-
-        # Print result
-        if convergence:
-            print("Convergence after", t_max, "iterations")
-            print("Relative utility loss", round(min_max_util_loss * 100, 3), "%")
-        else:
-            max_util_loss = np.max([strategies[i].utility_loss[-1] for i in strategies])
-            print("No convergence")
-            print("Current relative utility loss", round(max_util_loss * 100, 3), "%")
-            print("Best relative utility loss", round(min_max_util_loss * 100, 3), "%")
-
-    def check_convergence(self, strategies, min_max_util_loss: float) -> Tuple:
-        """check if the maximal relative utility loss (over all agents) is less than the tolerance"""
-        max_util_loss = np.max([strategies[i].utility_loss[-1] for i in strategies])
-        # update minimal max_util_loss (over all iterations)
-        min_max_util_loss = min(min_max_util_loss, max_util_loss)
-
-        # check if smaller than tolerance
-        convergence = max_util_loss < self.tol
-
-        return convergence, min_max_util_loss
-
-    def update_strategy(self, strategy, gradient: np.ndarray, stepsize: np.ndarray):
+    def update_strategy(self, strategy, gradient: np.ndarray, t: int) -> None:
         """
         Update strategy: dual avering with entropic regularizer
 
@@ -130,6 +41,8 @@ class SODA:
         -------
         np.ndarray : updated strategy
         """
+        # get stepsize
+        stepsize = self.step_rule(t, gradient, strategy.dim_o)
 
         # multiply with stepsize
         step = gradient * stepsize.reshape(list(stepsize.shape) + [1] * strategy.dim_a)
