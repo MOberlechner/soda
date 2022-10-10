@@ -231,11 +231,12 @@ class Strategy:
         Compute relative utility loss for current strategy and add to list self.utility
         Add 1e-50 so that we don't divide by zero
         """
+        util_br = (self.best_response(gradient) * gradient).sum()
         self.utility_loss += [
             np.abs(
                 1
                 - (self.x * gradient).sum()
-                / ((self.best_response(gradient) * gradient).sum() + 1e-50)
+                / (np.sign(util_br) * (np.abs(util_br) + 1e-50))
             )
         ]
 
