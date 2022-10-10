@@ -215,9 +215,13 @@ def discr_interval(
             + (0.5 + np.arange(n_discrete)) * (upper_bound - lower_bound) / n_discrete
         )
     else:
-        if (lower_bound == upper_bound) & (n_discrete > 2):
+        if (lower_bound == upper_bound) & (n_discrete > 1):
             raise ValueError(
                 "Discretized interval with n_discrete > 1 cannot have same lower and upper bound"
+            )
+        elif (lower_bound != upper_bound) & (n_discrete == 1):
+            raise ValueError(
+                "Discretized interval with n_discrete == 1 and midpoint=False cannot have different lower and upper bounds "
             )
         elif (lower_bound == upper_bound) & (n_discrete == 1):
             return np.array([lower_bound])
