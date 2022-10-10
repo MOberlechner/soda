@@ -4,3 +4,4 @@ tol: 1e-4
 steprule_bool: True
 eta: 50.
 beta: 0.05
+init_method: 'random'

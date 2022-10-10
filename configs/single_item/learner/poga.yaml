@@ -1,0 +1,7 @@
+name: 'poga'
+max_iter: 2000
+tol: 1e-4
+steprule_bool: True
+eta: 0.01
+beta: 0.05
+init_method: 'random'
