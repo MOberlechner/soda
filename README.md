@@ -1,10 +1,5 @@
 # SODA
 
-###  Todo
-
-[x] adapt mechanism.utility() such that we can call it always (but nothing happens if own_gradient is True)
-
-
 ### References:
 - **package opt_einsum:** Daniel G. A. Smith and Johnnie Gray, opt_einsum - A Python package for optimizing contraction order for einsum-like expressions. Journal of Open Source Software, 2018, 3(26), 753
 
