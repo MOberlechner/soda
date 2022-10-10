@@ -1,9 +1,14 @@
 # SODA
-New and better implementation of SODA ...
+
+###  Todo
+
+[x] adapt mechanism.utility() such that we can call it always (but nothing happens if own_gradient is True)
 
 
 ### References:
 - **package opt_einsum:** Daniel G. A. Smith and Johnnie Gray, opt_einsum - A Python package for optimizing contraction order for einsum-like expressions. Journal of Open Source Software, 2018, 3(26), 753
+
+- **projection onto simplex** is based on "W. Wang and M. A. Carreira-Perpinan - Projection onto the probability simplex: An efficient algorithm with a simple proof, and an application" (https://arxiv.org/abs/1309.1541)
 
 
 ## Setup
