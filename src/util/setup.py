@@ -1,3 +1,5 @@
+import hydra
+
 from src.game import Game
 from src.learner.best_response import BestResponse
 from src.learner.frank_wolfe import FrankWolfe
@@ -118,3 +120,31 @@ def create_learner(cfg_learner):
 
     else:
         raise ValueError("Learner {} unknown.".format(cfg_learner.name))
+
+
+def get_config(path_config: str, setting: str, experiment: str, learn_alg: str):
+    """Get config files
+
+    Args:
+        path_config (str): path to config directory
+        setting (str): subdirectory for mechanism
+        experiment (str): experiment for mechanism (setting)
+        learn_alg (str): learning algorithm in directory setting/learner
+
+    Returns:
+        config files for experiment and learner
+    """
+    # in soda directory
+    path_config = "../../" + path_config
+
+    # get auction game
+    hydra.initialize(config_path=path_config + setting, job_name="run")
+    cfg_exp = hydra.compose(config_name=experiment)
+    hydra.core.global_hydra.GlobalHydra().clear()
+
+    # get learner
+    hydra.initialize(config_path=path_config + setting + "/learner", job_name="run")
+    cfg_learner = hydra.compose(config_name=learn_alg)
+    hydra.core.global_hydra.GlobalHydra().clear()
+
+    return cfg_exp, cfg_learner

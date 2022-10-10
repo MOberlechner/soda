@@ -1,10 +1,8 @@
 from pathlib import Path
 from time import time
 
-import hydra
-
 from src.util.logging import log_run, log_strat
-from src.util.setup import create_learner, create_setting
+from src.util.setup import create_learner, create_setting, get_config
 
 
 def learn_strategies(mechanism, game, strategies, cfg_learner) -> None:
@@ -38,14 +36,11 @@ def run_experiment(
     Run experiments specified in experiments_list (only single setting possible)
     with specified learning algorithm.
     """
-
-    # prepare stuff
-    hydra.initialize(config_path=path_config + setting, job_name="run")
+    # directory to store results
     Path(path + "strategies/" + setting).mkdir(parents=True, exist_ok=True)
 
     # get parameter
-    cfg_learner = hydra.compose(config_name=learn_alg)
-    cfg = hydra.compose(config_name=experiment)
+    cfg, cfg_learner = get_config(path_config, setting, experiment, learn_alg)
 
     # initialize setting and compute utility
     t0 = time()
@@ -91,8 +86,8 @@ def run_experiment(
                     + experiment
                     + ("_run_" + str(run) if num_runs > 1 else "")
                 )
+                # save strategies
                 strategies[i].save(name, setting, path, save_init=True)
-    hydra.core.global_hydra.GlobalHydra().clear()
     print('Experiment: "' + experiment + '" finished!')
 
 
