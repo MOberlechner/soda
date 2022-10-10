@@ -83,7 +83,7 @@ class Learner:
             for i in game.set_bidder:
                 self.update_strategy(strategies[i], gradient.x[i], t)
 
-        self.print_result(self, convergence, min_max_util_loss, t_max, strategies)
+        self.print_result(convergence, min_max_util_loss, t_max, strategies)
 
     def update_strategy(self, strategy, gradient, t):
         """Update strategy according to update rule from specific learning method
