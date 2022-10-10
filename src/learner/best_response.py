@@ -21,13 +21,11 @@ class BestResponse(Learner):
         self.learner = "best_response"
 
     def update_strategy(self, strategy, gradient: np.ndarray, t: int) -> None:
-        """
-        Update strategy: Best Response
+        """_summary_
 
-        Parameters
-        ----------
-        strategy : class Strategy
-        gradient : np.ndarray,
-        stepsize : np.ndarray, step size
+        Args:
+            strategy (class): strategy class
+            gradient (np.ndarray): gradient
+            t (int): current iteration
         """
         strategy.x = strategy.best_response(gradient)

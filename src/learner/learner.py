@@ -69,7 +69,7 @@ class Learner:
 
             # update history (strategy, gradient, utility, utility loss)
             for i in game.set_bidder:
-                strategies[i].update_history(gradient[i])
+                strategies[i].update_history(gradient.x[i])
 
             # check convergence
             convergence, min_max_util_loss = self.check_convergence(
@@ -81,7 +81,7 @@ class Learner:
 
             # update strategy
             for i in game.set_bidder:
-                strategies[i].x = self.update_strategy(strategies[i], gradient.x[i], t)
+                self.update_strategy(strategies[i], gradient.x[i], t)
 
         self.print_result(self, convergence, min_max_util_loss, t_max, strategies)
 
@@ -92,6 +92,10 @@ class Learner:
             strategy (class):
             gradient (np.ndarray): gradient at iteration t
             t (int): teration (starting at 0)
+
+        Each learner has the method update_strategy where the strategy is update according
+        to a rule defined in the method update_step. This separation is done, to have the general update
+        step from the optimization method independent of the strategy class.
         """
         pass
 

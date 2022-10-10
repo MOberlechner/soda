@@ -30,24 +30,18 @@ class FrankWolfe(Learner):
         gradient : np.ndarray,
         stepsize : np.ndarray, step size
         """
-        stepsize = self.step_rule(t)
-
         # solution of minimization problem
-        y = strategy.best_response(gradient)
-        # make step towards y
-        x_new = (1 - stepsize) * strategy.x + stepsize * y
-        # update strategy
-        strategy.x = x_new
+        br = strategy.best_response(gradient)
+        # update step
+        strategy.x = self.update_step(strategy.x, br, t)
 
-    def step_rule(self, t: int) -> np.ndarray:
-        """Compute step size:
-        if step_rule is True: step sizes are not summable, but square-summable
-        if step_rule is False: heuristic step size, scaled for each observation
+    def update_step(self, x: np.ndarray, x_opt: np.ndarray, t):
+        """Update Step for Frank-Wolfe
 
         Args:
-            t (int): current iteration
-
-        Returns:
-            np.ndarray: step size eta (either scaler or for each valuation)
+            x (np.ndarray): current iterate
+            x_opt (np.ndarray): solution of linear program
+            stepsize (int): currrent iteration (starts at 0)
         """
-        return np.array([2 / (t + 2)])
+        gamma = 2 / (t + 2)
+        return (1 - gamma) * x + gamma * x_opt
