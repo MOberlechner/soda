@@ -1,5 +1,7 @@
 from src.game import Game
+from src.learner.best_response import BestResponse
 from src.learner.frank_wolfe import FrankWolfe
+from src.learner.poga import POGA
 from src.learner.soda import SODA
 from src.mechanism.all_pay import AllPay
 from src.mechanism.contest_game import ContestGame
@@ -14,14 +16,15 @@ from src.strategy import Strategy
 def create_setting(setting: str, cfg):
     """Initialize mechanism, discretized game and strategies
 
-    Parameters
-    ----------
-    setting : str, specifies mechanism
-    cfg : config for experimt
+    Args:
+        setting (str): specifies mechanism
+        cfg (_type_): config file
 
-    Returns
-    -------
-    mechanism, game, strategy
+    Raises:
+        ValueError: setting unknown
+
+    Returns:
+        tuple: mechanism, game, strategy
     """
 
     if setting == "single_item":
@@ -73,7 +76,7 @@ def create_setting(setting: str, cfg):
         )
 
     else:
-        raise ValueError('Mechanism "' + setting + '" not available')
+        raise ValueError('Mechanism "{}" not available'.format(setting))
 
     # create approximation game
     game = Game(mechanism, cfg.n, cfg.m)
@@ -105,11 +108,27 @@ def create_learner(cfg_learner):
             cfg_learner.eta,
             cfg_learner.beta,
         )
+
+    elif cfg_learner.name == "poga":
+        return POGA(
+            cfg_learner.max_iter,
+            cfg_learner.tol,
+            cfg_learner.steprule_bool,
+            cfg_learner.eta,
+            cfg_learner.beta,
+        )
+
     elif cfg_learner.name == "frank_wolfe":
         return FrankWolfe(
             cfg_learner.max_iter,
             cfg_learner.tol,
-            cfg_learner.steprule_bool,
         )
+
+    elif cfg_learner.name == "best_response":
+        return BestResponse(
+            cfg_learner.max_iter,
+            cfg_learner.tol,
+        )
+
     else:
         raise ValueError("Learner {} unknown.".format(cfg_learner.name))
