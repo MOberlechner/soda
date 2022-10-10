@@ -39,30 +39,16 @@ def create_setting(setting: str, cfg):
 
     elif setting == "contest_game":
         mechanism = ContestGame(
-            cfg.bidder,
-            cfg.o_space,
-            cfg.a_space,
-            cfg.param_prior,
-            cfg.param_util,
+            cfg.bidder, cfg.o_space, cfg.a_space, cfg.param_prior, cfg.param_util
         )
     elif setting == "all_pay":
         mechanism = AllPay(
-            cfg.bidder,
-            cfg.o_space,
-            cfg.a_space,
-            cfg.param_prior,
-            cfg.util_setting,
-            cfg.param_util,
+            cfg.bidder, cfg.o_space, cfg.a_space, cfg.param_prior, cfg.param_util
         )
 
     elif setting == "crowdsourcing":
         mechanism = Crowdsourcing(
-            cfg.bidder,
-            cfg.o_space,
-            cfg.a_space,
-            cfg.param_prior,
-            cfg.price,
-            cfg.param_util,
+            cfg.bidder, cfg.o_space, cfg.a_space, cfg.param_prior, cfg.param_util
         )
 
     elif setting == "split_award":
