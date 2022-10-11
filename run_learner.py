@@ -30,11 +30,26 @@ def learn_strategies(mechanism, game, strategies, cfg_learner) -> None:
 
 
 def run_experiment(
-    learn_alg, setting, experiment, logging, num_runs, path, path_config
+    learn_alg: str,
+    setting: str,
+    experiment: str,
+    logging: bool,
+    save_strat: bool,
+    num_runs: int,
+    path: str,
+    path_config: str,
 ):
-    """
-    Run experiments specified in experiments_list (only single setting possible)
-    with specified learning algorithm.
+    """Run Experiment
+
+    Args:
+        learn_alg (str): learning algorithm (soda, poga, frank_wolfe, ...)
+        setting (str): mechanism
+        experiment (str): specific experiment within defined setting/mechanism
+        logging (bool): save logging file
+        save_strat (bool): save strategies
+        num_runs (int): number of repetitions for each experiment
+        path (str): path where stuff is saved (rel. to directory where script is run)
+        path_config (str): path to config file (rel. to soda-directory)
     """
     # directory to store results
     Path(path + "strategies/" + setting).mkdir(parents=True, exist_ok=True)
@@ -87,7 +102,8 @@ def run_experiment(
                     + ("_run_" + str(run) if num_runs > 1 else "")
                 )
                 # save strategies
-                strategies[i].save(name, setting, path, save_init=True)
+                if save_strat:
+                    strategies[i].save(name, setting, path, save_init=True)
     print('Experiment: "' + experiment + '" finished!')
 
 
