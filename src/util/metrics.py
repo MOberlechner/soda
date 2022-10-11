@@ -178,7 +178,7 @@ def monotonicity(strategies):
     )
 
 
-def condition_best_response(strategies):
+def best_response_stability(strategies):
     """Check if br points towards equilibrium (i.e., last iterate)
     < s-br(s), s-s* > <= 0
 
@@ -210,7 +210,7 @@ def condition_best_response(strategies):
     )
 
 
-def condition_next_iterate(strategies):
+def next_iterate_stability(strategies):
     """Check if update points towards equilibrium (i.e., last iterate)
     < s-br(s), s-s* > <= 0
 

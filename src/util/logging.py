@@ -4,7 +4,12 @@ from os.path import exists
 import numpy as np
 import pandas as pd
 
-from src.util.metrics import monotonicity, variational_stability
+from src.util.metrics import (
+    best_response_stability,
+    monotonicity,
+    next_iterate_stability,
+    variational_stability,
+)
 
 
 def log_strat(
@@ -72,7 +77,7 @@ def log_run(
     """
 
     # file name
-    filename = "log_vs.csv"
+    filename = "log_stability.csv"
 
     # create new entry for each agent
     rows = [
@@ -82,10 +87,12 @@ def log_run(
             "learner": learn_alg,
             "run": run,
             "iterations": len(strategies[agent].utility),
-            "var_stab_iter": np.sum(variational_stability(strategies) <= 0),
+            "var_stab_max": variational_stability(strategies).max(),
             "var_stab_bool": np.all(variational_stability(strategies) <= 0),
-            "monotone_iter": np.sum(monotonicity(strategies) <= 0),
-            "monotone_bool": np.all(monotonicity(strategies) <= 0),
+            "br_stab_max": best_response_stability(strategies).max(),
+            "br_stab_bool": np.all(best_response_stability(strategies) <= 0),
+            "ni_stab_max": next_iterate_stability(strategies).max(),
+            "ni_stab_bool": np.all(next_iterate_stability(strategies) <= 0),
             "timestamp": str(datetime.now())[:-7],
         }
         for agent in strategies
