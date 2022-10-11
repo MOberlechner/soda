@@ -27,13 +27,14 @@ class Gradient:
 
         Args:
             strategies (Dict): contains strategies for agents
-            game (_type_): approximation (discretized) game
+            game (Game): approximation (discretized) game
             agent (str): specifies agent
             indices (Dict): contains str with indices
 
         Returns:
             np.ndarray: gradient
         """
+
         if mechanism.own_gradient:
             self.x = mechanism.compute_gradient(game, strategies, agent)
 
@@ -67,8 +68,8 @@ class Gradient:
         Respective attributes are updated.
 
         Args:
-            mechanism: auction mechanism
-            game: discretized game
+            mechanism (Mechanism): auction mechanism
+            game (Game): discretized game
             strategies (Dict): contains strategies for agents
 
         """

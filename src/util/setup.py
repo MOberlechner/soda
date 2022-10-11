@@ -123,7 +123,7 @@ def create_learner(cfg_learner):
 
 
 def get_config(path_config: str, setting: str, experiment: str, learn_alg: str):
-    """Get config files
+    """Get config file
 
     Args:
         path_config (str): path to config directory
@@ -134,7 +134,7 @@ def get_config(path_config: str, setting: str, experiment: str, learn_alg: str):
     Returns:
         config files for experiment and learner
     """
-    # in soda directory
+    # add this s.t. we start in the project directory, i.e. path_config should be "configs" or "data_paper/publication/configs"
     path_config = "../../" + path_config
 
     # get auction game
