@@ -117,35 +117,6 @@ def compute_util_loss_scaled(mechanism_scaled, game_scaled, strategies_scaled):
     return util_loss_scaled
 
 
-def variational_stability(strategies):
-    """Check all iterates for variational stability w.r.t. equilibrium (i.e., last iterate)
-    < v(s), s-s* > <= 0
-
-    Parameters
-    ----------
-    strategies : class
-
-    Returns
-    -------
-    np.ndarray, result for each iteration
-    """
-    iter = len(strategies[list(strategies.keys())[0]].history)
-    return np.array(
-        [
-            sum(
-                [
-                    (
-                        strategies[i].history_gradient[t]
-                        * (strategies[i].history[t] - strategies[i].history[-1])
-                    ).sum()
-                    for i in strategies
-                ]
-            )
-            for t in range(iter)
-        ]
-    )
-
-
 def monotonicity(strategies):
     """Check all iterates for monotonicity w.r.t. previous iterate
     < v(s)-v(s'), s-s' > <= 0
@@ -178,6 +149,36 @@ def monotonicity(strategies):
     )
 
 
+def variational_stability(strategies):
+    """Check all iterates for variational stability w.r.t. equilibrium (i.e., last iterate)
+    < v(s), s-s* > <= 0
+
+    Parameters
+    ----------
+    strategies : class
+
+    Returns
+    -------
+    np.ndarray, result for each iteration
+    """
+    iter = len(strategies[list(strategies.keys())[0]].history)
+    bne = {i: strategies[i].x for i in strategies}
+    return np.array(
+        [
+            sum(
+                [
+                    (
+                        strategies[i].history_gradient[t]
+                        * (strategies[i].history[t] - bne[i])
+                    ).sum()
+                    for i in strategies
+                ]
+            )
+            for t in range(iter)
+        ]
+    )
+
+
 def best_response_stability(strategies):
     """Check if br points towards equilibrium (i.e., last iterate)
     < s-br(s), s-s* > <= 0
@@ -191,6 +192,7 @@ def best_response_stability(strategies):
     np.ndarray, result for each iteration
     """
     iter = len(strategies[list(strategies.keys())[0]].history)
+    bne = {i: strategies[i].x for i in strategies}
     return np.array(
         [
             sum(
@@ -200,7 +202,7 @@ def best_response_stability(strategies):
                             strategies[i].history_best_response[t]
                             - strategies[i].history[t]
                         )
-                        * (strategies[i].history[t] - strategies[i].history[-1])
+                        * (strategies[i].history[t] - bne[i])
                     ).sum()
                     for i in strategies
                 ]
@@ -223,13 +225,14 @@ def next_iterate_stability(strategies):
     np.ndarray, result for each iteration
     """
     iter = len(strategies[list(strategies.keys())[0]].history)
+    bne = {i: strategies[i].x for i in strategies}
     return np.array(
         [
             sum(
                 [
                     (
                         (strategies[i].history[t + 1] - strategies[i].history[t])
-                        * (strategies[i].history[t] - strategies[i].history[-1])
+                        * (strategies[i].history[t] - bne[i])
                     ).sum()
                     for i in strategies
                 ]
