@@ -200,6 +200,30 @@ class Strategy:
 
         return best_response
 
+    def empirical_mean(self, iter: int = 1) -> np.ndarray:
+        """Compute empirical mean of strategies
+        over a number of iterations
+        iter = 1 : only last iterate (= self.x)
+        iter = -1: mean over all iterates
+
+
+        Args:
+            iter (int): number of iterations to consider
+
+        Returns:
+            np.ndarray: empirical mean of strategy
+        """
+        # return last iterate
+        if iter == 1 or (len(self.history) == 0):
+            return self.x
+        # return mean over all iterates
+        elif iter == -1:
+            return np.mean(self.history, axis=0)
+        elif iter > 1:
+            return np.mean(self.history[-iter:], axis=0)
+        else:
+            raise ValueError
+
     # --------------------------------------- METHODS USED TO DURING ITERATIONS ---------------------------------------- #
 
     def update_history_strategy(self):
@@ -469,7 +493,14 @@ class Strategy:
                 plt.figure(figsize=(5 * num_plots, 5))
 
             # -------------------- PLOT STRATEGIES -------------------- #
-            strat = self.x if iter is None else self.history[iter]
+            if iter is None:
+                strat = self.x
+            elif iter == -1:
+                strat = self.empirical_mean(-1)
+            elif iter >= 0:
+                strat = self.history[iter]
+            else:
+                raise ValueError("iter has to be either None, -1, or positive")
 
             if self.dim_a == 1:
                 # plot strategy
