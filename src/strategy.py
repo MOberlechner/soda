@@ -73,7 +73,7 @@ class Strategy:
         return self.x.sum(axis=tuple(range(self.dim_o, self.dim_o + self.dim_a)))
 
     def initialize(
-        self, init_method: str, param: dict = {}, lower_bound: float = 1e-50
+        self, init_method: str, param: dict = {}, lower_bound: float = 1e-20
     ):
         """
         Initialize strategy according to different methods. The sum of probabilities over all actions given a valuation is determined by the prior.
