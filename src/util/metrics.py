@@ -149,7 +149,7 @@ def monotonicity(strategies):
     )
 
 
-def variational_stability(strategies):
+def variational_stability(strategies, exact_bne: bool = False):
     """Check all iterates for variational stability w.r.t. equilibrium (i.e., last iterate)
     < v(s), s-s* > <= 0
 
@@ -162,7 +162,14 @@ def variational_stability(strategies):
     np.ndarray, result for each iteration
     """
     iter = len(strategies[list(strategies.keys())[0]].history)
-    bne = {i: strategies[i].x for i in strategies}
+    if exact_bne:
+        bne = {
+            i: get_bne_fpsb(strategies[list(strategies.keys())[0]].n)
+            for i in strategies
+        }
+    else:
+        bne = {i: strategies[i].x for i in strategies}
+
     return np.array(
         [
             sum(
@@ -179,7 +186,7 @@ def variational_stability(strategies):
     )
 
 
-def best_response_stability(strategies):
+def best_response_stability(strategies, exact_bne: bool = False):
     """Check if br points towards equilibrium (i.e., last iterate)
     < s-br(s), s-s* > <= 0
 
@@ -192,7 +199,13 @@ def best_response_stability(strategies):
     np.ndarray, result for each iteration
     """
     iter = len(strategies[list(strategies.keys())[0]].history)
-    bne = {i: strategies[i].x for i in strategies}
+    if exact_bne:
+        bne = {
+            i: get_bne_fpsb(strategies[list(strategies.keys())[0]].n)
+            for i in strategies
+        }
+    else:
+        bne = {i: strategies[i].x for i in strategies}
     return np.array(
         [
             sum(
@@ -212,7 +225,7 @@ def best_response_stability(strategies):
     )
 
 
-def next_iterate_stability(strategies):
+def next_iterate_stability(strategies, exact_bne: bool = False):
     """Check if update points towards equilibrium (i.e., last iterate)
     < s-br(s), s-s* > <= 0
 
@@ -225,7 +238,13 @@ def next_iterate_stability(strategies):
     np.ndarray, result for each iteration
     """
     iter = len(strategies[list(strategies.keys())[0]].history)
-    bne = {i: strategies[i].x for i in strategies}
+    if exact_bne:
+        bne = {
+            i: get_bne_fpsb(strategies[list(strategies.keys())[0]].n)
+            for i in strategies
+        }
+    else:
+        bne = {i: strategies[i].x for i in strategies}
     return np.array(
         [
             sum(
@@ -240,3 +259,33 @@ def next_iterate_stability(strategies):
             for t in range(iter - 1)
         ]
     )
+
+
+def get_bne_fpsb(n: int, odd: bool = True) -> np.ndarray:
+    """Discrete BNE for FPSB unform prior, 2 bidder
+
+    Args:
+        n (int): number of discretization points
+        odd (bool, optional): which BNE. Defaults to True.
+
+    Returns:
+        np.ndarray: bne
+    """
+
+    # bne_odd
+    if odd:
+        bne = np.vstack(
+            [
+                [0] * (n // 2 - 1),
+                (np.kron(np.eye(n // 2 - 1), np.ones(2)).T),
+                [0] * (n // 2 - 1),
+            ]
+        )
+        bne = np.hstack(
+            [np.eye(1, n, 0).reshape(n, 1), bne, np.eye(1, n, n - 1).reshape(n, 1)]
+        )
+        return np.hstack([bne, np.zeros((n, n // 2 - 1))])
+
+    else:
+        # bne even
+        return np.hstack([np.kron(np.eye(n // 2), np.ones(2)).T, np.zeros((n, n // 2))])
