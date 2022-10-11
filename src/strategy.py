@@ -80,7 +80,8 @@ class Strategy:
         But the probability P(bid|val) can be set arbitrarily:
         - equal: for a given valuation, all actions are played with equal probability.
         - random: for a given valuation, all actions are played with a random probability p ~ U([0,1]), which are scaled accordingly
-        - ...
+        - function: discrete distr. strategy that corresponds approximately to function (given in param)
+        - matrix: discrete distr. strategy given in param
 
         Parameters
         ----------
@@ -158,6 +159,19 @@ class Strategy:
             for i in range(n):
                 idx = (np.abs(self.a_discr - b[i])).argmin()
                 sigma[i, idx] = 1
+
+        elif init_method == "matrix":
+            if (
+                (param["init_matrix"].shape[0] == self.n)
+                & (param["init_matrix"].shape[-1] == self.m)
+                & (
+                    param["init_matrix"].size
+                    == self.n**self.dim_o * self.m**self.dim_a
+                )
+            ):
+                sigma = param["init_matrix"]
+            else:
+                raise ValueError("Dimension of matrix is not as expected")
 
         else:
             raise ValueError("init_method not known")
