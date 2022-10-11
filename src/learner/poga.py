@@ -26,7 +26,7 @@ class POGA(Learner):
         beta: float = 1 / 20,
     ):
         super().__init__(max_iter, tol)
-        self.learner = "soda"
+        self.learner = "poga"
         self.steprule_bool = steprule_bool
         self.eta = eta
         self.beta = beta

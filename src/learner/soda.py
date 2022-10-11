@@ -26,6 +26,9 @@ class SODA(Learner):
     ):
         super().__init__(max_iter, tol)
         self.learner = "soda"
+        self.steprule_bool = steprule_bool
+        self.eta = eta
+        self.beta = beta
 
     def update_strategy(self, strategy, gradient: np.ndarray, t: int) -> None:
         """
