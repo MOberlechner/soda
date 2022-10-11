@@ -21,7 +21,6 @@ def log_strat(
     run: int,
     time_init,
     time_run,
-    conv: bool,
     path: str,
 ):
     """
