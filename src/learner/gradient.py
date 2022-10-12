@@ -36,7 +36,7 @@ class Gradient:
         """
 
         if mechanism.own_gradient:
-            self.x = mechanism.compute_gradient(game, strategies, agent)
+            self.x[agent] = mechanism.compute_gradient(game, strategies, agent)
 
         else:
             opp = game.bidder.copy()
