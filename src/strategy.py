@@ -274,7 +274,7 @@ class Strategy:
             np.abs(
                 1
                 - (self.x * gradient).sum()
-                / (np.sign(util_br) * (np.abs(util_br) + 1e-50))
+                / (util_br if not np.isclose(util_br, 0) else 1e-8)
             )
         ]
 
