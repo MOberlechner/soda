@@ -274,7 +274,7 @@ class Strategy:
             np.abs(
                 1
                 - (self.x * gradient).sum()
-                / (util_br if not np.isclose(util_br, 0) else 1e-8)
+                / (util_br if not np.isclose(util_br, 0, atol=1e-20) else 1e-20)
             )
         ]
 
@@ -541,10 +541,18 @@ class Strategy:
                 )
                 plt.ylabel("bids b", fontsize=label_size)
                 plt.xlabel("observations v", fontsize=label_size)
-                plt.title(
-                    'Distributional Strategy Player "' + str(self.agent) + '"',
-                    fontsize=title_size,
-                )
+                if iter == -1:
+                    plt.title(
+                        'Empirical Mean of \n Distributional Strategy Player "'
+                        + str(self.agent)
+                        + '"',
+                        fontsize=title_size,
+                    )
+                else:
+                    plt.title(
+                        'Distributional Strategy Player "' + str(self.agent) + '"',
+                        fontsize=title_size,
+                    )
                 if self.n == 1:
                     plt.xticks(
                         [0.5 * (self.a_discr[0] + self.a_discr[-1])], self.o_discr
