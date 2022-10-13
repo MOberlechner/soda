@@ -1,6 +1,7 @@
 from typing import Dict, List
 
 import numpy as np
+from scipy.special import binom
 
 from .mechanism import Mechanism
 
@@ -38,19 +39,35 @@ class SingleItemAuction(Mechanism):
         super().__init__(bidder, o_space, a_space, param_prior, param_util)
         self.name = "single_item"
 
+        # check input
+        if "tie_breaking" not in self.param_util:
+            raise ValueError("specify tiebreaking rule")
+        elif "payment_rule" not in self.param_util:
+            raise ValueError("specify payment rule")
+
         self.payment_rule = param_util["payment_rule"]
+        self.tie_breaking = param_util["tie_breaking"]
+
+        # risk aversion
         self.risk = (
             param_util["risk"] if "risk" in param_util else [1.0] * self.n_bidder
         )
+        if type(self.risk) is float:
+            self.risk = [self.risk] * self.n_bidder
+
+        # prior
         if self.prior == "affiliated_values":
             self.values = "affiliated"
         elif self.prior == "common_value":
             self.values = "common"
             self.v_space = {i: [0, o_space[i][1] / 2] for i in bidder}
 
-        # check input
-        if type(self.risk) is float:
-            self.risk = [self.risk] * self.n_bidder
+        # use own gradient
+        if (len(self.set_bidder) == 1) and (self.payment_rule == "first_price") & (
+            self.prior not in ["affiliated_values", "common_value"]
+        ) & ("corr" not in self.param_prior):
+            print("own_gradient method is used")
+            self.own_gradient = True
 
     def utility(self, obs: np.ndarray, bids: np.ndarray, idx: int) -> None:
         """
@@ -73,10 +90,6 @@ class SingleItemAuction(Mechanism):
             raise ValueError("wrong format of bids")
         elif idx >= self.n_bidder:
             raise ValueError("bidder with index " + str(idx) + " not avaible")
-        elif "tie_breaking" not in self.param_util:
-            raise ValueError("specify tiebreaking rule")
-        elif "payment_rule" not in self.param_util:
-            raise ValueError("specify payment rule")
 
         # if True: we want each outcome for every observation, else: each outcome belongs to one observation
         if (self.values == "private") or (self.values == "common"):
@@ -90,16 +103,12 @@ class SingleItemAuction(Mechanism):
         else:
             raise ValueError('value model "{}" unknown'.format(self.values))
 
-        # tie_breaking rule
-        if "tie_breaking" not in self.param_util:
-            self.param_util["tie_breaking"] = "random"
-
         # determine allocation
-        if self.param_util["tie_breaking"] == "random":
+        if self.tie_breaking == "random":
             win = np.where(bids[idx] >= np.delete(bids, idx, 0).max(axis=0), 1, 0)
             num_winner = (bids.max(axis=0) == bids).sum(axis=0)
 
-        elif self.param_util["tie_breaking"] == "lose":
+        elif self.tie_breaking == "lose":
             win = np.where(bids[idx] > np.delete(bids, idx, 0).max(axis=0), 1, 0)
             num_winner = np.ones(win.shape)
 
@@ -159,3 +168,43 @@ class SingleItemAuction(Mechanism):
 
         elif self.prior == "common_value":
             return 2 * obs / (2 + obs)
+
+    def compute_gradient(self, game, strategies, agent: str):
+        """Simplified computation of gradient for i.i.d. bidders and tie-breaking "lose"
+
+        Parameters
+        ----------
+        strategies :
+        game :
+        agent :
+
+        Returns
+        -------
+
+        """
+        pdf = strategies[agent].x.sum(axis=0)
+        cdf = np.insert(pdf, 0, 0.0).cumsum()
+        exp_win = cdf[:-1] ** (self.n_bidder - 1)
+
+        if self.tie_breaking == "lose":
+            pass
+        elif self.tie_breaking == "random":
+            # add ties
+            exp_win += sum(
+                [
+                    binom(self.n_bidder - 1, i)
+                    * cdf[:-1] ** (self.n_bidder - i)
+                    / (i + 1)
+                    * cdf[:-1] ** i
+                    for i in range(1, self.n_bidder)
+                ]
+            )
+        else:
+            raise ValueError('Tie-breaking rule "{}" unknown'.format(self.tie_breaking))
+        payoff = (
+            np.ones((strategies[agent].m, strategies[agent].n))
+            * strategies[agent].o_discr
+        ).T - np.ones((strategies[agent].n, strategies[agent].m)) * strategies[
+            agent
+        ].a_discr
+        return exp_win * np.sign(payoff) * np.abs(payoff) ** self.risk[0]
