@@ -66,8 +66,8 @@ class SingleItemAuction(Mechanism):
         if (len(self.set_bidder) == 1) and (self.payment_rule == "first_price") & (
             self.prior not in ["affiliated_values", "common_value"]
         ) & ("corr" not in self.param_prior):
-            print("own_gradient method is used")
             self.own_gradient = True
+            print("own_gradient method: {}".format(self.own_gradient))
 
     def utility(self, obs: np.ndarray, bids: np.ndarray, idx: int) -> None:
         """
@@ -183,19 +183,18 @@ class SingleItemAuction(Mechanism):
 
         """
         pdf = strategies[agent].x.sum(axis=0)
-        cdf = np.insert(pdf, 0, 0.0).cumsum()
-        exp_win = cdf[:-1] ** (self.n_bidder - 1)
+        cdf = np.insert(pdf, 0, 0.0).cumsum()[:-1]
+        exp_win = cdf ** (self.n_bidder - 1)
 
         if self.tie_breaking == "lose":
             pass
         elif self.tie_breaking == "random":
-            # add ties
             exp_win += sum(
                 [
                     binom(self.n_bidder - 1, i)
-                    * cdf[:-1] ** (self.n_bidder - i)
+                    * cdf ** (self.n_bidder - i - 1)
                     / (i + 1)
-                    * cdf[:-1] ** i
+                    * pdf**i
                     for i in range(1, self.n_bidder)
                 ]
             )
