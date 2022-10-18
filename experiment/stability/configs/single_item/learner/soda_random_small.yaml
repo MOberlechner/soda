@@ -1,0 +1,7 @@
+name: 'soda'
+max_iter: 100000
+tol: 1e-4
+steprule_bool: True
+eta: 1
+beta: 0.05
+init_method: 'random'

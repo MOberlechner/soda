@@ -1,0 +1,5 @@
+name: 'frank_wolfe'
+max_iter: 2000
+tol: 1e-4
+steprule_bool: True
+init_method: 'random'
