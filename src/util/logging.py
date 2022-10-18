@@ -6,7 +6,6 @@ import pandas as pd
 
 from src.util.metrics import (
     best_response_stability,
-    monotonicity,
     next_iterate_stability,
     variational_stability,
 )
@@ -78,6 +77,11 @@ def log_run(
     # file name
     filename = "log_stability.csv"
 
+    # metrics
+    vs = variational_stability(strategies, exact_bne=False, normed=False)
+    brs = best_response_stability(strategies, exact_bne=False, normed=False)
+    nis = next_iterate_stability(strategies, exact_bne=False, normed=False)
+
     # create new entry for each agent
     rows = [
         {
@@ -86,12 +90,12 @@ def log_run(
             "learner": learn_alg,
             "run": run,
             "iterations": len(strategies[agent].utility),
-            "var_stab_max": variational_stability(strategies).max(),
-            "var_stab_bool": np.all(variational_stability(strategies) <= 0),
-            "br_stab_max": best_response_stability(strategies).max(),
-            "br_stab_bool": np.all(best_response_stability(strategies) <= 0),
-            "ni_stab_max": next_iterate_stability(strategies).max(),
-            "ni_stab_bool": np.all(next_iterate_stability(strategies) <= 0),
+            "vs_max": vs.max(),
+            "vs_bool": np.all(vs <= 0),
+            "brs_max": brs.max(),
+            "brs_bool": np.all(brs <= 0),
+            "nis_max": nis.max(),
+            "nis_bool": np.all(nis <= 0),
             "timestamp": str(datetime.now())[:-7],
         }
         for agent in strategies
