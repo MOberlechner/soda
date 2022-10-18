@@ -1,6 +1,8 @@
 from pathlib import Path
 from time import time
 
+from tqdm import tqdm
+
 from src.util.logging import log_run, log_strat
 from src.util.setup import create_learner, create_setting, get_config
 
@@ -66,7 +68,11 @@ def run_experiment(
     time_init = time() - t0
 
     # run soda
-    for run in range(num_runs):
+    for run in tqdm(
+        range(num_runs),
+        unit_scale=True,
+        bar_format="{l_bar}{bar:20}{r_bar}{bar:-10b}",
+    ):
         t0 = time()
         strategies = learn_strategies(mechanism, game, strategies, cfg_learner)
         time_run = time() - t0
