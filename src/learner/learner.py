@@ -40,13 +40,14 @@ class Learner:
         self.max_iter = max_iter
         self.tol = tol
 
-    def run(self, mechanism, game, strategies) -> None:
+    def run(self, mechanism, game, strategies, disable_tqdm: bool = True) -> None:
         """Run learning algorithm
 
         Args:
             mechanism (class): auction game
             game (class): discretized approximation game
             strategies (dict): strategy profile
+            disable_tqdm (bool): Disable progess bar. Defaults to True
         """
 
         # prepare gradients, i.e., compute path and indices
@@ -61,6 +62,7 @@ class Learner:
             range(self.max_iter),
             unit_scale=True,
             bar_format="{l_bar}{bar:20}{r_bar}{bar:-10b}",
+            disable=disable_tqdm,
         ):
 
             # compute gradients
