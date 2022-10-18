@@ -20,11 +20,12 @@ class SODA(Learner):
         self,
         max_iter: int,
         tol: float,
+        stop_criterion: str,
         steprule_bool: bool,
         eta: float,
         beta: float = 1 / 20,
     ):
-        super().__init__(max_iter, tol)
+        super().__init__(max_iter, tol, stop_criterion)
         self.learner = "soda"
         self.steprule_bool = steprule_bool
         self.eta = eta

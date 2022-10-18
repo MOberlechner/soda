@@ -16,8 +16,9 @@ class FrankWolfe(Learner):
         self,
         max_iter: int,
         tol: float,
+        stop_criterion: str,
     ):
-        super().__init__(max_iter, tol)
+        super().__init__(max_iter, tol, stop_criterion)
         self.learner = "frank_wolfe"
 
     def update_strategy(self, strategy, gradient: np.ndarray, t: int) -> None:
