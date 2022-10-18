@@ -149,17 +149,17 @@ def monotonicity(strategies):
     )
 
 
-def variational_stability(strategies, exact_bne: bool = False):
+def variational_stability(strategies, exact_bne: bool = False, normed: bool = False):
     """Check all iterates for variational stability w.r.t. equilibrium (i.e., last iterate)
-    < v(s), s-s* > <= 0
+    < v(s_t), s_t-s* > <= 0
 
-    Parameters
-    ----------
-    strategies : class
+    Args:
+        strategies (_type_): _description_
+        exact_bne (bool, optional): w.r.t last iterate or exact bne (FPSB 2 Bidder uniform). Defaults to False.
+        normed (bool, optional): Divide inner product by product of norms. Defaults to False.
 
-    Returns
-    -------
-    np.ndarray, result for each iteration
+    Returns:
+        np.ndarray: result for each iteration
     """
     iter = len(strategies[list(strategies.keys())[0]].history)
     if exact_bne:
@@ -170,14 +170,22 @@ def variational_stability(strategies, exact_bne: bool = False):
     else:
         bne = {i: strategies[i].x for i in strategies}
 
+    if normed:
+        fct_vs = lambda grad, x, bne: (grad * (x - bne)).sum() / max(
+            np.linalg.norm(grad) * np.linalg.norm(x - bne), 1e-20
+        )
+    else:
+        fct_vs = lambda grad, x, bne: (grad * (x - bne)).sum()
+
     return np.array(
         [
             sum(
                 [
-                    (
-                        strategies[i].history_gradient[t]
-                        * (strategies[i].history[t] - bne[i])
-                    ).sum()
+                    fct_vs(
+                        strategies[i].history_gradient[t],
+                        strategies[i].history[t],
+                        bne[i],
+                    )
                     for i in strategies
                 ]
             )
@@ -186,17 +194,17 @@ def variational_stability(strategies, exact_bne: bool = False):
     )
 
 
-def best_response_stability(strategies, exact_bne: bool = False):
+def best_response_stability(strategies, exact_bne: bool = False, normed: bool = False):
     """Check if br points towards equilibrium (i.e., last iterate)
-    < s-br(s), s-s* > <= 0
+    < br(s_t)-s_t, s_t-s* > <= 0
 
-    Parameters
-    ----------
-    strategies : class
+    Args:
+        strategies (_type_): _description_
+        exact_bne (bool, optional): w.r.t last iterate or exact bne (FPSB 2 Bidder uniform). Defaults to False.
+        normed (bool, optional): Divide inner product by product of norms. Defaults to False.
 
-    Returns
-    -------
-    np.ndarray, result for each iteration
+    Returns:
+        np.ndarray: result for each iteration
     """
     iter = len(strategies[list(strategies.keys())[0]].history)
     if exact_bne:
@@ -206,17 +214,23 @@ def best_response_stability(strategies, exact_bne: bool = False):
         }
     else:
         bne = {i: strategies[i].x for i in strategies}
+
+    if normed:
+        fct_brs = lambda br, x, bne: ((br - x) * (x - bne)).sum() / max(
+            np.linalg.norm(br - x) * np.linalg.norm(x - bne), 1e-20
+        )
+    else:
+        fct_brs = lambda br, x, bne: ((br - x) * (x - bne)).sum()
+
     return np.array(
         [
             sum(
                 [
-                    (
-                        (
-                            strategies[i].history_best_response[t]
-                            - strategies[i].history[t]
-                        )
-                        * (strategies[i].history[t] - bne[i])
-                    ).sum()
+                    fct_brs(
+                        strategies[i].history_best_response[t],
+                        strategies[i].history[t],
+                        bne[i],
+                    )
                     for i in strategies
                 ]
             )
@@ -225,17 +239,17 @@ def best_response_stability(strategies, exact_bne: bool = False):
     )
 
 
-def next_iterate_stability(strategies, exact_bne: bool = False):
+def next_iterate_stability(strategies, exact_bne: bool = False, normed: bool = False):
     """Check if update points towards equilibrium (i.e., last iterate)
-    < s-br(s), s-s* > <= 0
+    < s_t+1-s_t, s_t-s* > <= 0
 
-    Parameters
-    ----------
-    strategies : class
+    Args:
+        strategies (_type_):
+        exact_bne (bool, optional): w.r.t last iterate or exact bne (FPSB 2 Bidder uniform). Defaults to False.
+        normed (bool, optional): Divide inner product by product of norms. Defaults to False.
 
-    Returns
-    -------
-    np.ndarray, result for each iteration
+    Returns:
+        np.ndarray: result for each iteration
     """
     iter = len(strategies[list(strategies.keys())[0]].history)
     if exact_bne:
@@ -245,16 +259,90 @@ def next_iterate_stability(strategies, exact_bne: bool = False):
         }
     else:
         bne = {i: strategies[i].x for i in strategies}
+
+    if normed:
+        fct_nis = lambda y, x, bne: ((y - x) * (x - bne)).sum() / max(
+            np.linalg.norm(y - x) * np.linalg.norm(x - bne), 1e-20
+        )
+    else:
+        fct_nis = lambda y, x, bne: ((y - x) * (x - bne)).sum()
+
     return np.array(
         [
             sum(
                 [
-                    (
-                        (strategies[i].history[t + 1] - strategies[i].history[t])
-                        * (strategies[i].history[t] - bne[i])
-                    ).sum()
+                    fct_nis(
+                        strategies[i].history[t + 1], strategies[i].history[t], bne[i]
+                    )
                     for i in strategies
                 ]
+            )
+            for t in range(iter - 1)
+        ]
+    )
+
+
+def gradient_direction(strategies, normed: bool = False):
+    """Check if gradient of each update points towards gradient of equilibrium (i.e., last iterate)
+    < v(s), v(s^*) > <= 0
+
+    Args:
+        strategies (_type_):
+        normed (bool, optional): Divide inner product by product of norms. Defaults to False.
+
+    Returns:
+        np.ndarray: result for each iteration
+    """
+    iter = len(strategies[list(strategies.keys())[0]].history)
+
+    if normed:
+        fct_gs = lambda x, y: (x * y).sum() / max(
+            np.linalg.norm(x) * np.linalg.norm(y), 1e-20
+        )
+    else:
+        fct_gs = lambda x, y: (x * y).sum()
+
+    return np.array(
+        [
+            sum(
+                [
+                    fct_gs(
+                        strategies[i].history_gradient[t],
+                        strategies[i].history_gradient[-1],
+                    )
+                    for i in strategies
+                ]
+            )
+            for t in range(iter - 1)
+        ]
+    )
+
+
+def gradient_distance(strategies):
+    """Check if gradient of each update points towards gradient of equilibrium (i.e., last iterate)
+     norm(v(s_t)-v(s^*))
+
+    Args:
+        strategies (_type_):
+
+    Returns:
+        np.ndarray: result for each iteration
+    """
+    iter = len(strategies[list(strategies.keys())[0]].history)
+    fct_gd = lambda x, y: np.linalg.norm(x - y) ** 2
+
+    return np.array(
+        [
+            np.sqrt(
+                sum(
+                    [
+                        fct_gd(
+                            strategies[i].history_gradient[t],
+                            strategies[i].history_gradient[-1],
+                        )
+                        for i in strategies
+                    ]
+                )
             )
             for t in range(iter - 1)
         ]
@@ -284,8 +372,9 @@ def get_bne_fpsb(n: int, odd: bool = True) -> np.ndarray:
         bne = np.hstack(
             [np.eye(1, n, 0).reshape(n, 1), bne, np.eye(1, n, n - 1).reshape(n, 1)]
         )
-        return np.hstack([bne, np.zeros((n, n // 2 - 1))])
+        x = np.hstack([bne, np.zeros((n, n // 2 - 1))])
 
     else:
         # bne even
-        return np.hstack([np.kron(np.eye(n // 2), np.ones(2)).T, np.zeros((n, n // 2))])
+        x = np.hstack([np.kron(np.eye(n // 2), np.ones(2)).T, np.zeros((n, n // 2))])
+    return x / x.sum()
