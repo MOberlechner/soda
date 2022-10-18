@@ -116,6 +116,7 @@ dmypy.json
 .pyre/
 
 # Directories
+/data_paper
 /src/test/
 /src/test/
 /test/
