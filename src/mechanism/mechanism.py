@@ -1,3 +1,4 @@
+from abc import abstractclassmethod
 from typing import Dict, List
 
 import numpy as np
@@ -47,6 +48,19 @@ class Mechanism:
         self.param_util = param_util
         self.own_gradient = False
         self.values = "private"  # valuation depends only on own observation
+
+    def utility(self, obs: np.ndarray, bids: np.ndarray, idx: int):
+        """Compute utility according to specified mechanism
+
+        Args:
+            obs (np.ndarray): observation of agent (idx)
+            bids (np.ndarray): bids of all agents
+            idx (int): index of agent
+
+        Returns:
+            np.ndarry: utilities of agend (idx)
+        """
+        raise NotImplementedError
 
     def draw_values(self, n_vals: int) -> np.ndarray:
         """samples observations (and valuations) for each agent according to the prior
