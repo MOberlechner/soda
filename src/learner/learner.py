@@ -40,7 +40,7 @@ class Learner:
         self.max_iter = max_iter
         self.tol = tol
 
-    def run(self, mechanism, game, strategies, disable_tqdm: bool = True) -> None:
+    def run(self, mechanism, game, strategies, disable_tqdm: bool = True, print: bool = False) -> None:
         """Run learning algorithm
 
         Args:
@@ -48,6 +48,7 @@ class Learner:
             game (class): discretized approximation game
             strategies (dict): strategy profile
             disable_tqdm (bool): Disable progess bar. Defaults to True
+            print (bool): Print result. Defaults to False
         """
 
         # prepare gradients, i.e., compute path and indices
@@ -84,8 +85,10 @@ class Learner:
             # update strategy
             for i in game.set_bidder:
                 self.update_strategy(strategies[i], gradient.x[i], t)
-
-        self.print_result(convergence, min_max_util_loss, t_max, strategies)
+        
+        # print result
+        if print:
+            self.print_result(convergence, min_max_util_loss, t_max, strategies)
 
     def update_strategy(self, strategy, gradient, t):
         """Update strategy according to update rule from specific learning method
