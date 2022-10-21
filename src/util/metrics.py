@@ -189,7 +189,7 @@ def variational_stability(strategies, exact_bne: bool = False, normed: bool = Fa
                     for i in strategies
                 ]
             )
-            for t in range(iter)
+            for t in range(iter - 1)
         ]
     )
 
@@ -234,7 +234,7 @@ def best_response_stability(strategies, exact_bne: bool = False, normed: bool = 
                     for i in strategies
                 ]
             )
-            for t in range(iter)
+            for t in range(iter - 1)
         ]
     )
 
