@@ -92,6 +92,7 @@ def create_learner(cfg_learner):
         return SODA(
             cfg_learner.max_iter,
             cfg_learner.tol,
+            cfg_learner.stop_criterion,
             cfg_learner.steprule_bool,
             cfg_learner.eta,
             cfg_learner.beta,
@@ -101,6 +102,7 @@ def create_learner(cfg_learner):
         return POGA(
             cfg_learner.max_iter,
             cfg_learner.tol,
+            cfg_learner.stop_criterion,
             cfg_learner.steprule_bool,
             cfg_learner.eta,
             cfg_learner.beta,
@@ -110,12 +112,14 @@ def create_learner(cfg_learner):
         return FrankWolfe(
             cfg_learner.max_iter,
             cfg_learner.tol,
+            cfg_learner.stop_criterion,
         )
 
     elif cfg_learner.name == "best_response":
         return BestResponse(
             cfg_learner.max_iter,
             cfg_learner.tol,
+            cfg_learner.stop_criterion,
         )
 
     else:

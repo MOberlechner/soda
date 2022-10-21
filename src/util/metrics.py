@@ -261,11 +261,13 @@ def next_iterate_stability(strategies, exact_bne: bool = False, normed: bool = F
         bne = {i: strategies[i].x for i in strategies}
 
     if normed:
-        fct_nis = lambda y, x, bne: ((y - x) * (x - bne)).sum() / max(
-            np.linalg.norm(y - x) * np.linalg.norm(x - bne), 1e-20
+        fct_nis = lambda x_next, x_now, bne: (
+            (x_next - x_now) * (x_now - bne)
+        ).sum() / max(
+            np.linalg.norm(x_next - x_now) * np.linalg.norm(x_now - bne), 1e-20
         )
     else:
-        fct_nis = lambda y, x, bne: ((y - x) * (x - bne)).sum()
+        fct_nis = lambda x_next, x_now, bne: ((x_next - x_now) * (x_now - bne)).sum()
 
     return np.array(
         [
