@@ -1,4 +1,5 @@
 import sys
+import traceback
 
 sys.path.append("../../")
 
@@ -15,10 +16,10 @@ experiments = [
     ### single item
     ("single_item", "fpsb32", "poga_random"),
     ("single_item", "fpsb64", "poga_random"),
-    # ("single_item", "fpsb32", "soda_random"),
-    # ("single_item", "fpsb64", "soda_random"),
-    # ("single_item", "fpsb32", "frank_wolfe_random"),
-    # ("single_item", "fpsb64", "frank_wolfe_random"),
+    ("single_item", "fpsb32", "soda_random"),
+    ("single_item", "fpsb64", "soda_random"),
+    ("single_item", "fpsb32", "frank_wolfe_random"),
+    ("single_item", "fpsb64", "frank_wolfe_random"),
 ]
 
 # path to store results
@@ -32,6 +33,18 @@ save_strat = False
 
 # Compute Strategies
 for setting, experiment, learn_alg in experiments:
-    run_experiment(
-        learn_alg, setting, experiment, logging, save_strat, num_runs, path, path_config
-    )
+    try:
+        run_experiment(
+            learn_alg,
+            setting,
+            experiment,
+            logging,
+            save_strat,
+            num_runs,
+            path,
+            path_config,
+        )
+    except Exception as e:
+        tb = traceback.format_exc()
+        print("Experiment failed with {} ".format(type(e)))
+        print("Traceback:\n{} ".format(tb))
