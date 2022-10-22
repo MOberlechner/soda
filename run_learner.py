@@ -3,17 +3,17 @@ from time import time
 
 from tqdm import tqdm
 
+from src.strategy import Strategy
 from src.util.logging import log_run, log_strat
 from src.util.setup import create_learner, create_setting, get_config
 
 
-def learn_strategies(mechanism, game, strategies, cfg_learner) -> None:
+def learn_strategies(mechanism, game, cfg_learner) -> None:
     """Runs Learner to compute strategies given the specified setting.
 
     Args:
         mechanism: continuous auction game
         game: approximation game
-        strategies: dict of strategies
         cfg_learner: parameter for Learning Algorithm
     """
 
@@ -22,13 +22,13 @@ def learn_strategies(mechanism, game, strategies, cfg_learner) -> None:
 
     # initialize strategies
     init_method = cfg_learner.init_method if "init" in cfg_learner else "random"
+    strategies = {}
     for i in game.set_bidder:
+        strategies[i] = Strategy(i, game)
         strategies[i].initialize(init_method)
 
     # run soda
-    learner.run(mechanism, game, strategies)
-
-    return strategies
+    return learner.run(mechanism, game, strategies)
 
 
 def run_experiment(
@@ -61,7 +61,7 @@ def run_experiment(
 
     # initialize setting and compute utility
     t0 = time()
-    mechanism, game, strategies = create_setting(setting, cfg)
+    mechanism, game = create_setting(setting, cfg)
     if not mechanism.own_gradient:
         print('Computations of Utilities for experiment: "' + experiment + '" started!')
         game.get_utility(mechanism)
@@ -74,7 +74,7 @@ def run_experiment(
         bar_format="{l_bar}{bar:20}{r_bar}{bar:-10b}",
     ):
         t0 = time()
-        strategies = learn_strategies(mechanism, game, strategies, cfg_learner)
+        strategies = learn_strategies(mechanism, game, cfg_learner)
         time_run = time() - t0
 
         # log and save
@@ -101,6 +101,7 @@ def run_experiment(
                 path,
             )
 
+        if save_strat:
             for i in game.set_bidder:
                 name = (
                     cfg_learner.name
@@ -109,8 +110,8 @@ def run_experiment(
                     + ("_run_" + str(run) if num_runs > 1 else "")
                 )
                 # save strategies
-                if save_strat:
-                    strategies[i].save(name, setting, path, save_init=True)
+                strategies[i].save(name, setting, path, save_init=True)
+
     print('Experiment: "' + experiment + '" finished!')
 
 

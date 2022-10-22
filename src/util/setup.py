@@ -69,12 +69,7 @@ def create_setting(setting: str, cfg):
     # create approximation game
     game = Game(mechanism, cfg.n, cfg.m)
 
-    # create strategies
-    strategies = {}
-    for i in game.set_bidder:
-        strategies[i] = Strategy(i, game)
-
-    return mechanism, game, strategies
+    return mechanism, game
 
 
 def create_learner(cfg_learner):
