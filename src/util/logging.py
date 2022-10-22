@@ -79,9 +79,15 @@ def log_run(
     filename = "log_stability.csv"
 
     # metrics
-    vs = variational_stability(strategies, game, exact_bne=False, normed=False)
-    brs = best_response_stability(strategies, game, exact_bne=False, normed=False)
-    nis = next_iterate_stability(strategies, game, exact_bne=False, normed=False)
+    bool_normed = False
+    bool_bne = True
+    vs = variational_stability(strategies, game, exact_bne=bool_bne, normed=bool_normed)
+    brs = best_response_stability(
+        strategies, game, exact_bne=bool_bne, normed=bool_normed
+    )
+    nis = next_iterate_stability(
+        strategies, game, exact_bne=bool_bne, normed=bool_normed
+    )
 
     # create new entry for each agent
     rows = [
