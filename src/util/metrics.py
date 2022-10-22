@@ -117,13 +117,14 @@ def compute_util_loss_scaled(mechanism_scaled, game_scaled, strategies_scaled):
     return util_loss_scaled
 
 
-def monotonicity(strategies):
+def monotonicity(strategies, game):
     """Check all iterates for monotonicity w.r.t. previous iterate
     < v(s)-v(s'), s-s' > <= 0
 
     Parameters
     ----------
-    strategies : class
+    strategies : Strategy
+    game : Game
 
     Returns
     -------
@@ -141,7 +142,7 @@ def monotonicity(strategies):
                         )
                         * (strategies[i].history[t] - strategies[i].history[t + 1])
                     ).sum()
-                    for i in strategies
+                    for i in game.bidder
                 ]
             )
             for t in range(iter - 1)
@@ -149,12 +150,15 @@ def monotonicity(strategies):
     )
 
 
-def variational_stability(strategies, exact_bne: bool = False, normed: bool = False):
+def variational_stability(
+    strategies, game, exact_bne: bool = False, normed: bool = False
+):
     """Check all iterates for variational stability w.r.t. equilibrium (i.e., last iterate)
     < v(s_t), s_t-s* > <= 0
 
     Args:
         strategies (_type_): _description_
+        game (_type_): Game
         exact_bne (bool, optional): w.r.t last iterate or exact bne (FPSB 2 Bidder uniform). Defaults to False.
         normed (bool, optional): Divide inner product by product of norms. Defaults to False.
 
@@ -186,7 +190,7 @@ def variational_stability(strategies, exact_bne: bool = False, normed: bool = Fa
                         strategies[i].history[t],
                         bne[i],
                     )
-                    for i in strategies
+                    for i in game.bidder
                 ]
             )
             for t in range(iter - 1)
@@ -194,12 +198,15 @@ def variational_stability(strategies, exact_bne: bool = False, normed: bool = Fa
     )
 
 
-def best_response_stability(strategies, exact_bne: bool = False, normed: bool = False):
+def best_response_stability(
+    strategies, game, exact_bne: bool = False, normed: bool = False
+):
     """Check if br points towards equilibrium (i.e., last iterate)
     < br(s_t)-s_t, s_t-s* > <= 0
 
     Args:
         strategies (_type_): _description_
+        game (_type_): Game
         exact_bne (bool, optional): w.r.t last iterate or exact bne (FPSB 2 Bidder uniform). Defaults to False.
         normed (bool, optional): Divide inner product by product of norms. Defaults to False.
 
@@ -231,7 +238,7 @@ def best_response_stability(strategies, exact_bne: bool = False, normed: bool = 
                         strategies[i].history[t],
                         bne[i],
                     )
-                    for i in strategies
+                    for i in game.bidder
                 ]
             )
             for t in range(iter - 1)
@@ -239,12 +246,15 @@ def best_response_stability(strategies, exact_bne: bool = False, normed: bool = 
     )
 
 
-def next_iterate_stability(strategies, exact_bne: bool = False, normed: bool = False):
+def next_iterate_stability(
+    strategies, game, exact_bne: bool = False, normed: bool = False
+):
     """Check if update points towards equilibrium (i.e., last iterate)
     < s_t+1-s_t, s_t-s* > <= 0
 
     Args:
         strategies (_type_):
+        game (_type_): Game
         exact_bne (bool, optional): w.r.t last iterate or exact bne (FPSB 2 Bidder uniform). Defaults to False.
         normed (bool, optional): Divide inner product by product of norms. Defaults to False.
 
@@ -276,7 +286,7 @@ def next_iterate_stability(strategies, exact_bne: bool = False, normed: bool = F
                     fct_nis(
                         strategies[i].history[t + 1], strategies[i].history[t], bne[i]
                     )
-                    for i in strategies
+                    for i in game.bidder
                 ]
             )
             for t in range(iter - 1)
@@ -284,12 +294,13 @@ def next_iterate_stability(strategies, exact_bne: bool = False, normed: bool = F
     )
 
 
-def gradient_direction(strategies, normed: bool = False):
+def gradient_direction(strategies, game, normed: bool = False):
     """Check if gradient of each update points towards gradient of equilibrium (i.e., last iterate)
     < v(s), v(s^*) > <= 0
 
     Args:
         strategies (_type_):
+        game (_type_): Game
         normed (bool, optional): Divide inner product by product of norms. Defaults to False.
 
     Returns:
@@ -312,7 +323,7 @@ def gradient_direction(strategies, normed: bool = False):
                         strategies[i].history_gradient[t],
                         strategies[i].history_gradient[-1],
                     )
-                    for i in strategies
+                    for i in game.bidder
                 ]
             )
             for t in range(iter - 1)
@@ -320,12 +331,13 @@ def gradient_direction(strategies, normed: bool = False):
     )
 
 
-def gradient_distance(strategies):
+def gradient_distance(strategies, game):
     """Check if gradient of each update points towards gradient of equilibrium (i.e., last iterate)
      norm(v(s_t)-v(s^*))
 
     Args:
         strategies (_type_):
+        game (_type_): Game
 
     Returns:
         np.ndarray: result for each iteration
@@ -342,7 +354,7 @@ def gradient_distance(strategies):
                             strategies[i].history_gradient[t],
                             strategies[i].history_gradient[-1],
                         )
-                        for i in strategies
+                        for i in game.bidder
                     ]
                 )
             )

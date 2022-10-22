@@ -93,6 +93,7 @@ def run_experiment(
 
             log_run(
                 strategies,
+                game,
                 learn_alg,
                 experiment,
                 setting,

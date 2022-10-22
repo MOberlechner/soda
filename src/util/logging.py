@@ -64,6 +64,7 @@ def log_strat(
 
 def log_run(
     strategies,
+    game,
     learn_alg: str,
     experiment: str,
     setting: str,
@@ -78,9 +79,9 @@ def log_run(
     filename = "log_stability.csv"
 
     # metrics
-    vs = variational_stability(strategies, exact_bne=False, normed=False)
-    brs = best_response_stability(strategies, exact_bne=False, normed=False)
-    nis = next_iterate_stability(strategies, exact_bne=False, normed=False)
+    vs = variational_stability(strategies, game, exact_bne=False, normed=False)
+    brs = best_response_stability(strategies, game, exact_bne=False, normed=False)
+    nis = next_iterate_stability(strategies, game, exact_bne=False, normed=False)
 
     # create new entry for each agent
     rows = [
