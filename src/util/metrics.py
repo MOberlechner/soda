@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.stats import wasserstein_distance
 
 from src.learner.soda import SODA
 
@@ -320,10 +321,13 @@ def gradient_direction(strategies, game, normed: bool = False):
             sum(
                 [
                     fct_gs(
-                        strategies[i].history_gradient[t],
-                        strategies[i].history_gradient[-1],
+                        np.vstack(
+                            [strategies[i].history_gradient[t] for i in game.bidder]
+                        ),
+                        np.vstack(
+                            [strategies[i].history_gradient[-1] for i in game.bidder]
+                        ),
                     )
-                    for i in game.bidder
                 ]
             )
             for t in range(iter - 1)
@@ -353,6 +357,42 @@ def gradient_distance(strategies, game):
                         fct_gd(
                             strategies[i].history_gradient[t],
                             strategies[i].history_gradient[-1],
+                        )
+                        for i in game.bidder
+                    ]
+                )
+            )
+            for t in range(iter - 1)
+        ]
+    )
+
+
+def wasserstein_dist(strategies, game):
+    """Compute Wasserstein Distance to last iterate
+    Wasserstein distance is computed for each mixed strategy (fixed observation) separately and then averaged over
+    and summed over all bidders
+
+    Args:
+        strategies (_type_): Strategy
+        game (_type_): Game
+
+    Returns:
+        np.ndarray: result for each iteration
+    """
+    iter = len(strategies[list(strategies.keys())[0]].history)
+    fct_wd = lambda x, y, a_discr: np.mean(
+        [wasserstein_distance(x[j], y[j], a_discr, a_discr) for j in range(game.n)]
+    )
+
+    return np.array(
+        [
+            np.sqrt(
+                sum(
+                    [
+                        fct_wd(
+                            strategies[i].history_gradient[t],
+                            strategies[i].history_gradient[-1],
+                            strategies[i].a_discr,
                         )
                         for i in game.bidder
                     ]
