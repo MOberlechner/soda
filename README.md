@@ -1,5 +1,16 @@
 # SODA
 
+### Structure of the Code
+There are for central classes
+- **Mechanism** - represents the auction/contest mechanism we want to consider
+- **Game** - represents the discretized version of the mechanism
+- **Strategy** - represents the distributional strategy we want to compute
+- **Learner** - represents the learning algorithm we use to compute the equilibrium strategy
+
+The basic functionality can be seen in the examplary [notebook](https://gitlab.lrz.de/ga38fip/soda/-/blob/main/notebooks/examples/single_item_auction.ipynb).
+
+---
+
 ### References:
 - **package opt_einsum:** Daniel G. A. Smith and Johnnie Gray, opt_einsum - A Python package for optimizing contraction order for einsum-like expressions. Journal of Open Source Software, 2018, 3(26), 753
 
