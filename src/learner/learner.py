@@ -118,8 +118,10 @@ class Learner:
 
     def check_convergence(self, strategies, min_max_value: float) -> Tuple:
         """Check stopping criterion
-        utility_loss: if the maximal relative utility loss (over all agents) is less than the tolerance
-        distance: if the maximal distance to the last iterate loss (over all agents) is less than the tolerance
+        We check if the maximal (over all agents) "metric" is less than the tolerance
+        utility_loss: relative utility loss w.r.t. best response
+        dist_euclidean: Euclidean distance to previous iterate
+        dist_wasserstein: Wasserstein distance (mean over all mixed strategies) to previous iterate
 
         Args:
             strategies (dict): contains all strategies
@@ -138,7 +140,7 @@ class Learner:
 
             return convergence, min_max_value
 
-        elif self.stop_criterion == "dist":
+        elif self.stop_criterion == "dist_euclidean":
             # update minimal distance to last iterate (over all iterations)
             max_distance = np.max(
                 [
@@ -156,6 +158,9 @@ class Learner:
             convergence = max_distance < self.tol
 
             return convergence, min_max_value
+
+        elif self.stop_criterion == "dist_wasserstein":
+            raise NotImplementedError
 
         else:
             raise ValueError(
