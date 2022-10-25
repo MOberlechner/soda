@@ -80,7 +80,7 @@ def log_run(
 
     # metrics
     bool_normed = False
-    bool_bne = True
+    bool_bne = False
     vs = variational_stability(strategies, game, exact_bne=bool_bne, normed=bool_normed)
     brs = best_response_stability(
         strategies, game, exact_bne=bool_bne, normed=bool_normed
@@ -103,6 +103,8 @@ def log_run(
             "brs_bool": np.all(brs <= 0),
             "nis_max": nis.max(),
             "nis_bool": np.all(nis <= 0),
+            "exact_bne": bool_bne,
+            "normed": bool_normed,
             "timestamp": str(datetime.now())[:-7],
         }
         for agent in strategies
