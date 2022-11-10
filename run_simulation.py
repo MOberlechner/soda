@@ -1,5 +1,6 @@
 import hydra
 
+from src.strategy import Strategy
 from src.util.logging import log_sim
 from src.util.metrics import compute_l2_norm, compute_util_loss_scaled, compute_utility
 from src.util.setup import create_setting
@@ -18,18 +19,20 @@ def run_sim(
     # get setting
     hydra.initialize(config_path="configs/" + setting, job_name="run")
     cfg = hydra.compose(config_name=experiment)
-    mechanism, game, strategies = create_setting(setting, cfg)
 
     # path to strategies
     path_dir = "experiment/" + setting + "/"
 
     # create scaled game for util_loss_large
-    if not cfg.bne_known:
+    if cfg.bne_known:
+        mechanism, game = create_setting(setting, cfg)
+    else:
         cfg.n = n_scaled
         cfg.m = m_scaled
-        mechanism_scaled, game_scaled, strategies_scaled = create_setting(setting, cfg)
+        mechanism, game = create_setting(setting, cfg)
+
         if not mechanism.own_gradient:
-            game_scaled.get_utility(mechanism_scaled)
+            game.get_utility(mechanism)
             print("Utilties for experiments computed!")
 
     for r in range(runs):
@@ -37,11 +40,16 @@ def run_sim(
         # import strategies: naming convention now includes learner !!!
         name = experiment + ("_run_" + str(r) if runs > 1 else "")
 
+        # create strategies
+        strategies = {}
+        for i in game.set_bidder:
+            strategies[i] = Strategy(i, game)
+
         for i in strategies:
             if cfg.bne_known:
                 strategies[i].load(name, path_dir)
             else:
-                strategies_scaled[i].load_scale(name, path_dir, n_scaled, m_scaled)
+                strategies[i].load_scale(name, path_dir, n_scaled, m_scaled)
 
         # compute metrics if BNE is known
         if cfg.bne_known:
@@ -56,9 +64,7 @@ def run_sim(
                 for tag, val in zip(tag_labels, values):
                     log_sim(strategies, experiment, setting, r, tag, val, path)
         else:
-            util_loss_approx = compute_util_loss_scaled(
-                mechanism_scaled, game_scaled, strategies_scaled
-            )
+            util_loss_approx = compute_util_loss_scaled(mechanism, game, strategies)
 
             if logging is True:
                 log_sim(
