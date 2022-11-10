@@ -2,7 +2,7 @@ import hydra
 
 from src.util.logging import log_sim
 from src.util.metrics import compute_l2_norm, compute_util_loss_scaled, compute_utility
-from src.util.setting import create_setting
+from src.util.setup import create_setting
 
 
 def run_sim(
