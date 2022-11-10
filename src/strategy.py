@@ -50,7 +50,9 @@ class Strategy:
         self.prior = game.prior[agent]
 
         # strategy
-        self.x = np.ones(tuple(game.n + game.m)) / (np.prod(game.n) * np.prod(game.m))
+        self.x = np.ones(tuple([game.n] * self.dim_o + [game.m] * self.dim_a)) / (
+            game.n**self.dim_o * game.m**self.dim_a
+        )
         # utility, history, gradients
         (
             self.utility,
@@ -199,21 +201,19 @@ class Strategy:
         # determine largest entry of gradient for each valuation und put all the weight on the respective entry
         if self.dim_o == self.dim_a == 1:
             index_max = gradient.argmax(axis=1)
-            best_response[range(self.n[0]), index_max] = self.prior
+            best_response[range(self.n), index_max] = self.prior
 
         elif self.dim_o == 1:
-            for i in range(self.n[0]):
+            for i in range(self.n):
                 index_max = np.unravel_index(
                     np.argmax(gradient[i], axis=None), gradient[i].shape
                 )
                 best_response[i][index_max] = self.margin()[i]
 
         else:
-            for i in product(*[range(n) for n in self.n]):
-                index_max = np.unravel_index(
-                    np.argmax(gradient[i], axis=None), gradient[i].shape
-                )
-                best_response[i][index_max] = self.margin()[i]
+            raise NotImplementedError(
+                "Best Response not implemented for multi-dimensional observation space"
+            )
 
         return best_response
 
