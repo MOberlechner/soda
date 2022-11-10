@@ -61,12 +61,16 @@ def run_experiment(
     # get parameter
     cfg, cfg_learner = get_config(path_config, setting, experiment, learn_alg)
 
+    print('Experiment: "' + experiment + '" started!')
     # initialize setting and compute utility
     t0 = time()
     mechanism, game = create_setting(setting, cfg)
     if not mechanism.own_gradient:
         print('Computations of Utilities for experiment: "' + experiment + '" started!')
         game.get_utility(mechanism)
+        print(
+            'Computations of Utilities for experiment: "' + experiment + '" finished!'
+        )
     time_init = time() - t0
 
     # run soda
