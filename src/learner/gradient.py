@@ -97,7 +97,7 @@ class Gradient:
                 idx_opp = [i for i in range(n_bidder) if i != idx]
 
                 # indices of utility array
-                if game.values == "private":
+                if game.values == "private" or game.values == "private_common":
                     # utility depends only on own oversvation
                     start = indices_act + indices_obs[idx * dim_o : (idx + 1) * dim_o]
 
