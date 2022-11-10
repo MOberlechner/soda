@@ -3,27 +3,26 @@ import hydra
 from src.strategy import Strategy
 from src.util.logging import log_sim
 from src.util.metrics import compute_l2_norm, compute_util_loss_scaled, compute_utility
-from src.util.setup import create_setting
+from src.util.setup import create_learner, create_setting, get_config
 
 
 def run_sim(
+    learn_alg,
     setting,
     experiment,
-    runs: int = 1,
+    path,
+    path_config,
+    num_runs: int = 1,
     n_obs: int = int(2 * 22),
     logging: bool = True,
     n_scaled: int = 1024,
     m_scaled: int = 1024,
 ):
 
-    # get setting
-    hydra.initialize(config_path="configs/" + setting, job_name="run")
-    cfg = hydra.compose(config_name=experiment)
+    # get parameter
+    cfg, cfg_learner = get_config(path_config, setting, experiment, learn_alg)
 
-    # path to strategies
-    path_dir = "experiment/" + setting + "/"
-
-    # create scaled game for util_loss_large
+    # create settings (standard or scaled)
     if cfg.bne_known:
         mechanism, game = create_setting(setting, cfg)
     else:
@@ -35,21 +34,25 @@ def run_sim(
             game.get_utility(mechanism)
             print("Utilties for experiments computed!")
 
-    for r in range(runs):
+    for run in range(num_runs):
 
         # import strategies: naming convention now includes learner !!!
-        name = experiment + ("_run_" + str(r) if runs > 1 else "")
+        name = (
+            cfg_learner.name
+            + "_"
+            + experiment
+            + ("_run_" + str(run) if num_runs > 1 else "")
+        )
 
-        # create strategies
         strategies = {}
         for i in game.set_bidder:
             strategies[i] = Strategy(i, game)
 
         for i in strategies:
             if cfg.bne_known:
-                strategies[i].load(name, path_dir)
+                strategies[i].load(name, setting, path)
             else:
-                strategies[i].load_scale(name, path_dir, n_scaled, m_scaled)
+                strategies[i].load_scale(name, setting, path, n_scaled, m_scaled)
 
         # compute metrics if BNE is known
         if cfg.bne_known:
@@ -62,7 +65,7 @@ def run_sim(
                 tag_labels = ["l2_norm", "util_in_bne", "util_vs_bne", "util_loss"]
                 values = [l2_norm, util_bne, util_vs_bne, util_loss]
                 for tag, val in zip(tag_labels, values):
-                    log_sim(strategies, experiment, setting, r, tag, val, path)
+                    log_sim(strategies, experiment, setting, run, tag, val, path)
         else:
             util_loss_approx = compute_util_loss_scaled(mechanism, game, strategies)
 
@@ -82,25 +85,30 @@ def run_sim(
 
 if __name__ == "__main__":
 
-    setting = "llg_auction"
+    learn_alg = "frank_wolfe"
+    setting = "single_item"
     experiments_list = [
-        "llg_auction_nb_gamma1",
-        "llg_auction_nb_gamma2",
-        "llg_auction_nb_gamma3",
-        "llg_auction_nvcg_gamma1",
-        "llg_auction_nvcg_gamma2",
-        "llg_auction_nvcg_gamma3",
-        "llg_auction_nz_gamma1",
-        "llg_auction_nz_gamma2",
-        "llg_auction_nz_gamma3",
+        "fpsb",
     ]
 
     # specify path for experiments
-    path = "experiment/" + setting + "/test_frank_wolfe/"
+    path = "experiment/"
+    path_config = "configs/"
     logging = True
-    runs = 10
+    num_runs = 1
     n_obs = int(2**22)
     n_scaled = m_scaled = 1024
 
     for experiment in experiments_list:
-        run_sim(setting, experiment, runs, n_obs, logging, n_scaled, m_scaled)
+        run_sim(
+            learn_alg,
+            setting,
+            experiment,
+            path,
+            path_config,
+            num_runs,
+            n_obs,
+            logging,
+            n_scaled,
+            m_scaled,
+        )

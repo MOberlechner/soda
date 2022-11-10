@@ -28,7 +28,8 @@ def learn_strategies(mechanism, game, cfg_learner) -> None:
         strategies[i].initialize(init_method)
 
     # run soda
-    return learner.run(mechanism, game, strategies)
+    learner.run(mechanism, game, strategies)
+    return strategies
 
 
 def run_experiment(
@@ -125,9 +126,19 @@ if __name__ == "__main__":
         "fpsb",
     ]
     logging = True
-    runs = 10
+    num_runs = 1
     path = "experiment/"
     path_config = "configs/"
+    save_strat = True
 
     for experiment in experiments_list:
-        run_experiment(learn_alg, setting, experiment, logging, runs, path)
+        run_experiment(
+            learn_alg,
+            setting,
+            experiment,
+            logging,
+            save_strat,
+            num_runs,
+            path,
+            path_config,
+        )
