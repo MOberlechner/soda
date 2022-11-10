@@ -34,7 +34,7 @@ class Game:
 
         # discrete action and observation space (and optional valuation space)
         self.o_discr = {
-            i: discr_spaces(mechanism.o_space[i], n, midpoint=True)
+            i: discr_spaces(mechanism.o_space[i], n, midpoint=False)
             for i in self.set_bidder
         }
         self.a_discr = {
@@ -43,7 +43,7 @@ class Game:
         }
         if hasattr(mechanism, "v_space"):
             self.v_discr = {
-                i: discr_spaces(mechanism.v_space[i], m, midpoint=True)
+                i: discr_spaces(mechanism.v_space[i], m, midpoint=False)
                 for i in self.set_bidder
             }
 
