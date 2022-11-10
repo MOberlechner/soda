@@ -67,7 +67,6 @@ class SingleItemAuction(Mechanism):
             self.prior not in ["affiliated_values", "common_value"]
         ) & ("corr" not in self.param_prior):
             self.own_gradient = True
-            print("own_gradient method: {}".format(self.own_gradient))
 
     def utility(self, obs: np.ndarray, bids: np.ndarray, idx: int) -> None:
         """
