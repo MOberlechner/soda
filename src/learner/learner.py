@@ -100,8 +100,6 @@ class Learner:
         if print:
             self.print_result(convergence, min_max_value, t_max, strategies)
 
-        return strategies
-
     def update_strategy(self, strategy, gradient, t):
         """Update strategy according to update rule from specific learning method
 
