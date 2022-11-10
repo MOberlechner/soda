@@ -62,67 +62,6 @@ def log_strat(
     log.to_csv(path + filename, index=False)
 
 
-def log_run(
-    strategies,
-    game,
-    learn_alg: str,
-    experiment: str,
-    setting: str,
-    run: int,
-    path: str,
-):
-    """
-    log variational stability and monotonicity for each run
-    """
-
-    # file name
-    filename = "log_stability.csv"
-
-    # metrics
-    bool_normed = False
-    bool_bne = False
-    vs = variational_stability(strategies, game, exact_bne=bool_bne, normed=bool_normed)
-    brs = best_response_stability(
-        strategies, game, exact_bne=bool_bne, normed=bool_normed
-    )
-    nis = next_iterate_stability(
-        strategies, game, exact_bne=bool_bne, normed=bool_normed
-    )
-
-    # create new entry for each agent
-    rows = [
-        {
-            "experiment": experiment,
-            "mechanism": setting,
-            "learner": learn_alg,
-            "run": run,
-            "iterations": len(strategies[agent].utility),
-            "vs_max": vs.max(),
-            "vs_bool": np.all(vs <= 0),
-            "brs_max": brs.max(),
-            "brs_bool": np.all(brs <= 0),
-            "nis_max": nis.max(),
-            "nis_bool": np.all(nis <= 0),
-            "exact_bne": bool_bne,
-            "normed": bool_normed,
-            "timestamp": str(datetime.now())[:-7],
-        }
-        for agent in strategies
-    ]
-    # create DataFrame with entries
-    df = pd.DataFrame(rows)
-
-    if exists(path + filename):
-        # import existing dataframe
-        log = pd.read_csv(path + filename)
-        log = pd.concat([log, df])
-    else:
-        log = df
-
-    # save data
-    log.to_csv(path + filename, index=False)
-
-
 def log_sim(
     strategies, experiment: str, setting: str, run: int, tag, values, path: str
 ):
