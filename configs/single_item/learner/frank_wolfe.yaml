@@ -1,6 +1,6 @@
 name: 'frank_wolfe'
-max_iter: 1000
-tol: 1e-4
-stop_criterion: 'util_loss'
+max_iter: 100000
+tol: 1e-5
+stop_criterion: 'dist_euclidean'
 steprule_bool: True
-init_method: 'random'
+init_method: 'equal'
