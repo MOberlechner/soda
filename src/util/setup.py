@@ -11,7 +11,6 @@ from src.mechanism.crowdsourcing import Crowdsourcing
 from src.mechanism.double_auction import DoubleAuction
 from src.mechanism.llg_auction import LLGAuction
 from src.mechanism.single_item import SingleItemAuction
-from src.mechanism.single_item_roi import SingleItemAuctionROI
 from src.mechanism.split_award import SplitAwardAuction
 from src.strategy import Strategy
 
@@ -32,11 +31,6 @@ def create_setting(setting: str, cfg):
 
     if setting == "single_item":
         mechanism = SingleItemAuction(
-            cfg.bidder, cfg.o_space, cfg.a_space, cfg.param_prior, cfg.param_util
-        )
-
-    if setting == "single_item_roi":
-        mechanism = SingleItemAuctionROI(
             cfg.bidder, cfg.o_space, cfg.a_space, cfg.param_prior, cfg.param_util
         )
 
