@@ -56,10 +56,11 @@ class SingleItemAuction(Mechanism):
             raise NotImplementedError
 
         # use own gradient
-        # if (len(self.set_bidder) == 1) and (self.payment_rule == "first_price") & (
-        #    self.prior not in ["affiliated_values", "common_value"]
-        # ) & ("corr" not in self.param_prior):
-        #    self.own_gradient = True
+        if (len(self.set_bidder) == 1) and (self.payment_rule == "first_price") & (
+            self.prior not in ["affiliated_values", "common_value"]
+        ) & ("corr" not in self.param_prior):
+            self.own_gradient = True
+            print("own gradient")
 
     def utility(self, obs: np.ndarray, bids: np.ndarray, idx: int) -> None:
         """
@@ -190,10 +191,35 @@ class SingleItemAuction(Mechanism):
             )
         else:
             raise ValueError('Tie-breaking rule "{}" unknown'.format(self.tie_breaking))
-        payoff = (
+
+        # utility type
+        obs_grid = (
             np.ones((strategies[agent].m, strategies[agent].n))
             * strategies[agent].o_discr
-        ).T - np.ones((strategies[agent].n, strategies[agent].m)) * strategies[
-            agent
-        ].a_discr
-        return exp_win * np.sign(payoff) * np.abs(payoff) ** self.risk[0]
+        ).T
+        bid_grid = (
+            np.ones((strategies[agent].n, strategies[agent].m))
+            * strategies[agent].a_discr
+        )
+
+        if self.utility_type == "QL":
+            payoff = obs_grid - bid_grid
+
+        elif self.utility_type == "ROI":
+            payoff = np.divide(
+                obs_grid - bid_grid,
+                bid_grid,
+                out=np.zeros_like(obs_grid),
+                where=bid_grid != 0,
+            )
+        elif self.utility_type == "ROS":
+            payoff = np.divide(
+                obs_grid,
+                bid_grid,
+                out=np.zeros_like(obs_grid),
+                where=bid_grid != 0,
+            )
+        else:
+            raise ValueError("utility type " + self.utility_type + " not available")
+
+        return exp_win * payoff
