@@ -126,6 +126,13 @@ class SingleItemAuction(Mechanism):
                 out=np.zeros_like((obs / np.ones(price.shape))),
                 where=price != 0,
             )
+        elif self.utility_type == "ROSB":
+            payoff = np.divide(
+                obs + np.log(self.param_util["budget"] - price),
+                price,
+                out=np.zeros_like((obs / np.ones(price.shape))),
+                where=price != 0,
+            )
         else:
             raise ValueError("utility type " + self.utility_type + " not available")
 
@@ -219,7 +226,16 @@ class SingleItemAuction(Mechanism):
                 out=np.zeros_like(obs_grid),
                 where=bid_grid != 0,
             )
+        elif self.utility_type == "ROSB":
+            payoff = np.divide(
+                obs_grid + np.log(self.param_util["budget"] - bid_grid),
+                bid_grid,
+                out=np.zeros_like(obs_grid),
+                where=bid_grid != 0,
+            )
         else:
-            raise ValueError("utility type " + self.utility_type + " not available")
+            raise ValueError(
+                "utility type " + self.utility_type + " not available in own gradient"
+            )
 
         return exp_win * payoff
