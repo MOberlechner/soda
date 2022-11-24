@@ -22,7 +22,7 @@ def learn_strategies(mechanism, game, cfg_learner):
     learner = create_learner(cfg_learner)
 
     # initialize strategies
-    init_method = cfg_learner.init_method if "init" in cfg_learner else "random"
+    init_method = cfg_learner.init_method if "init_method" in cfg_learner else "random"
     strategies = {}
     for i in game.set_bidder:
         strategies[i] = Strategy(i, game)
