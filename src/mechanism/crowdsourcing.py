@@ -35,9 +35,11 @@ class Crowdsourcing(Mechanism):
         )
         self.param_util = param_util
         self.type = param_util["type"] if "type" in param_util else "cost"
-        self.own_gradient = (len(self.set_bidder) == 1) and (
-            self.param_util["tiebreaking"] == "lose"
-        )
+
+        # use own gradient
+        if (len(self.set_bidder) == 1) and (self.param_util["tiebreaking"] == "lose"):
+            self.own_gradient = True
+            print("own_gradient method: {}".format(self.own_gradient))
 
         # check input
         if self.prices.sum() != 1:
