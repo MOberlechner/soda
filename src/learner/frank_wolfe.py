@@ -10,6 +10,7 @@ class FrankWolfe(Learner):
         method (str): specify learning algorithm
         max_iter (int): maximal number of iterations
         tol (float): stopping criterion (relative utility loss)
+        stop_criterion (str): specify stopping criterion. Defaults to "util_loss"
     """
 
     def __init__(

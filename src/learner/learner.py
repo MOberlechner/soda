@@ -12,10 +12,9 @@ class Learner:
     In each iteration methods are updated according to the specified learning algorithm (method)
 
     Implemented methods (subclasses) so far are:
-        soda: dual averaging with entropic regularizer
+        soda: Simultanoues Online Dual Averaging
+        soma: Projected Online Mirror Ascent
         frank_wolfe: Frank-Wolfe Algorithm
-        pogd: Projected Online Gradient Descent
-        brgd: Best-Response-Gradient-Dynamic: Mixture of SODA and Frank-Wolfe
         best_response: Best-Response Dynamic
 
     Attributes:
@@ -48,8 +47,9 @@ class Learner:
         mechanism,
         game,
         strategies,
-        disable_tqdm: bool = True,
-        print: bool = False,
+        disable_tqdm_bool: bool = True,
+        print_result_bool: bool = False,
+        save_history_bool: bool = True,
     ) -> None:
         """Run learning algorithm
 
@@ -57,8 +57,9 @@ class Learner:
             mechanism (class): auction game
             game (class): discretized approximation game
             strategies (dict): strategy profile
-            disable_tqdm (bool): Disable progess bar. Defaults to True
-            print (bool): Print result. Defaults to False
+            disable_tqdm_bool (bool): Disable progess bar. Defaults to True
+            print_result_bool (bool): Print result. Defaults to False
+            save_history_bool (bool): Save history of iterates (apart from first iteration). Defaults to True
         """
 
         # prepare gradients, i.e., compute path and indices
@@ -73,16 +74,16 @@ class Learner:
             range(self.max_iter),
             unit_scale=True,
             bar_format="{l_bar}{bar:20}{r_bar}{bar:-10b}",
-            disable=disable_tqdm,
+            disable=disable_tqdm_bool,
         ):
 
             # compute gradients
             for i in game.set_bidder:
                 gradient.compute(mechanism, game, strategies, i)
 
-            # update history (strategy, gradient, utility, utility loss)
+            # update history (utility, utility loss, dist_prev_iter, optional: strategy, gradient)
             for i in game.set_bidder:
-                strategies[i].update_history(gradient.x[i])
+                strategies[i].update_history(gradient.x[i], save_history_bool)
 
             # check convergence
             convergence, min_max_value = self.check_convergence(
@@ -97,10 +98,8 @@ class Learner:
                 self.update_strategy(strategies[i], gradient.x[i], t)
 
         # print result
-        if print:
+        if print_result_bool:
             self.print_result(convergence, min_max_value, t_max, strategies)
-
-        return strategies
 
     def update_strategy(self, strategy, gradient, t):
         """Update strategy according to update rule from specific learning method
@@ -119,9 +118,9 @@ class Learner:
     def check_convergence(self, strategies, min_max_value: float) -> Tuple:
         """Check stopping criterion
         We check if the maximal (over all agents) "metric" is less than the tolerance
-        utility_loss: relative utility loss w.r.t. best response
-        dist_euclidean: Euclidean distance to previous iterate
-        dist_wasserstein: Wasserstein distance (mean over all mixed strategies) to previous iterate
+            - utility_loss: relative utility loss w.r.t. best response
+            - dist_euclidean: Euclidean distance to previous iterate
+            - dist_wasserstein: Wasserstein distance (mean over all mixed strategies) to previous iterate
 
         Args:
             strategies (dict): contains all strategies
@@ -132,32 +131,11 @@ class Learner:
         """
         if self.stop_criterion == "util_loss":
             # update minimal max_util_loss (over all iterations)
-            max_util_loss = np.max([strategies[i].utility_loss[-1] for i in strategies])
-            min_max_value = min(min_max_value, max_util_loss)
-
-            # check if smaller than tolerance
-            convergence = max_util_loss < self.tol
-
-            return convergence, min_max_value
+            max_value = np.max([strategies[i].utility_loss[-1] for i in strategies])
 
         elif self.stop_criterion == "dist_euclidean":
             # update minimal distance to last iterate (over all iterations)
-            max_distance = np.max(
-                [
-                    np.linalg.norm(
-                        strategies[i].history[-1] - strategies[i].history[-2]
-                    )
-                    if len(strategies[i].history) >= 2
-                    else 1
-                    for i in strategies
-                ]
-            )
-            min_max_value = min(min_max_value, max_distance)
-
-            # check if smaller than tolerance
-            convergence = max_distance < self.tol
-
-            return convergence, min_max_value
+            max_value = np.max([strategies[i].dist_prev_iter[-1] for i in strategies])
 
         elif self.stop_criterion == "dist_wasserstein":
             raise NotImplementedError
@@ -168,6 +146,9 @@ class Learner:
                     self.stop_criterion
                 )
             )
+        min_max_value = min(min_max_value, max_value)
+        convergence = max_value < self.tol
+        return convergence, min_max_value
 
     def print_result(
         self, convergence: bool, min_max_value: float, t_max: int, strategies
