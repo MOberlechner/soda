@@ -114,7 +114,7 @@ class Learner:
         to a rule defined in the method update_step. This separation is done, to have the general update
         step from the optimization method independent of the strategy class.
         """
-        pass
+        raise NotImplementedError
 
     def check_convergence(self, strategies, min_max_value: float) -> Tuple:
         """Check stopping criterion
