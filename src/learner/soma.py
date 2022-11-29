@@ -3,8 +3,8 @@ import numpy as np
 from .learner import Learner
 
 
-class SODA(Learner):
-    """Simultaneous Online Dual Averaging
+class SOMA(Learner):
+    """Simultaneous Online Mirror Ascent
 
     Attributes:
         method (str): specify learning algorithm
@@ -12,7 +12,7 @@ class SODA(Learner):
         tol (float): stopping criterion (relative utility loss)
         stop_criterion (str): specify stopping criterion. Defaults to "util_loss"
 
-        regularizer (str): regularizer for dual averaging
+        mirror_map (str): distance generating function for mirror ascent
         step_rule (bool): if True we use decreasing, else heuristic step size
         eta (float): factor for stepsize
         beta (float): rate the stepsize decreases with each iteration
@@ -23,17 +23,17 @@ class SODA(Learner):
         max_iter: int,
         tol: float,
         stop_criterion: str,
-        regularizer: str,
+        mirror_map: str,
         steprule_bool: bool,
         eta: float,
         beta: float = 1 / 20,
     ):
         super().__init__(max_iter, tol, stop_criterion)
-        self.learner = "soma" + regularizer[:4]
+        self.learner = "soma" + mirror_map[:4]
+        self.mirror_map = mirror_map
         self.steprule_bool = steprule_bool
         self.eta = eta
         self.beta = beta
-        self.regularizer = regularizer
 
         self.check_input()
 
@@ -41,31 +41,27 @@ class SODA(Learner):
         """Check Paramaters for Learner
 
         Raises:
-            ValueError: regulizer unknown
+            ValueError: mirror_map unkown
         """
-        if self.regularizer not in ["euclidean", "entropic"]:
-            raise ValueError('Regularizer "{}" unknown'.format(self.regularizer))
+        if self.mirror_map not in ["euclidean", "entropic"]:
+            raise ValueError('Regularizer "{}" unknown'.format(self.mirror_map))
 
     def update_strategy(self, strategy, gradient: np.ndarray, t: int) -> None:
-        """Update Step for SODA
+        """Update strategy: Projected Gradient Ascent
 
-        Attributes:
-            method (str): specify learning algorithm
-            max_iter (int): maximal number of iterations
-            tol (float): stopping criterion (relative utility loss)
-
-            step_rule (bool): if True we use decreasing, else heuristic step size
-            eta (float): factor for stepsize
-            beta (float): rate the stepsize decreases with each iteration
+        Args:
+            strategy (class): strategy class
+            gradient (np.ndarray): current gradient for agent i
+            t (int): iteration
         """
         # compute stepsize
         stepsize = self.step_rule(t, gradient, strategy.dim_o, strategy.dim_a)
         # make update step
-        if self.regularizer == "euclidean":
-            strategy.x, strategy.y = self.update_step_euclidean(
-                strategy.y, gradient, stepsize, strategy.prior
+        if self.mirror_map == "euclidean":
+            strategy.x = self.update_step_euclidean(
+                strategy.x, gradient, stepsize, strategy.prior
             )
-        elif self.regularizer == "entropic":
+        elif self.mirror_map == "entropic":
             strategy.x = self.update_step_entropic(
                 strategy.x,
                 gradient,
@@ -77,25 +73,23 @@ class SODA(Learner):
 
     def update_step_euclidean(
         self,
-        y: np.ndarray,
+        x: np.ndarray,
         grad: np.ndarray,
         eta_t: np.ndarray,
         prior: np.ndarray,
-    ) -> tuple:
-        """Update step SODA with euclidean mirror map, i.e. Lazy Projected Online Gradient Ascent
+    ) -> np.ndarray:
+        """Update step SOMA with euclidean mirror map, i.e. Projected Online Gradient Ascent
 
         Args:
-            y (np.ndarray): current (dual) iterate
+            x (np.ndarray): current iterate
             grad (np.ndarray): gradient
-            eta_t (np.ndarray): step size at iteration t
             prior (np.ndarray): marginal prior distribution (scaling of prob. simplex)
+            eta_t (np.ndarray): step size at iteration t
 
         Returns:
-            tuple (np.ndarray): next dual and primal iterate
+            np.ndarray: next iterate
         """
-        y += eta_t * grad
-        x = self.projection(y, prior)
-        return x, y
+        return self.projection(x + grad * eta_t, prior)
 
     def update_step_entropic(
         self,
@@ -103,21 +97,21 @@ class SODA(Learner):
         grad: np.ndarray,
         eta_t: np.ndarray,
         prior: np.ndarray,
-        dim_o: int = 1,
-        dim_a: int = 1,
-    ):
-        """Update step SODA with entropic regularizer, i.e. Entropic Ascent Algorithm
+        dim_o: int,
+        dim_a: int,
+    ) -> np.ndarray:
+        """Update step SOMA with entropic mirror map, i.e. Entropic Ascent Algorithm
 
         Args:
             x (np.ndarray): current iterate
             grad (np.ndarray): gradient
-            eta_t (np.ndarray): stepsize
+            eta_t (np.ndarray): step size at iteration t
             prior (np.ndarray): marginal prior distribution (scaling of prob. simplex)
-            dim_o (int): dimension of type space
-            dim_a (int): dimension of action space
+            dim_o (int): dimension observation space
+            dim_a (int): dimension action space
 
         Returns:
-            np.ndarray: updateted strategy
+            np.ndarray: next iterate
         """
         xc_exp = x * np.exp(grad * eta_t)
         xc_exp_sum = xc_exp.sum(axis=tuple(range(dim_o, dim_o + dim_a))).reshape(
