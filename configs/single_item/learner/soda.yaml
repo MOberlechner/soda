@@ -1,5 +1,6 @@
 name: 'soda'
 max_iter: 1000
+stop_criterion: 'util_loss'
 tol: 1e-4
 steprule_bool: True
 eta: 50.
