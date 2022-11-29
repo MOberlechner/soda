@@ -4,15 +4,13 @@ from .learner import Learner
 
 
 class SODA(Learner):
-    """Simultaneous Online Dual Averaging
+    """SODA - Dual Averaging with entropic regularizer
 
     Attributes:
         method (str): specify learning algorithm
         max_iter (int): maximal number of iterations
         tol (float): stopping criterion (relative utility loss)
-        stop_criterion (str): specify stopping criterion. Defaults to "util_loss"
 
-        regularizer (str): regularizer for dual averaging
         step_rule (bool): if True we use decreasing, else heuristic step size
         eta (float): factor for stepsize
         beta (float): rate the stepsize decreases with each iteration
@@ -23,96 +21,58 @@ class SODA(Learner):
         max_iter: int,
         tol: float,
         stop_criterion: str,
-        regularizer: str,
         steprule_bool: bool,
         eta: float,
         beta: float = 1 / 20,
     ):
         super().__init__(max_iter, tol, stop_criterion)
-        self.learner = "soma" + regularizer[:4]
+        self.learner = "soda"
         self.steprule_bool = steprule_bool
         self.eta = eta
         self.beta = beta
-        self.regularizer = regularizer
-
-        self.check_input()
-
-    def check_input(self):
-        """Check Paramaters for Learner
-
-        Raises:
-            ValueError: regulizer unknown
-        """
-        if self.regularizer not in ["euclidean", "entropic"]:
-            raise ValueError('Regularizer "{}" unknown'.format(self.regularizer))
 
     def update_strategy(self, strategy, gradient: np.ndarray, t: int) -> None:
-        """Update Step for SODA
+        """
+        Update strategy: dual avering with entropic regularizer
 
-        Attributes:
-            method (str): specify learning algorithm
-            max_iter (int): maximal number of iterations
-            tol (float): stopping criterion (relative utility loss)
+        Parameters
+        ----------
+        strategy : class Strategy
+        gradient : np.ndarray,
+        stepsize : np.ndarray, step size
 
-            step_rule (bool): if True we use decreasing, else heuristic step size
-            eta (float): factor for stepsize
-            beta (float): rate the stepsize decreases with each iteration
+        Returns
+        -------
+        np.ndarray : updated strategy
         """
         # compute stepsize
         stepsize = self.step_rule(t, gradient, strategy.dim_o, strategy.dim_a)
         # make update step
-        if self.regularizer == "euclidean":
-            strategy.x, strategy.y = self.update_step_euclidean(
-                strategy.y, gradient, stepsize, strategy.prior
-            )
-        elif self.regularizer == "entropic":
-            strategy.x = self.update_step_entropic(
-                strategy.x,
-                gradient,
-                stepsize,
-                strategy.prior,
-                strategy.dim_o,
-                strategy.dim_a,
-            )
+        strategy.x = self.update_step(
+            strategy.x,
+            gradient,
+            strategy.prior,
+            stepsize,
+            strategy.dim_o,
+            strategy.dim_a,
+        )
 
-    def update_step_euclidean(
-        self,
-        y: np.ndarray,
-        grad: np.ndarray,
-        eta_t: np.ndarray,
-        prior: np.ndarray,
-    ) -> tuple:
-        """Update step SODA with euclidean mirror map, i.e. Lazy Projected Online Gradient Ascent
-
-        Args:
-            y (np.ndarray): current (dual) iterate
-            grad (np.ndarray): gradient
-            eta_t (np.ndarray): step size at iteration t
-            prior (np.ndarray): marginal prior distribution (scaling of prob. simplex)
-
-        Returns:
-            tuple (np.ndarray): next dual and primal iterate
-        """
-        y += eta_t * grad
-        x = self.projection(y, prior)
-        return x, y
-
-    def update_step_entropic(
+    def update_step(
         self,
         x: np.ndarray,
         grad: np.ndarray,
-        eta_t: np.ndarray,
         prior: np.ndarray,
+        eta_t: np.ndarray,
         dim_o: int = 1,
         dim_a: int = 1,
     ):
-        """Update step SODA with entropic regularizer, i.e. Entropic Ascent Algorithm
+        """Update step for SODA, i.e. exponentiated gradient ascent or dual averaging with entropic regularizer
 
         Args:
             x (np.ndarray): current iterate
             grad (np.ndarray): gradient
-            eta_t (np.ndarray): stepsize
             prior (np.ndarray): marginal prior distribution (scaling of prob. simplex)
+            eta_t (np.ndarray): stepsize
             dim_o (int): dimension of type space
             dim_a (int): dimension of action space
 
@@ -123,40 +83,9 @@ class SODA(Learner):
         xc_exp_sum = xc_exp.sum(axis=tuple(range(dim_o, dim_o + dim_a))).reshape(
             list(prior.shape) + [1] * dim_a
         )
+
+        # update strategy
         return 1 / xc_exp_sum * prior.reshape(list(prior.shape) + [1] * dim_a) * xc_exp
-
-    def projection(self, x: np.ndarray, prior: np.ndarray) -> np.ndarray:
-        """Projection w.r.t. Euclidean distance
-        each row x[i] is projected to the probability simplex scaled by prior[i]
-        Algorithm based on https://arxiv.org/pdf/1309.1541.pdf
-
-        Args:
-            x (np.ndarry): 2-dim array
-            prior (np.ndarray): marginal prior
-
-        Returns:
-            np.ndarray: projection of x
-        """
-        if len(x.shape) > 2:
-            raise NotImplementedError(
-                "Projection only implemented for 1-dim action space and valuation space"
-            )
-        n, m = x.shape
-        assert n == len(prior), "dimensions of strategy and prior not compatible"
-
-        # sort
-        x_sort = -np.sort(-x, axis=1)
-        x_cumsum = x_sort.cumsum(axis=1)
-        # find rho
-        rho = np.array(
-            (x_sort + (prior.reshape(n, 1) - x_cumsum) / np.arange(1, m + 1) > 0).sum(
-                axis=1
-            ),
-            dtype=int,
-        )
-        # define lambda
-        lamb = 1 / rho * (prior - x_cumsum[range(n), rho - 1])
-        return (x + np.repeat(lamb, m).reshape(n, m)).clip(min=0)
 
     def step_rule(self, t: int, grad: np.ndarray, dim_o: int, dim_a: int) -> np.ndarray:
         """Compute step size:
