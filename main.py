@@ -1,4 +1,4 @@
-from src.util.run_experiments import *
+from src.util.run import *
 
 """
 General Parameter for Experiment
@@ -23,22 +23,7 @@ learn_alg = "frank_wolfe"
 setting = "single_item"
 
 exp_list = [
-    "QL_FP_2_gaussian",
-    # "QL_FP_2_uniform",
-    # "QL_FP_5_gaussian",
-    # "QL_FP_5_uniform",
-    # "QL_SP_2_gaussian",
-    # "QL_SP_2_uniform",
-    # "QL_SP_5_gaussian",
-    # "QL_SP_5_uniform",
-    # "ROI_FP_2_gaussian",
-    # "ROI_FP_2_uniform",
-    # "ROI_FP_5_gaussian",
-    # "ROI_FP_5_uniform",
-    # "ROI_SP_2_gaussian",
-    # "ROI_SP_2_uniform",
-    # "ROI_SP_5_gaussian",
-    # "ROI_SP_5_uniform",
+    "fpsb",
 ]
 
 simulation = False
