@@ -50,13 +50,11 @@ class Strategy:
         self.prior = game.prior[agent]
 
         # strategy - primal iterate
-        self.x = np.ones(tuple([game.n] * self.dim_o + [game.m] * self.dim_a)) / (
+        self.x = -np.ones(tuple([game.n] * self.dim_o + [game.m] * self.dim_a)) / (
             game.n**self.dim_o * game.m * self.dim_a
         )
         # strategy - dual iterate
-        self.y = np.ones(tuple([game.n] * self.dim_o + [game.m] * self.dim_a)) / (
-            game.n**self.dim_o * game.m * self.dim_a
-        )
+        self.y = np.zeros_like(self.x)
 
         # utility, history, gradients
         (
