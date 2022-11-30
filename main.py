@@ -1,94 +1,76 @@
-from src.util.run_experiments import *
-
-"""
-General Parameter for Experiment
-
-path_config     specify path to config file, which contain files for 
-                learn_alg and experiment in a subdirectory setting
-
-path            log files and strategies are saved in the specified directory
+from src.util.run import *
 
 
-Experiment sepcific Parameter (which config file to access)
-setting         specifies the mechanism / subdirectory in config
-learn_alg       specifies learning algorithm (config file in learner subdirectory)
-exp_lists       list of settings where we want to compute the equilibria
-simulation      run simulations, otherwise only the strategies are computed
+def main(
+    path_config: str,
+    path: str,
+    experiments: list,
+    simulation: bool,
+    logging: bool,
+    n_obs: int = int(2**22),
+    n_scaled: int = 1024,
+    m_scaled: int = 1024,
+):
+    """Run Experiments
 
-"""
-path_config = "configs/"
-path = "experiment/"
+    Args:
+        path_config (str): specify path to config file, which contain files for learn_alg and experiment in a subdirectory setting
+        path (str): log files and strategies are saved in the specified directory
+        experiments (list): list of tuples (setting, experiment, learner)
+        setting (str): specifies the mechanism / subdirectory in config
+        exp_list (list): list of specific version of the setting where we want to compute the equilibria
+        simulation (bool): run simulations, otherwise only the strategies are computed
+        logging (bool): log results from simulation
+        n_obs (int): number of simulated observations. Defaults to int(2**22).
+        n_scaled (int): number of discretization points for observations to evaluate computed strategy. Defaults to 1024.
+        m_scaled (int) number of discretization points for actions to evaluate computed strategy. Defaults to 1024.
+    """
 
-learn_alg = "frank_wolfe"
-setting = "single_item"
-
-exp_list = [
-    "QL_FP_2_gaussian",
-    # "QL_FP_2_uniform",
-    # "QL_FP_5_gaussian",
-    # "QL_FP_5_uniform",
-    # "QL_SP_2_gaussian",
-    # "QL_SP_2_uniform",
-    # "QL_SP_5_gaussian",
-    # "QL_SP_5_uniform",
-    # "ROI_FP_2_gaussian",
-    # "ROI_FP_2_uniform",
-    # "ROI_FP_5_gaussian",
-    # "ROI_FP_5_uniform",
-    # "ROI_SP_2_gaussian",
-    # "ROI_SP_2_uniform",
-    # "ROI_SP_5_gaussian",
-    # "ROI_SP_5_uniform",
-]
-
-simulation = False
-
-"""
-Run experiment - Learn distributional strategies
-
-logging (bool)      log information to runs
-num_runs (int)      number of repetitions of each experiment
-save_strat (bool)   save solutions
-"""
-logging = True
-num_runs = 1
-save_strat = True
-
-for experiment in exp_list:
-    run_experiment(
-        learn_alg,
-        setting,
-        experiment,
-        logging,
-        save_strat,
-        num_runs,
-        path,
-        path_config,
-    )
-
-
-"""
-Run simulations - evaluate computed strategies
-
-n_obs (int)     number of simulated auctions used to compare with analytical BNE
-n_scaled (int)  if no analytical BNE is available we evaluate the strategy in a discretized game with a higher discretization (slow)
-
-"""
-
-if simulation:
-    n_obs = int(2**22)
-    n_scaled = m_scaled = 1024
-
-    for experiment in exp_list:
-        run_sim(
+    # compute strategies
+    for setting, experiment, learn_alg in experiments:
+        print(setting, experiment, learn_alg)
+        run_experiment(
             learn_alg,
             setting,
             experiment,
+            logging,
+            save_strat,
+            num_runs,
             path,
             path_config,
-            num_runs,
-            n_obs,
-            logging,
-            n_scaled,
-            m_scaled,
         )
+
+    # evaluate strategies
+    if simulation:
+        for setting, experiment, learn_alg in experiments:
+            run_sim(
+                learn_alg,
+                setting,
+                experiment,
+                path,
+                path_config,
+                num_runs,
+                n_obs,
+                logging,
+                n_scaled,
+                m_scaled,
+            )
+
+    print("Done!")
+
+
+if __name__ == "__main__":
+
+    path_config = "configs/"
+    path = "experiment/test/"
+    experiments = [("single_item", "fpsb", "soda")]
+
+    # computation
+    num_runs = 10
+    save_strat = True
+
+    # simulation
+    simulation = False
+    logging = True
+
+    main(path_config, path, experiments, simulation, logging)

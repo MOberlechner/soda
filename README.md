@@ -1,13 +1,13 @@
 # SODA
 
 ### Structure of the Code
-There are for central classes
-- **Mechanism** - represents the auction/contest mechanism we want to consider
-- **Game** - represents the discretized version of the mechanism
-- **Strategy** - represents the distributional strategy we want to compute
-- **Learner** - represents the learning algorithm we use to compute the equilibrium strategy
+There are four central classes
+- [Mechanism](https://gitlab.lrz.de/ga38fip/soda/-/blob/main/src/mechanism/mechanism.py) - represents the auction/contest mechanism we want to consider
+- [Game](https://gitlab.lrz.de/ga38fip/soda/-/blob/main/src/game.py) - represents the discretized version of the mechanism
+- [Strategy](https://gitlab.lrz.de/ga38fip/soda/-/blob/main/src/strategy.py) - represents the distributional strategy we want to compute
+- [Learner](https://gitlab.lrz.de/ga38fip/soda/-/blob/main/src/learner/learner.py) - represents the learning algorithm we use to compute the equilibrium strategy
 
-The basic functionality can be seen in the examplary [notebook](https://gitlab.lrz.de/ga38fip/soda/-/blob/main/notebooks/examples/single_item_auction.ipynb).
+The basic functionality can be seen in the [intro notebook](https://gitlab.lrz.de/ga38fip/soda/-/blob/main/notebooks/intro.ipynb).
 
 ---
 

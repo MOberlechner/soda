@@ -1,7 +1,7 @@
 name: 'poga'
-max_iter: 100000
-tol: 1e-5
-stop_criterion: 'dist_euclidean'
+max_iter: 2000
+stop_criterion: 'util_loss'
+tol: 1e-4
 steprule_bool: True
 eta: 1
 beta: 0.5

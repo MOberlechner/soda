@@ -1,7 +1,8 @@
 name: 'soda'
-max_iter: 100000
-tol: 1e-5
-stop_criterion: 'dist_euclidean'
+max_iter: 1000
+tol: 1e-4
+stop_criterion: 'util_loss'
+regularizer: 'euclidean'
 steprule_bool: True
 eta: 10
 beta: 0.05

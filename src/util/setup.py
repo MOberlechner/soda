@@ -3,8 +3,8 @@ import hydra
 from src.game import Game
 from src.learner.best_response import BestResponse
 from src.learner.frank_wolfe import FrankWolfe
-from src.learner.poga import POGA
 from src.learner.soda import SODA
+from src.learner.soma import SOMA
 from src.mechanism.all_pay import AllPay
 from src.mechanism.contest_game import ContestGame
 from src.mechanism.crowdsourcing import Crowdsourcing
@@ -88,16 +88,18 @@ def create_learner(cfg_learner):
             cfg_learner.max_iter,
             cfg_learner.tol,
             cfg_learner.stop_criterion,
+            cfg_learner.regularizer,
             cfg_learner.steprule_bool,
             cfg_learner.eta,
             cfg_learner.beta,
         )
 
-    elif cfg_learner.name == "poga":
-        return POGA(
+    elif cfg_learner.name == "soma":
+        return SOMA(
             cfg_learner.max_iter,
             cfg_learner.tol,
             cfg_learner.stop_criterion,
+            cfg_learner.mirror_map,
             cfg_learner.steprule_bool,
             cfg_learner.eta,
             cfg_learner.beta,

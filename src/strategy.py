@@ -49,10 +49,15 @@ class Strategy:
         # prior (marginal) distribution
         self.prior = game.prior[agent]
 
-        # strategy
+        # strategy - primal iterate
         self.x = np.ones(tuple([game.n] * self.dim_o + [game.m] * self.dim_a)) / (
             game.n**self.dim_o * game.m**self.dim_a
         )
+        # strategy - dual iterate
+        self.y = np.ones(tuple([game.n] * self.dim_o + [game.m] * self.dim_a)) / (
+            game.n**self.dim_o * game.m * self.dim_a
+        )
+
         # utility, history, gradients
         (
             self.utility,
@@ -96,10 +101,14 @@ class Strategy:
         (
             self.utility,
             self.utility_loss,
+            self.dist_prev_iter,
             self.history,
+            self.history_dual,
             self.history_gradient,
-            history_best_response,
+            self.history_best_response,
         ) = (
+            [],
+            [],
             [],
             [],
             [],
@@ -181,6 +190,9 @@ class Strategy:
             list(self.prior.shape) + [1] * self.dim_a
         ) * sigma
 
+        # init dual variable
+        self.y = np.zeros_like(self.x)
+
     # --------------------------------------- METHODS USED FOR COMPUTATION ------------------------------------------- #
 
     def best_response(self, gradient: np.ndarray) -> np.ndarray:
@@ -223,7 +235,6 @@ class Strategy:
         iter = 1 : only last iterate (= self.x)
         iter = -1: mean over all iterates
 
-
         Args:
             iter (int): number of iterations to consider
 
@@ -242,25 +253,6 @@ class Strategy:
             raise ValueError
 
     # --------------------------------------- METHODS USED TO DURING ITERATIONS ---------------------------------------- #
-
-    def update_history_strategy(self):
-        """
-        Add current strategy in list
-        """
-        self.history += [self.x]
-
-    def update_history_gradient(self, gradient: np.ndarray):
-        """
-        Add current gradient to history of gradients
-        """
-        self.history_gradient += [gradient]
-
-    def update_history_best_response(self, gradient: np.ndarray):
-        """
-        Add current best response to history of response
-        """
-        self.history_best_response += [self.best_response(gradient)]
-
     def update_utility(self, gradient: np.ndarray):
         """
         Compute utility for current strategy and add to list self.utility
@@ -281,18 +273,80 @@ class Strategy:
             )
         ]
 
-    def update_history(self, gradient: np.ndarray):
+    def update_dist_prev_iter(self):
         """
-        Call all update functions: history, gradient, best response, utility, utility loss
+        Compute Euclidean distance to previous iterate
+        We assume that update_history is performed after this computation
         """
-        self.update_history_strategy()
-        self.update_history_gradient(gradient)
-        self.update_history_best_response(gradient)
+        self.dist_prev_iter += [
+            np.linalg.norm(self.x - self.history[-1])
+            if len(self.history) > 0
+            else np.nan
+        ]
+
+    def update_history_strategy(self, update_history_bool: bool):
+        """
+        Add current strategy to history of primal iterates
+
+        Args:
+            update_history_bool: If true we save all history,
+                else we save only initial strategy and last iterate
+        """
+        if update_history_bool or (len(self.history) < 2):
+            self.history += [self.x]
+        else:
+            self.history[1] = self.x
+
+    def update_history_dual(self, update_history_bool: bool):
+        """
+        Add current dual iterate to history of dual iterates
+
+        Args:
+            update_history_bool: If true we save all history,
+                else we save only initial strategy and last iterate
+        """
+        if update_history_bool or (len(self.history_dual) < 2):
+            self.history_dual += [self.y]
+        else:
+            self.history_dual[1] = self.y
+
+    def update_history_gradient(self, gradient: np.ndarray, update_history_bool: bool):
+        """
+        Add current gradient to history of gradients
+        """
+        if update_history_bool or (len(self.history_gradient) < 2):
+            self.history_gradient += [self.y]
+        else:
+            self.history_gradient[1] = self.y
+
+    def update_history_best_response(
+        self, gradient: np.ndarray, update_history_bool: bool
+    ):
+        """
+        Add current best response to history of response
+        """
+        if update_history_bool:
+            self.history_best_response += [self.best_response(gradient)]
+
+    def update_history(self, gradient: np.ndarray, update_history_bool: bool):
+        """
+        Call all update methods
+
+        Args:
+            gradient: gradient to compute util, ...
+            update_history_bool: if True all history are saved, else only util (loss)
+        """
         self.update_utility(gradient)
         self.update_utility_loss(gradient)
+        self.update_dist_prev_iter()
+        self.update_history_strategy(update_history_bool)
+        self.update_history_dual(update_history_bool)
+        self.update_history_gradient(gradient, update_history_bool)
+        self.update_history_best_response(gradient, update_history_bool)
 
     def get_dist_last_iter(self) -> np.ndarray:
-        """compute distance to last iterate
+        """
+        Compute distance to last iterate
 
         Returns:
             np.ndarray
@@ -300,7 +354,8 @@ class Strategy:
         return np.array([np.linalg.norm(s - self.x) for s in self.history[:-1]])
 
     def get_dist_prev_iter(self) -> np.ndarray:
-        """compute distance to previous iterate
+        """
+        Compute distance to previous iterate
 
         Returns:
             np.ndarray
@@ -412,24 +467,18 @@ class Strategy:
             # -------------------- PLOT METRICS -------------------- #
             if more:
                 num_plots = 1 + self.dim_a
-                # metric for convergence
-                distance_to_last_iterate = self.get_dist_last_iter()
-                distance_to_prev_iterate = self.get_dist_prev_iter()
 
                 # plot utility loss and distance (utility loss plot maximal until 100%)
                 plt.figure(figsize=(5 * num_plots, 5))
                 plt.subplot(1, num_plots, num_plots)
                 plt.plot(
-                    np.minimum(self.utility_loss, 1), label="utility loss", color="k"
-                )
-                plt.plot(
-                    distance_to_last_iterate,
-                    label="dist. last iterate",
+                    np.minimum(self.utility_loss, 1),
+                    label="utility loss",
                     color="tab:blue",
-                    linestyle="--",
+                    linestyle="-",
                 )
                 plt.plot(
-                    distance_to_prev_iterate,
+                    self.dist_prev_iter,
                     label="dist. prev. iterate",
                     color="tab:red",
                     linestyle="--",
