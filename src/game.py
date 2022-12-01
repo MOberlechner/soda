@@ -65,7 +65,17 @@ class Game:
         self.weights = self.get_weights(mechanism)
         self.utility = {}
 
-    def get_utility(self, mechanism):
+    def get_utility(self, mechanism) -> None:
+        """Compute utility array for discretized game
+        For each agent an array is stored which contains all possible combinations of
+        observations/valuations and bid profiles
+
+        Args:
+            mechanism: mechanism (e.g. auction game) which has a method utility
+
+        Raises:
+            ValueError: values unknown
+        """
 
         for i in self.set_bidder:
 
