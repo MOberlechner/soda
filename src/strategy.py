@@ -311,9 +311,9 @@ class Strategy:
         Add current gradient to history of gradients
         """
         if update_history_bool or (len(self.history_gradient) < 2):
-            self.history_gradient += [self.y]
+            self.history_gradient += [gradient]
         else:
-            self.history_gradient[1] = self.y
+            self.history_gradient[1] = gradient
 
     def update_history_best_response(
         self, gradient: np.ndarray, update_history_bool: bool
@@ -433,213 +433,244 @@ class Strategy:
 
     def plot(
         self,
-        more: bool = False,
+        metrics: bool = False,
+        grad: bool = False,
         beta: np.ndarray = None,
         iter: int = None,
-        grad: bool = False,
+        save: bool = False,
     ):
-        """
-        Visualize current strategy
+        """Visualize Strategy
 
-        more : bool, if true, we also plot utility loss and distance to last iterate
-        beta : array, equilibrium strategy to plot
-        iter : int, plot strategy at iteration iter
+        Args:
+            metrics (bool, optional): show metrics (util_loss, dist_prev_iter). Defaults to False.
+            grad (bool, optional): show gradient with best response. Defaults to False.
+            beta (np.ndarray, optional): plot function over strategy. Defaults to None.
+            iter (int, optional): show intermediate strategy. Defaults to None.
+            save (bool, optional): save plot. Defaults to False.
 
-        If iteration is specified, we only plot strategy and gradient at that iteration, but no additional metrics (i.e. more=Fa
+        Raises:
+            NotImplementedError: plot not available for multi-dim strategies
+            ValueError: history not available
         """
+
+        param = {
+            "fontsize_title": 14,
+            "fontsize_legend": 13,
+            "fontsize_label": 12,
+        }
 
         # check input
-        if more + grad == 2:
-            raise NotImplementedError('Choose either "more" or "grad", not both')
-        elif grad and self.dim_a > 1:
-            raise NotImplementedError("Gradient only for 1-dim action space available")
+        if grad and (self.dim_a + self.dim_o != 2):
+            raise NotImplementedError(
+                "Plot of Gradient only for 1-dim actions and observations available"
+            )
 
-        # parameters
-        label_size = 13
-        title_size = 14
-
-        if (self.dim_o == 1) and (self.dim_a <= 2):
-
-            # -------------------- PLOT METRICS -------------------- #
-            if more:
-                num_plots = 1 + self.dim_a
-
-                # plot utility loss and distance (utility loss plot maximal until 100%)
-                plt.figure(figsize=(5 * num_plots, 5))
-                plt.subplot(1, num_plots, num_plots)
-                plt.plot(
-                    np.minimum(self.utility_loss, 1),
-                    label="utility loss",
-                    color="tab:blue",
-                    linestyle="-",
-                )
-                plt.plot(
-                    self.dist_prev_iter,
-                    label="dist. prev. iterate",
-                    color="tab:red",
-                    linestyle="--",
-                )
-                plt.yscale("log")
-                plt.grid(axis="y")
-                plt.legend()
-
-            # -------------------- PLOT GRADIENT -------------------- #
-            elif grad:
-
-                num_plots = 1 + self.dim_a
-                plt.figure(figsize=(5 * num_plots, 5))
-                plt.subplot(1, num_plots, num_plots)
-
-                # plot gradient
-                grad = (
-                    self.history_gradient[-1]
-                    if iter is None
-                    else self.history_gradient[iter]
-                )
-
-                plt.imshow(
-                    grad.T,
-                    extent=(
-                        self.o_discr[0],
-                        self.o_discr[-1],
-                        self.a_discr[0],
-                        self.a_discr[-1],
-                    )
-                    if self.n > 1
-                    else (
-                        self.a_discr[0],
-                        self.a_discr[-1],
-                        self.a_discr[0],
-                        self.a_discr[-1],
-                    ),
-                    origin="lower",
-                    cmap="viridis",
-                    aspect="auto",
-                )
-
-                if self.n == 1:
-                    plt.xticks(
-                        [0.5 * (self.a_discr[0] + self.a_discr[-1])], self.o_discr
-                    )
-
-                # plot best response
-                index_max = grad.argmax(axis=1)
-                br = self.a_discr[index_max]
-                if self.n > 1:
-                    plt.plot(
-                        self.o_discr,
-                        br,
-                        linestyle="--",
-                        linewidth=3,
-                        color="orange",
-                        label="best response",
-                    )
-                else:
-                    plt.axhline(
-                        br,
-                        linestyle="--",
-                        linewidth=3,
-                        color="orange",
-                        label="best response",
-                    )
-                plt.ylabel("bids b", fontsize=label_size)
-                plt.xlabel("observations v", fontsize=label_size)
-                plt.legend(fontsize=label_size, loc=2)
-                plt.title(
-                    'Gradient Player "' + str(self.agent) + '"',
-                    fontsize=title_size,
-                )
-
-            else:
-                num_plots = self.dim_a
-                plt.figure(figsize=(5 * num_plots, 5))
-
-            # -------------------- PLOT STRATEGIES -------------------- #
-            if iter is None:
-                strat = self.x
-            elif iter == -1:
-                strat = self.empirical_mean(-1)
-            elif iter >= 0:
-                strat = self.history[iter]
-            else:
-                raise ValueError("iter has to be either None, -1, or positive")
-
-            if self.dim_a == 1:
-                # plot strategy
-                plt.subplot(1, num_plots, 1)
-                plt.imshow(
-                    strat.T / self.margin(),
-                    extent=(
-                        self.o_discr[0],
-                        self.o_discr[-1],
-                        self.a_discr[0],
-                        self.a_discr[-1],
-                    )
-                    if self.n > 1
-                    else (
-                        self.a_discr[0],
-                        self.a_discr[-1],
-                        self.a_discr[0],
-                        self.a_discr[-1],
-                    ),
-                    origin="lower",
-                    vmin=0,
-                    cmap="Greys",
-                    aspect="auto",
-                )
-                plt.ylabel("bids b", fontsize=label_size)
-                plt.xlabel("observations v", fontsize=label_size)
-                if iter == -1:
-                    plt.title(
-                        'Empirical Mean of \n Distributional Strategy Player "'
-                        + str(self.agent)
-                        + '"',
-                        fontsize=title_size,
-                    )
-                else:
-                    plt.title(
-                        'Distributional Strategy Player "' + str(self.agent) + '"',
-                        fontsize=title_size,
-                    )
-                if self.n == 1:
-                    plt.xticks(
-                        [0.5 * (self.a_discr[0] + self.a_discr[-1])], self.o_discr
-                    )
-
-                # plot BNE
-                if beta is not None:
-                    x = np.linspace(self.o_discr[0], self.o_discr[-1], len(beta))
-                    if self.n > 1:
-                        plt.plot(
-                            x, beta, linestyle="--", color="r", label="analyt. BNE"
-                        )
-                        plt.legend()
-                    else:
-                        plt.axhline(
-                            beta, linestyle="--", color="r", label="analyt. BNE"
-                        )
-
-                plt.show()
-
-            else:
-                for i in range(2):
-                    plt.subplot(1, num_plots, i + 1)
-                    s = strat.sum(axis=2 - i)
-                    plt.imshow(
-                        s.T / s.sum(axis=1),
-                        extent=(
-                            self.o_discr[0],
-                            self.o_discr[-1],
-                            self.a_discr[i][0],
-                            self.a_discr[i][-1],
-                        ),
-                        origin="lower",
-                        vmin=0,
-                        cmap="Greys",
-                        aspect="auto",
-                    )
+        # choose correct strategy and gradient from history or take current one
+        if iter is None:
+            strategy = self.x
+            if grad:
+                gradient = self.history_gradient[-1]
+        elif iter == 0:
+            strategy = self.history[0]
+            if grad:
+                gradient = self.history_gradient[0]
         else:
-            raise NotImplementedError("Plot not available for dim_o > 1 or dim_a > 2")
+            if len(self.history) != len(self.utility):
+                raise ValueError(
+                    "History not saved. Intermediate strategies are not available"
+                )
+            else:
+                if iter == -1:
+                    strategy = self.empirical_mean()
+                    if grad:
+                        gradient = np.array(self.history_gradient).mean(axis=0)
+                else:
+                    strategy = self.history[iter]
+                if grad:
+                    gradient = self.history_gradient[iter]
+
+        # create figure
+        num_plots = self.dim_a + metrics + grad
+        counter = 1
+        fig = plt.figure(figsize=(5 * num_plots, 5), tight_layout=True)
+
+        # plot strategy
+        ax_strat = fig.add_subplot(1, num_plots, counter)
+        self._plot_strategy(ax_strat, strategy, param, iter, beta)
+        counter += 1
+
+        # plot gradient
+        if grad:
+            ax_grad = fig.add_subplot(1, num_plots, counter)
+            self._plot_gradient(ax_grad, gradient, param, iter)
+            counter += 1
+
+        # plot metrics
+        if metrics:
+            ax_metr = fig.add_subplot(1, num_plots, counter)
+            self._plot_metrics(ax_metr, param, iter)
+
+        # save figure
+        if save:
+            plt.savefig(
+                f"plot_strategy_{self.agent}.png",
+                facecolor="white",
+                transparent=False,
+                dpi=150,
+            )
+
+    def _plot_strategy(
+        self, ax, strategy: np.ndarray, param: dict, iter: int = None, beta=None
+    ) -> None:
+        """Plot Gradient (for standard incomplete information setting)
+
+        Args:
+            ax: axis from pyplot
+            strategy (np.ndarray): Strategy to visualize
+            param (dict): specifies parameter (fontsize, ...) for plots
+            iter (int, optional): show intermediate strategy. Defaults to None.
+            beta (function, optional): Defaults to None.
+        """
+        # plot strategy
+        ax.imshow(
+            strategy.T / self.margin(),
+            extent=(
+                self.o_discr[0],
+                self.o_discr[-1],
+                self.a_discr[0],
+                self.a_discr[-1],
+            ),
+            origin="lower",
+            vmin=0,
+            cmap="Greys",
+            aspect="auto",
+        )
+
+        # plot function
+        if beta is not None:
+            if callable(beta):
+                b = beta(self.o_discr)
+            else:
+                b = beta
+            ax.plot(
+                self.o_discr,
+                b,
+                linestyle="--",
+                color="tab:orange",
+                linewidth=2,
+                label="analyt. BNE",
+            )
+            ax.legend(fontsize=param["fontsize_legend"])
+
+        # labels
+        title_label = f"Strategy - Agent {self.agent} " + (
+            f"(Iteration {iter})" if iter is not None else f""
+        )
+        ax.set_title(
+            title_label, fontsize=param["fontsize_title"], verticalalignment="bottom"
+        )
+        ax.set_xlabel("Observation o", fontsize=param["fontsize_label"])
+        ax.set_ylabel("Bid b", fontsize=param["fontsize_label"])
+
+    def _plot_gradient(
+        self, ax, gradient: np.ndarray, param: dict, iter: int = None
+    ) -> None:
+        """Plot Gradient (for standard incomplete information setting)
+
+        Args:
+            ax: axis from pyplot
+            gradient (np.ndarray): gradient
+            param (dict): specifies parameter (fontsize, ...) for plots
+            iter (int, optional): show intermediate gradient. Defaults to None.
+        """
+
+        # plot gradient
+        im = ax.imshow(
+            gradient.T,
+            extent=(
+                self.o_discr[0],
+                self.o_discr[-1],
+                self.a_discr[0],
+                self.a_discr[-1],
+            ),
+            cmap="RdBu",
+            origin="lower",
+            aspect="auto",
+            vmin=-np.abs(gradient).max(),
+            vmax=+np.abs(gradient).max(),
+        )
+        # plot best response
+        best_response = self.best_response(gradient)
+        best_response[best_response == 0] = np.nan
+        ax.imshow(
+            best_response.T / self.margin(),
+            cmap="Wistia",
+            vmin=0,
+            vmax=1.1,
+            extent=(
+                self.o_discr[0],
+                self.o_discr[-1],
+                self.a_discr[0],
+                self.a_discr[-1],
+            ),
+            origin="lower",
+            aspect="auto",
+        )
+        ax.plot(
+            [], [], color="tab:orange", linewidth=0, marker="s", label="best\nresponse"
+        )
+
+        # labels
+        title_label = f"Gradient - Agent {self.agent} " + (
+            f"(Iteration {iter})" if iter is not None else f""
+        )
+        ax.set_title(
+            title_label, fontsize=param["fontsize_title"], verticalalignment="bottom"
+        )
+        ax.set_xlabel("Observation o", fontsize=param["fontsize_label"])
+        ax.set_ylabel("Bid b", fontsize=param["fontsize_label"])
+
+        # grid, legend, ticks
+        ax.legend(loc="upper left", fontsize=param["fontsize_legend"])
+
+    def _plot_metrics(self, ax, param: dict, iter: int = None) -> None:
+        """Plot Metrics
+
+        Args:
+            ax (_type_): _description_
+            param (dict): _description_
+            iter (int, optional): _description_. Defaults to None.
+        """
+        # plot metrics
+        ax.plot(
+            self.utility_loss,
+            linestyle="-",
+            linewidth=1.5,
+            color="k",
+            label="util. loss",
+        )
+        ax.plot(
+            self.dist_prev_iter,
+            linestyle="--",
+            linewidth=1.5,
+            color="k",
+            label="dist. prev. iter.",
+        )
+        if iter is not None:
+            ax.axvline(x=iter, color="tab:orange", linestyle=":", linewidth=2)
+
+        # labels
+        title_label = f"Metrics for Equilibrium Learning"
+        ax.set_title(
+            title_label, fontsize=param["fontsize_title"], verticalalignment="bottom"
+        )
+        ax.set_xlabel("Iterations", fontsize=param["fontsize_label"])
+
+        # grid, legend, ticks
+        ax.set_yscale("log")
+        ax.set_ylim(top=1)
+        ax.grid(axis="y", linestyle="-", linewidth=0.5, color=".25", zorder=-10)
+        ax.legend(loc="upper right", fontsize=param["fontsize_legend"])
 
     def save(self, name: str, setting: str, path: str, save_init: bool = False):
         """Saves strategy in respective directory
