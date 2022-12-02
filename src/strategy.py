@@ -62,9 +62,9 @@ class Strategy:
         (
             self.utility,
             self.utility_loss,
+            self.dist_prev_iter,
             self.history,
             self.history_gradient,
-            self.history_best_response,
         ) = ([], [], [], [], [])
 
     def __str__(self):
@@ -315,15 +315,6 @@ class Strategy:
         else:
             self.history_gradient[1] = gradient
 
-    def update_history_best_response(
-        self, gradient: np.ndarray, update_history_bool: bool
-    ):
-        """
-        Add current best response to history of response
-        """
-        if update_history_bool:
-            self.history_best_response += [self.best_response(gradient)]
-
     def update_history(self, gradient: np.ndarray, update_history_bool: bool):
         """
         Call all update methods
@@ -338,30 +329,6 @@ class Strategy:
         self.update_history_strategy(update_history_bool)
         self.update_history_dual(update_history_bool)
         self.update_history_gradient(gradient, update_history_bool)
-        self.update_history_best_response(gradient, update_history_bool)
-
-    def get_dist_last_iter(self) -> np.ndarray:
-        """
-        Compute distance to last iterate
-
-        Returns:
-            np.ndarray
-        """
-        return np.array([np.linalg.norm(s - self.x) for s in self.history[:-1]])
-
-    def get_dist_prev_iter(self) -> np.ndarray:
-        """
-        Compute distance to previous iterate
-
-        Returns:
-            np.ndarray
-        """
-        return np.array(
-            [
-                np.linalg.norm(self.history[t + 1] - self.history[t])
-                for t in range(len(self.history) - 1)
-            ]
-        )
 
     # --------------------------------------- METHODS USED TO ANALYZE RESULTS ---------------------------------------- #
 
