@@ -41,6 +41,7 @@ class Learner:
         self.max_iter = max_iter
         self.tol = tol
         self.stop_criterion = stop_criterion
+        self.convergence = False
 
     def run(
         self,
@@ -86,10 +87,8 @@ class Learner:
                 strategies[i].update_history(gradient.x[i], save_history_bool)
 
             # check convergence
-            convergence, min_max_value = self.check_convergence(
-                strategies, min_max_value
-            )
-            if convergence:
+            min_max_value = self.check_convergence(strategies, min_max_value)
+            if self.convergence:
                 t_max = t
                 break
 
@@ -99,7 +98,7 @@ class Learner:
 
         # print result
         if print_result_bool:
-            self.print_result(convergence, min_max_value, t_max, strategies)
+            self.print_result(self.convergence, min_max_value, t_max, strategies)
 
     def update_strategy(self, strategy, gradient, t):
         """Update strategy according to update rule from specific learning method
@@ -147,8 +146,8 @@ class Learner:
                 )
             )
         min_max_value = min(min_max_value, max_value)
-        convergence = max_value < self.tol
-        return convergence, min_max_value
+        self.convergence = max_value < self.tol
+        return min_max_value
 
     def print_result(
         self, convergence: bool, min_max_value: float, t_max: int, strategies
