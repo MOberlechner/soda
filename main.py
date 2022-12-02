@@ -5,6 +5,7 @@ def main(
     path_config: str,
     path: str,
     experiments: list,
+    learning: bool,
     simulation: bool,
     logging: bool,
     n_obs: int = int(2**22),
@@ -19,6 +20,7 @@ def main(
         experiments (list): list of tuples (setting, experiment, learner)
         setting (str): specifies the mechanism / subdirectory in config
         exp_list (list): list of specific version of the setting where we want to compute the equilibria
+        learning (bool): run learning algorithm, otherwise only simulations are performed
         simulation (bool): run simulations, otherwise only the strategies are computed
         logging (bool): log results from simulation
         n_obs (int): number of simulated observations. Defaults to int(2**22).
@@ -27,18 +29,19 @@ def main(
     """
 
     # compute strategies
-    for setting, experiment, learn_alg in experiments:
-        print(setting, experiment, learn_alg)
-        run_experiment(
-            learn_alg,
-            setting,
-            experiment,
-            logging,
-            save_strat,
-            num_runs,
-            path,
-            path_config,
-        )
+    if learning:
+        for setting, experiment, learn_alg in experiments:
+            print(setting, experiment, learn_alg)
+            run_experiment(
+                learn_alg,
+                setting,
+                experiment,
+                logging,
+                save_strat,
+                num_runs,
+                path,
+                path_config,
+            )
 
     # evaluate strategies
     if simulation:
@@ -66,11 +69,12 @@ if __name__ == "__main__":
     experiments = [("single_item", "fpsb", "soda")]
 
     # computation
-    num_runs = 10
+    learning = False
+    num_runs = 2
     save_strat = True
 
     # simulation
-    simulation = False
+    simulation = True
     logging = True
 
-    main(path_config, path, experiments, simulation, logging)
+    main(path_config, path, experiments, learning, simulation, logging)
