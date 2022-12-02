@@ -29,7 +29,7 @@ class SODA(Learner):
         beta: float = 1 / 20,
     ):
         super().__init__(max_iter, tol, stop_criterion)
-        self.learner = "soma" + regularizer[:4]
+        self.learner = "soda" + regularizer[:4]
         self.steprule_bool = steprule_bool
         self.eta = eta
         self.beta = beta
