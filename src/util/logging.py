@@ -33,7 +33,7 @@ class Logger:
         self.experiment = experiment
         self.learn_alg = learn_alg
         self.logging = logging
-        self.round_decimal = 4
+        self.round_decimal = round_decimal
 
         # log run learning
         self.filename_log_learning = "log_learn.csv"

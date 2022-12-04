@@ -4,7 +4,10 @@ from typing import Dict, List, Tuple
 import numpy as np
 from tqdm import tqdm
 
+from src.game import Game
 from src.learner.gradient import Gradient
+from src.mechanism.mechanism import Mechanism
+from src.strategy import Strategy
 
 
 class Learner:
@@ -45,9 +48,9 @@ class Learner:
 
     def run(
         self,
-        mechanism,
-        game,
-        strategies,
+        mechanism: Mechanism,
+        game: Game,
+        strategies: dict,
         disable_tqdm_bool: bool = True,
         print_result_bool: bool = False,
         save_history_bool: bool = True,
@@ -87,7 +90,7 @@ class Learner:
                 strategies[i].update_history(gradient.x[i], save_history_bool)
 
             # check convergence
-            min_max_value = self.check_convergence(strategies, min_max_value)
+            min_max_value, max_value = self.check_convergence(strategies, min_max_value)
             if self.convergence:
                 t_max = t
                 break
@@ -98,9 +101,9 @@ class Learner:
 
         # print result
         if print_result_bool:
-            self.print_result(self.convergence, min_max_value, t_max, strategies)
+            self.print_result(self.convergence, min_max_value, max_value, t_max)
 
-    def update_strategy(self, strategy, gradient, t):
+    def update_strategy(self, strategy: Strategy, gradient: np.ndarray, t):
         """Update strategy according to update rule from specific learning method
 
         Args:
@@ -114,7 +117,7 @@ class Learner:
         """
         raise NotImplementedError
 
-    def check_convergence(self, strategies, min_max_value: float) -> Tuple:
+    def check_convergence(self, strategies: dict, min_max_value: float) -> tuple:
         """Check stopping criterion
         We check if the maximal (over all agents) "metric" is less than the tolerance
             - utility_loss: relative utility loss w.r.t. best response
@@ -126,8 +129,9 @@ class Learner:
             min_max_value (float): minimal value over all iterations of maximal value of stopping criterion over all agents
 
         Returns:
-            Tuple: convergence (bool), new value of min_max_value (float)
+            float, float: new value of min_max_value, current value of metric
         """
+
         if self.stop_criterion == "util_loss":
             # update minimal max_util_loss (over all iterations)
             max_value = np.max([strategies[i].utility_loss[-1] for i in strategies])
@@ -141,40 +145,31 @@ class Learner:
 
         else:
             raise ValueError(
-                "Stopping critertion {} unknown. Choose util_loss or dist".format(
-                    self.stop_criterion
-                )
+                f"Stopping critertion {self.stop_criterion} unknown. Choose util_loss or dist"
             )
         min_max_value = min(min_max_value, max_value)
         self.convergence = max_value < self.tol
-        return min_max_value
+        return min_max_value, max_value
 
     def print_result(
-        self, convergence: bool, min_max_value: float, t_max: int, strategies
+        self, convergence: bool, min_max_value: float, max_value: float, t_max: int
     ):
         """Print result of run
 
         Args:
             convergence (bool): did method converge
-            min_max_value (float): best relative utility loss of worst agent
+            min_max_value (float): best value of stopping critertion of worst agent
+            max_value (float): current value of stopping critertion of worst agent
             t_max (int): number of iteration until convergence (0 if no convergence)
-            strategies (class): current strategy profile
         """
 
         if convergence:
-            print("Convergence after", t_max, "iterations")
+            print(f"Convergence after {t_max} iterations")
             print(
-                "Value of stopping criterion ({})".format(self.stop_criterion),
+                f"Value of stopping criterion ({self.stop_criterion})",
                 round(min_max_value, 5),
             )
         else:
-            max_util_loss = np.max([strategies[i].utility_loss[-1] for i in strategies])
-            print("No convergence")
-            print(
-                "Current value of stopping criterion ({})".format(self.stop_criterion),
-                round(max_util_loss, 5),
-            )
-            print(
-                "Best value of stopping criterion ({})".format(self.stop_criterion),
-                round(min_max_value, 5),
-            )
+            print("No convergence with stopping criterion")
+            print(f"Current value of ({self.stop_criterion}): {max_value:.5f}")
+            print(f"Best value of ({self.stop_criterion})   : {min_max_value:.5f})")

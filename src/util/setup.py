@@ -110,6 +110,10 @@ def create_learner(cfg_learner):
             cfg_learner.max_iter,
             cfg_learner.tol,
             cfg_learner.stop_criterion,
+            cfg_learner.method,
+            cfg_learner.steprule_bool,
+            cfg_learner.eta,
+            cfg_learner.beta,
         )
 
     elif cfg_learner.name == "best_response":
