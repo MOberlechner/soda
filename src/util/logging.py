@@ -47,6 +47,7 @@ class Logger:
                 "agent",
                 "utility",
                 "utility_loss",
+                "dist_prev_iter",
                 "iterations",
                 "convergence",
                 "iter/sec",
