@@ -1,0 +1,9 @@
+name: 'soda'
+max_iter: 2000
+tol: 1e-4
+stop_criterion: 'util_loss'
+regularizer: 'euclidean'
+steprule_bool: True
+eta: 50
+beta: 0.05
+init_method: 'random'
