@@ -62,6 +62,7 @@ def test_hyperparameter(setting, experiment, learn_alg, etas, betas):
 
     for eta in etas:
         for beta in betas:
+
             print(f"eta={eta}, beta={beta}")
 
             for run in tqdm(
@@ -86,19 +87,25 @@ if __name__ == "__main__":
 
     path_config = "experiment/soda_or/configs/"
     path = ""
-    setting = "single_item"
-    experiment = "affiliated_values"
-    learn_alg = "soda_entro"
+    experiments = [
+        ("affiliated_values", "fpsb", "soda_entro"),
+        ("affiliated_values", "fpsb", "soda_eucl"),
+        ("affiliated_values", "fpsb", "soma_eucl"),
+        ("common_value", "fpsb", "soda_entro"),
+        ("common_value", "fpsb", "soda_eucl"),
+        ("common_value", "fpsb", "soma_eucl"),
+    ]
 
     # computation
     learning = True
-    num_runs = 2
+    num_runs = 5
 
-    etas = [1, 2, 10, 20, 50]
+    etas = [0.1, 1, 2, 10, 50, 100]
     betas = [1.0, 0.95, 0.50]
 
     # simulation
     simulation = False
     logging = True
 
-    test_hyperparameter(setting, experiment, learn_alg, etas, betas)
+    for setting, experiment, learn_alg in experiments:
+        test_hyperparameter(setting, experiment, learn_alg, etas, betas)
