@@ -11,7 +11,7 @@ from src.util.logging import Logger
 from src.util.run import *
 
 
-def learn_strategies(mechanism, game, logger, cfg_learner, eta, beta):
+def learn_strategies(mechanism, game, logger, cfg_learner, learn_alg, eta, beta):
     """Runs Learner to compute strategies given the specified setting.
 
     Args:
@@ -26,7 +26,7 @@ def learn_strategies(mechanism, game, logger, cfg_learner, eta, beta):
     # change parameter
     learner.eta = eta
     learner.beta = beta
-    logger.learn_alg = f"{cfg_learner.name}_{eta}_{beta}"
+    logger.learn_alg = f"{learn_alg}_{eta}_{beta}"
 
     # initialize strategies
     init_method = cfg_learner.init_method if "init_method" in cfg_learner else "random"
@@ -73,7 +73,7 @@ def test_hyperparameter(setting, experiment, learn_alg, etas, betas):
                 t0 = time()
                 # learn stratege
                 strategies, convergence = learn_strategies(
-                    mechanism, game, logger, cfg_learner, eta, beta
+                    mechanism, game, logger, cfg_learner, learn_alg, eta, beta
                 )
                 time_run = time() - t0
 
