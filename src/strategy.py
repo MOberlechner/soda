@@ -3,7 +3,7 @@ from itertools import product
 import matplotlib.pyplot as plt
 import numpy as np
 
-from src.game import discr_interval
+from src.game import Game, discr_interval
 
 
 class Strategy:
@@ -21,14 +21,13 @@ class Strategy:
 
     """
 
-    def __init__(self, agent, game):
+    def __init__(self, agent: str, game: Game):
         """Create strategy for agent.
         Parameters are given by respective game.
 
-        Parameters
-        ----------
-        agent : str, name of repr. bidder
-        game : class Game, approximation game
+        Args:
+            agent (str): name of repr. bidder/agent
+            game (Game): approximation game
         """
 
         # name of the bidder
@@ -64,6 +63,9 @@ class Strategy:
             self.history,
             self.history_gradient,
         ) = ([], [], [], [], [])
+
+    def __repr__(self) -> str:
+        return f"Strategy({self.agent})"
 
     def __str__(self):
         return "Strategy Bidder " + self.agent + " - shape: " + str(self.x.shape)
