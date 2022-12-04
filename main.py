@@ -64,8 +64,8 @@ def main(
 
 if __name__ == "__main__":
 
-    path_config = "configs/"
-    path = "experiment/test/"
+    path_config = "experiment/soda_or/configs/"
+    path = "experiment/soda_or/"
     experiments = [
         ("single_item", "affiliated_values", "soda_entro"),
         ("single_item", "affiliated_values", "soda_eucl"),
