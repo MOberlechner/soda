@@ -150,31 +150,24 @@ class Learner:
         return min_max_value
 
     def print_result(
-        self, convergence: bool, min_max_value: float, t_max: int, strategies
+        self, convergence: bool, min_max_value: float, max_value: float, t_max: int
     ):
         """Print result of run
 
         Args:
             convergence (bool): did method converge
-            min_max_value (float): best relative utility loss of worst agent
+            min_max_value (float): best value of stopping critertion of worst agent
+            max_value (float): current value of stopping critertion of worst agent
             t_max (int): number of iteration until convergence (0 if no convergence)
-            strategies (class): current strategy profile
         """
 
         if convergence:
-            print("Convergence after", t_max, "iterations")
+            print(f"Convergence after {t_max} iterations")
             print(
                 "Value of stopping criterion ({})".format(self.stop_criterion),
                 round(min_max_value, 5),
             )
         else:
-            max_util_loss = np.max([strategies[i].utility_loss[-1] for i in strategies])
-            print("No convergence")
-            print(
-                "Current value of stopping criterion ({})".format(self.stop_criterion),
-                round(max_util_loss, 5),
-            )
-            print(
-                "Best value of stopping criterion ({})".format(self.stop_criterion),
-                round(min_max_value, 5),
-            )
+            print("No convergence with stopping criterion")
+            print(f"Current value of ({self.stop_criterion}): {max_value:.5f}")
+            print(f"Best value of ({self.stop_criterion})   : {min_max_value:.5f})")
