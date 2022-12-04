@@ -30,7 +30,11 @@ class FrankWolfe(Learner):
         self.method = method
         self.steprule_bool = steprule_bool
         self.eta = eta
-        self.beta: beta
+        self.beta = beta
+
+        # check input
+        if self.eta > 1:
+            raise ValueError(f"eta={self.eta} not feasible (step > 1)")
 
     def update_strategy(self, strategy, gradient: np.ndarray, t: int) -> None:
         """Update strategy according to Frank-Wolfe (FW)
