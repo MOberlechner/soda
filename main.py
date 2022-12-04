@@ -66,7 +66,21 @@ if __name__ == "__main__":
 
     path_config = "configs/"
     path = "experiment/test/"
-    experiments = [("single_item", "fpsb", "soda")]
+    experiments = [
+        ("single_item", "affiliated_values", "soda_entro")(
+            "single_item", "affiliated_values", "soda_eucl"
+        )("single_item", "affiliated_values", "soma_eucl")(
+            "single_item", "affiliated_values", "sofw"
+        )(
+            "single_item", "common_value", "sofw_std"
+        )(
+            "single_item", "common_value", "sofw_std"
+        )(
+            "single_item", "common_value", "sofw_std"
+        )(
+            "single_item", "common_value", "sofw_std"
+        )
+    ]
 
     # computation
     learning = True
