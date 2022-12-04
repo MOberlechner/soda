@@ -69,8 +69,8 @@ if __name__ == "__main__":
     experiments = [("single_item", "fpsb", "soda")]
 
     # computation
-    learning = False
-    num_runs = 2
+    learning = True
+    num_runs = 10
     save_strat = True
 
     # simulation

@@ -90,7 +90,7 @@ def run_experiment(
         if save_strat:
             for i in game.set_bidder:
                 name = (
-                    cfg_learner.name
+                    learn_alg
                     + "_"
                     + experiment
                     + ("_run_" + str(run) if num_runs > 1 else "")
@@ -140,10 +140,7 @@ def run_sim(
 
         # import strategies: naming convention now includes learner !!!
         name = (
-            cfg_learner.name
-            + "_"
-            + experiment
-            + ("_run_" + str(run) if num_runs > 1 else "")
+            learn_alg + "_" + experiment + ("_run_" + str(run) if num_runs > 1 else "")
         )
 
         strategies = {}
@@ -169,7 +166,7 @@ def run_sim(
 
         # compute util loss for higher discretization
         else:
-            util_loss_approx = compute_util_loss_scaled(mechanism, game, strategies)
+            val = compute_util_loss_scaled(mechanism, game, strategies)
             logger.log_simulation(run, "util_loss_approx", val)
     logger.log_experiment_simulation()
     print('Simulation for experiments: "' + experiment + '" finished!')
