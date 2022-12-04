@@ -92,10 +92,10 @@ if __name__ == "__main__":
 
     # computation
     learning = True
-    num_runs = 5
+    num_runs = 2
 
     etas = [1, 2, 10, 20, 50]
-    betas = [0.95, 0.50]
+    betas = [1.0, 0.95, 0.50]
 
     # simulation
     simulation = False
