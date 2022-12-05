@@ -98,7 +98,7 @@ def run_experiment(
                 strategies[i].save(name, setting, path, save_init=True)
 
     logger.log_experiment_learning()
-    print(f"Experiment: '{experiment}' with {learn_alg} finished!")
+    print(f"Experiment: '{experiment}' with {learn_alg} finished!\n")
 
 
 def run_sim(
