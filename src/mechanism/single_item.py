@@ -153,20 +153,34 @@ class SingleItemAuction(Mechanism):
         np.ndarray : bids to corresponding observation
 
         """
+        if self.utility_type == "QL":
+            if self.prior == "uniform":
+                if (self.payment_rule == "first_price") & np.all(
+                    [self.o_space[i] == [0, 1] for i in self.set_bidder]
+                ):
+                    return (
+                        (self.n_bidder - 1) / (self.n_bidder - 1 + self.risk[0]) * obs
+                    )
+                elif self.payment_rule == "second_price":
+                    return obs
 
-        if self.prior == "uniform":
-            if (self.payment_rule == "first_price") & np.all(
-                [self.o_space[i] == [0, 1] for i in self.set_bidder]
+            elif self.prior == "affiliated_values":
+                return 2 / 3 * obs
+
+            elif self.prior == "common_value":
+                return 2 * obs / (2 + obs)
+
+        elif self.utility_type == "ROI":
+            if (
+                (self.prior == "uniform")
+                & (self.payment_rule == "first_price")
+                & (len(self.set_bidder == 1))
+                & (self.a_space[self.set_bidder[0]][0] > 0)
             ):
-                return (self.n_bidder - 1) / (self.n_bidder - 1 + self.risk[0]) * obs
-            elif self.payment_rule == "second_price":
-                return obs
-
-        elif self.prior == "affiliated_values":
-            return 2 / 3 * obs
-
-        elif self.prior == "common_value":
-            return 2 * obs / (2 + obs)
+                reserve_price = self.a_space[self.set_bidder[0]][0]
+                raise NotImplementedError(
+                    "Implement BNE for ROI with uniform prior and reserve price"
+                )
 
     def compute_gradient(self, game, strategies, agent: str):
         """Simplified computation of gradient for i.i.d. bidders and tie-breaking "lose"
