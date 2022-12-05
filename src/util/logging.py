@@ -173,7 +173,7 @@ class Logger:
         """
         if self.logging:
             self.save_log_learning()
-            # self.save_agg_log_learning()
+            self.save_agg_log_learning()
         else:
             print("Results not logged.")
 
