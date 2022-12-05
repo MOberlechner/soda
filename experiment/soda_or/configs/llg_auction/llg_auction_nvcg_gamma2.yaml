@@ -1,0 +1,10 @@
+name: 'llg_auction_nvcg_gamma2'
+mechanism: 'llg_auction'
+bidder: ['L', 'L', 'G']
+o_space: {'L': [0.0 ,1.0], 'G':[0.0, 2.0]}
+a_space: {'L': [0.0 ,1.0], 'G':[0.0, 2.0]}
+param_prior: {'distribution':'uniform', 'corr': 0.5}
+param_util: {'payment_rule': 'NVCG', 'tie_breaking': 'local'}
+n: 64
+m: 64
+bne_known: True
