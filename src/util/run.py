@@ -29,7 +29,7 @@ def learn_strategies(mechanism, game, cfg_learner):
         strategies[i].initialize(init_method)
 
     # run soda
-    learner.run(mechanism, game, strategies)
+    learner.run(mechanism, game, strategies, save_history_bool=False)
     return strategies, learner.convergence
 
 
