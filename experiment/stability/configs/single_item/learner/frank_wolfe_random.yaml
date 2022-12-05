@@ -1,6 +1,0 @@
-name: 'frank_wolfe'
-max_iter: 2000
-tol: 1e-4
-stop_criterion: 'util_loss'
-steprule_bool: True
-init_method: 'random'
