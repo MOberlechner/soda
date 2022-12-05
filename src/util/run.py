@@ -67,7 +67,6 @@ def run_experiment(
     t0 = time()
     mechanism, game = create_setting(setting, cfg)
     if not mechanism.own_gradient:
-        print('Computations of Utilities for experiment: "' + experiment + '" started!')
         game.get_utility(mechanism)
         print(
             'Computations of Utilities for experiment: "' + experiment + '" finished!'

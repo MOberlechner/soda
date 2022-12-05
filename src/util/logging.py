@@ -1,5 +1,6 @@
 from datetime import datetime
 from os.path import exists
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -28,12 +29,15 @@ class Logger:
             learn_alg (str): used learning algorithm
             logging (bool): store results in csv
         """
-        self.path = path
+        self.path = path + "log/" + setting
         self.setting = setting
         self.experiment = experiment
         self.learn_alg = learn_alg
         self.logging = logging
         self.round_decimal = round_decimal
+
+        # create directory for each setting
+        Path(path + "log/" + setting).mkdir(parents=True, exist_ok=True)
 
         # log run learning
         self.filename_log_learning = "log_learn.csv"
@@ -97,7 +101,7 @@ class Logger:
                 "utility_loss": strategies[agent].utility_loss[-1],
                 "dist_prev_iter": strategies[agent].dist_prev_iter[-1],
                 "iterations": len(strategies[agent].utility),
-                "convergence": convergence,
+                "convergence": float(convergence),
                 "iter/sec": round(len(strategies[agent].utility) / time_run, 2),
                 "time_init": round(time_init, 2),
                 "time_run": round(time_run, 2),
@@ -107,9 +111,7 @@ class Logger:
         ]
         df_rows = pd.DataFrame(rows)
         # add entry to DataFrame
-        self.file_log_learning = pd.concat(
-            [self.file_log_learning, df_rows], dtype={"convergence": bool}
-        )
+        self.file_log_learning = pd.concat([self.file_log_learning, df_rows])
 
     def save_log_learning(self):
         """Save csv from learning experiment"""
