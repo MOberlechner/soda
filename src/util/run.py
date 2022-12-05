@@ -4,7 +4,7 @@ from time import time
 from tqdm import tqdm
 
 from src.strategy import Strategy
-from src.util.logging import log_sim, log_strat
+from src.util.logging import Logger
 from src.util.metrics import compute_l2_norm, compute_util_loss_scaled, compute_utility
 from src.util.setup import create_learner, create_setting, get_config
 
@@ -30,7 +30,7 @@ def learn_strategies(mechanism, game, cfg_learner):
 
     # run soda
     learner.run(mechanism, game, strategies)
-    return strategies
+    return strategies, learner.convergence
 
 
 def run_experiment(
@@ -57,6 +57,7 @@ def run_experiment(
     """
     # directory to store results
     Path(path + "strategies/" + setting).mkdir(parents=True, exist_ok=True)
+    logger = Logger(path, setting, experiment, learn_alg, logging, round_decimal=5)
 
     # get parameter
     cfg, cfg_learner = get_config(path_config, setting, experiment, learn_alg)
@@ -80,22 +81,11 @@ def run_experiment(
         bar_format="{l_bar}{bar:20}{r_bar}{bar:-10b}",
     ):
         t0 = time()
-        strategies = learn_strategies(mechanism, game, cfg_learner)
+        strategies, convergence = learn_strategies(mechanism, game, cfg_learner)
         time_run = time() - t0
 
         # log and save
-        if logging is True:
-            log_strat(
-                strategies,
-                cfg_learner,
-                learn_alg,
-                experiment,
-                setting,
-                run,
-                time_init,
-                time_run,
-                path,
-            )
+        logger.log_learning(strategies, run, convergence, time_init, time_run)
 
         if save_strat:
             for i in game.set_bidder:
@@ -108,6 +98,7 @@ def run_experiment(
                 # save strategies
                 strategies[i].save(name, setting, path, save_init=True)
 
+    logger.log_experiment_learning()
     print('Experiment: "' + experiment + '" finished!')
 
 
@@ -126,7 +117,9 @@ def run_sim(
 
     # get parameter
     cfg, cfg_learner = get_config(path_config, setting, experiment, learn_alg)
+    logger = Logger(path, setting, experiment, learn_alg, logging, round_decimal=5)
 
+    print('Simulation for experiments: "' + experiment + '" started!')
     # create settings (standard or scaled)
     if cfg.bne_known:
         mechanism, game = create_setting(setting, cfg)
@@ -139,7 +132,11 @@ def run_sim(
             game.get_utility(mechanism)
             print("Utilties for experiments computed!")
 
-    for run in range(num_runs):
+    for run in tqdm(
+        range(num_runs),
+        unit_scale=True,
+        bar_format="{l_bar}{bar:20}{r_bar}{bar:-10b}",
+    ):
 
         # import strategies: naming convention now includes learner !!!
         name = (
@@ -165,22 +162,14 @@ def run_sim(
             util_bne, util_vs_bne, util_loss = compute_utility(
                 mechanism, strategies, n_obs
             )
+            tag_labels = ["l2_norm", "util_in_bne", "util_vs_bne", "util_loss"]
+            values = [l2_norm, util_bne, util_vs_bne, util_loss]
+            for tag, val in zip(tag_labels, values):
+                logger.log_simulation(run, tag, val)
 
-            if logging is True:
-                tag_labels = ["l2_norm", "util_in_bne", "util_vs_bne", "util_loss"]
-                values = [l2_norm, util_bne, util_vs_bne, util_loss]
-                for tag, val in zip(tag_labels, values):
-                    log_sim(strategies, experiment, setting, run, tag, val, path)
+        # compute util loss for higher discretization
         else:
             util_loss_approx = compute_util_loss_scaled(mechanism, game, strategies)
-
-            if logging is True:
-                log_sim(
-                    strategies,
-                    experiment,
-                    run,
-                    "util_loss_approx",
-                    util_loss_approx,
-                    path,
-                )
+            logger.log_simulation(run, "util_loss_approx", val)
+    logger.log_experiment_simulation()
     print('Simulation for experiments: "' + experiment + '" finished!')
