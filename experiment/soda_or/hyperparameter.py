@@ -26,7 +26,7 @@ def learn_strategies(mechanism, game, logger, cfg_learner, eta, beta):
     # change parameter
     learner.eta = eta
     learner.beta = beta
-    logger.learn_alg = cfg_learner.name + f"_{eta}_{beta}"
+    logger.learn_alg = f"{cfg_learner.name}_{eta}_{beta}"
 
     # initialize strategies
     init_method = cfg_learner.init_method if "init_method" in cfg_learner else "random"
