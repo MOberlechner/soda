@@ -54,8 +54,7 @@ class Logger:
                 "time_init",
                 "time_run",
                 "timestamp",
-            ],
-            dtype={"convergence": bool},
+            ]
         )
 
         # log run simulation
@@ -108,7 +107,9 @@ class Logger:
         ]
         df_rows = pd.DataFrame(rows)
         # add entry to DataFrame
-        self.file_log_learning = pd.concat([self.file_log_learning, df_rows])
+        self.file_log_learning = pd.concat(
+            [self.file_log_learning, df_rows], dtype={"convergence": bool}
+        )
 
     def save_log_learning(self):
         """Save csv from learning experiment"""
@@ -217,21 +218,18 @@ class Logger:
         if self.file_log_simulation["run"].max() > 0:
             indices = ["experiment", "mechanism", "learner", "agent", "tag"]
             # mean
-            print(self.file_log_simulation)
             df_mean = (
                 self.file_log_simulation.groupby(indices)
                 .agg({"value": "mean"})
                 .reset_index()
             )
             df_mean = df_mean.rename(columns={"tag": "metric", "value": "mean"})
-            print(df_mean)
             # std
             df_std = (
                 self.file_log_simulation.groupby(indices)
                 .agg({"value": "std"})
                 .reset_index()
             )
-            print(df_std)
             df_std = df_std.rename(columns={"tag": "metric", "value": "std"})
             # combine
             return (
@@ -249,7 +247,6 @@ class Logger:
     def save_agg_log_simulation(self):
         """Save aggregated csv from simulation experiment"""
         df = self.agg_log_simulation()
-        print(df)
         if df is not None:
             if exists(self.path + self.filename_log_simulation_agg):
                 log = pd.read_csv(self.path + self.filename_log_simulation_agg)

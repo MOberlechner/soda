@@ -62,7 +62,7 @@ def run_experiment(
     # get parameter
     cfg, cfg_learner = get_config(path_config, setting, experiment, learn_alg)
 
-    print('Experiment: "' + experiment + '" started!')
+    print(f"Experiment: '{experiment}' with {learn_alg} started!")
     # initialize setting and compute utility
     t0 = time()
     mechanism, game = create_setting(setting, cfg)
@@ -99,7 +99,7 @@ def run_experiment(
                 strategies[i].save(name, setting, path, save_init=True)
 
     logger.log_experiment_learning()
-    print('Experiment: "' + experiment + '" finished!')
+    print(f"Experiment: '{experiment}' with {learn_alg} finished!")
 
 
 def run_sim(

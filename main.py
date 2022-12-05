@@ -67,14 +67,14 @@ if __name__ == "__main__":
     path_config = "experiment/soda_or/configs/"
     path = "experiment/soda_or/"
     experiments = [
-        ("single_item", "affiliated_values", "soda_entro"),
-        ("single_item", "affiliated_values", "soda_eucl"),
-        ("single_item", "affiliated_values", "soma_eucl"),
-        ("single_item", "affiliated_values", "sofw_std"),
+        # ("single_item", "affiliated_values", "soda_entro"),
+        # ("single_item", "affiliated_values", "soda_eucl"),
+        # ("single_item", "affiliated_values", "soma_eucl"),
+        # ("single_item", "affiliated_values", "sofw_std"),
         ("single_item", "common_value", "soda_entro"),
-        ("single_item", "common_value", "soda_eucl"),
-        ("single_item", "common_value", "soma_eucl"),
-        ("single_item", "common_value", "sofw_std"),
+        # ("single_item", "common_value", "soda_eucl"),
+        # ("single_item", "common_value", "soma_eucl"),
+        # ("single_item", "common_value", "sofw_std"),
     ]
 
     # computation
