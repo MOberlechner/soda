@@ -129,11 +129,11 @@ class SingleItemAuction(Mechanism):
             )
         elif self.utility_type == "ROSB":
             payoff = np.divide(
-                obs + np.log(self.param_util["budget"] - price),
+                obs,
                 price,
                 out=np.zeros_like((obs / np.ones(price.shape))),
                 where=price != 0,
-            )
+            ) + np.log(self.param_util["budget"] - price)
         else:
             raise ValueError("utility type " + self.utility_type + " not available")
 
