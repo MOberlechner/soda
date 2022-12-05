@@ -62,15 +62,13 @@ def run_experiment(
     # get parameter
     cfg, cfg_learner = get_config(path_config, setting, experiment, learn_alg)
 
-    print(f"Experiment: '{experiment}' with {learn_alg} started!")
+    print(f"Experiment '{experiment}' with '{learn_alg}' started!")
     # initialize setting and compute utility
     t0 = time()
     mechanism, game = create_setting(setting, cfg)
     if not mechanism.own_gradient:
         game.get_utility(mechanism)
-        print(
-            'Computations of Utilities for experiment: "' + experiment + '" finished!'
-        )
+        print("- utilties computed")
     time_init = time() - t0
 
     # run soda
@@ -98,7 +96,7 @@ def run_experiment(
                 strategies[i].save(name, setting, path, save_init=True)
 
     logger.log_experiment_learning()
-    print(f"Experiment: '{experiment}' with {learn_alg} finished!\n")
+    print(f"Experiment '{experiment}' with '{learn_alg}' finished!\n")
 
 
 def run_sim(
@@ -116,9 +114,9 @@ def run_sim(
 
     # get parameter
     cfg, cfg_learner = get_config(path_config, setting, experiment, learn_alg)
-    logger = Logger(path, setting, experiment, learn_alg, logging, round_decimal=5)
+    logger = Logger(path, setting, experiment, learn_alg, logging, round_decimal=3)
 
-    print('Simulation for experiments: "' + experiment + '" started!')
+    print(f"Simulation '{experiment}' with '{learn_alg}' started!")
     # create settings (standard or scaled)
     if cfg.bne_known:
         mechanism, game = create_setting(setting, cfg)
@@ -129,7 +127,7 @@ def run_sim(
 
         if not mechanism.own_gradient:
             game.get_utility(mechanism)
-            print("Utilties for experiments computed!")
+            print("- utilties computed")
 
     for run in tqdm(
         range(num_runs),
@@ -168,4 +166,4 @@ def run_sim(
             val = compute_util_loss_scaled(mechanism, game, strategies)
             logger.log_simulation(run, "util_loss_approx", val)
     logger.log_experiment_simulation()
-    print('Simulation for experiments: "' + experiment + '" finished!')
+    print(f"Simulation '{experiment}' with '{learn_alg}' finished!")

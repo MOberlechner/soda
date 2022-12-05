@@ -29,7 +29,7 @@ class Logger:
             learn_alg (str): used learning algorithm
             logging (bool): store results in csv
         """
-        self.path = path + "log/" + setting
+        self.path = path + "log/" + setting + "/"
         self.setting = setting
         self.experiment = experiment
         self.learn_alg = learn_alg
@@ -120,7 +120,7 @@ class Logger:
             log = pd.concat([log, self.file_log_learning])
         else:
             log = self.file_log_learning
-        log.to_csv(f"{self.path}/{self.filename_log_learning}.csv", index=False)
+        log.to_csv(self.path + self.filename_log_learning, index=False)
 
     def agg_log_learning(self):
         """Aggregate file_log_learning if there are more runs"""
@@ -168,7 +168,7 @@ class Logger:
                 log = pd.concat([log, df])
             else:
                 log = df
-            log.to_csv(f"{self.path}/{self.filename_log_learning_agg}.csv", index=False)
+            log.to_csv(self.path + self.filename_log_learning_agg, index=False)
 
     def log_experiment_learning(self):
         """Main function to save logs from learning experiment.
@@ -214,7 +214,7 @@ class Logger:
             log = pd.concat([log, self.file_log_simulation])
         else:
             log = self.file_log_simulation
-        log.to_csv(f"{self.path}/{self.filename_log_simulation}.csv", index=False)
+        log.to_csv(self.path + self.filename_log_simulation, index=False)
 
     def agg_log_simulation(self):
         if self.file_log_simulation["run"].max() > 0:
@@ -255,9 +255,7 @@ class Logger:
                 log = pd.concat([log, df])
             else:
                 log = df
-            log.to_csv(
-                f"{self.path}/{self.filename_log_simulation_agg}.csv", index=False
-            )
+            log.to_csv(self.path + self.filename_log_simulation_agg, index=False)
 
     def log_experiment_simulation(self):
         """Main function to save logs from simulation experiment.
