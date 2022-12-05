@@ -45,7 +45,8 @@ class SingleItemAuction(Mechanism):
         elif "payment_rule" not in self.param_util:
             raise ValueError("specify payment rule")
         elif "utility_type" not in self.param_util:
-            raise ValueError("specify utility type")
+            self.param_prior["utility_type"] = "QL"
+            print("utility type not specified, quasi-linear (QL) chosen by default.")
 
         self.payment_rule = param_util["payment_rule"]
         self.tie_breaking = param_util["tie_breaking"]
