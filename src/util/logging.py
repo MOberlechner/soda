@@ -54,7 +54,8 @@ class Logger:
                 "time_init",
                 "time_run",
                 "timestamp",
-            ]
+            ],
+            dtype={"convergence": bool},
         )
 
         # log run simulation
