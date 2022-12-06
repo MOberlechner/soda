@@ -70,10 +70,10 @@ if __name__ == "__main__":
         ("single_item", "affiliated_values", "soda_entro"),
         ("single_item", "affiliated_values", "soda_eucl"),
         ("single_item", "affiliated_values", "soma_eucl"),
-        ("single_item", "affiliated_values", "sofw"),
-        ("single_item", "common_value", "sofw_std"),
-        ("single_item", "common_value", "sofw_std"),
-        ("single_item", "common_value", "sofw_std"),
+        ("single_item", "affiliated_values", "sofw_std"),
+        ("single_item", "common_value", "soda_entro"),
+        ("single_item", "common_value", "soda_eucl"),
+        ("single_item", "common_value", "soma_eucl"),
         ("single_item", "common_value", "sofw_std"),
     ]
 
