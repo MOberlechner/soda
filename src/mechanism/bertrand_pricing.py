@@ -62,11 +62,11 @@ class BertrandPricing(Mechanism):
             elif self.intercept <= 0:
                 raise ValueError("intercept must be greater than 0")
 
-        if self.prior in ["affiliated_values", "common_value"]:
-            raise NotImplementedError
-
         else:
             raise ValueError("demand function '" + str(self.demand) + "' not available")
+
+        if self.prior in ["affiliated_values", "common_value"]:
+            raise NotImplementedError
 
         # use own gradient
         if (len(self.set_bidder) == 1) and (self.demand == "linear") & (
@@ -163,6 +163,7 @@ class BertrandPricing(Mechanism):
         -------
 
         """
+
         pdf = strategies[agent].x.sum(axis=0)
         cdf = 1 - np.cumsum(pdf)
         exp_win = cdf ** (self.n_bidder - 1)
