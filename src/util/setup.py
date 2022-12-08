@@ -6,6 +6,7 @@ from src.learner.frank_wolfe import FrankWolfe
 from src.learner.soda import SODA
 from src.learner.soma import SOMA
 from src.mechanism.all_pay import AllPay
+from src.mechanism.bertrand_pricing import BertrandPricing
 from src.mechanism.contest_game import ContestGame
 from src.mechanism.crowdsourcing import Crowdsourcing
 from src.mechanism.double_auction import DoubleAuction
@@ -60,6 +61,11 @@ def create_setting(setting: str, cfg):
 
     elif setting == "double_auction":
         mechanism = DoubleAuction(
+            cfg.bidder, cfg.o_space, cfg.a_space, cfg.param_prior, cfg.param_util
+        )
+
+    elif setting == "bertrand_pricing":
+        mechanism = BertrandPricing(
             cfg.bidder, cfg.o_space, cfg.a_space, cfg.param_prior, cfg.param_util
         )
 
