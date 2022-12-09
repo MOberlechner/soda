@@ -24,7 +24,7 @@ class SingleItemAuction(Mechanism):
     Parameter Utility (param_util)
         tiebreaking     str: specifies tiebreaking rule: "random" (default), "lose"
         payment_rule    str: choose betweem "first_price" and "second_price"
-        utility_type    str: QL (quasi-linear), ROI (return of investment), ROS (return of something)
+        utility_type    str: QL (quasi-linear (corresponds to Auction, Default), ROI (return of investment), ROS (return of something)
 
     """
 
@@ -42,10 +42,10 @@ class SingleItemAuction(Mechanism):
         # check input
         if "tie_breaking" not in self.param_util:
             raise ValueError("specify tiebreaking rule")
-        elif "payment_rule" not in self.param_util:
+        if "payment_rule" not in self.param_util:
             raise ValueError("specify payment rule")
-        elif "utility_type" not in self.param_util:
-            self.param_prior["utility_type"] = "QL"
+        if "utility_type" not in self.param_util:
+            self.param_util["utility_type"] = "QL"
             print("utility type not specified, quasi-linear (QL) chosen by default.")
 
         self.payment_rule = param_util["payment_rule"]
