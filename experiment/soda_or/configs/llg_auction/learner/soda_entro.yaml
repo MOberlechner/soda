@@ -4,6 +4,6 @@ tol: 1e-4
 stop_criterion: 'util_loss'
 regularizer: 'entropic'
 steprule_bool: True
-eta: 50
-beta: 0.05
+eta: 100
+beta: 0.5
 init_method: 'random'
