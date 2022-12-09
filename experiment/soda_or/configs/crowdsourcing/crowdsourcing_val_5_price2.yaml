@@ -7,7 +7,7 @@ param_prior: {'distribution':'uniform'}
 param_util: {
   'tiebreaking':'lose', 
   'type':'valuation',
-  'price': [0.7, 0.3],
+  'prices': [0.7, 0.3],
   }
 n: 64
 m: 64
