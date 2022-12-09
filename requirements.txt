@@ -8,5 +8,4 @@ opt_einsum
 pre-commit
 black
 isort
-hydra-core
 pathlib
