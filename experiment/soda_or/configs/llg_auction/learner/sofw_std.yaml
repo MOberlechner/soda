@@ -7,3 +7,4 @@ steprule_bool: False
 eta: 1.0
 beta: 1.0
 init_method: 'random'
+bne_known: 'true'
