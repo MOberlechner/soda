@@ -37,7 +37,7 @@ class Logger:
         self.round_decimal = round_decimal
 
         # create directory for each setting
-        Path(path + "log/" + setting).mkdir(parents=True, exist_ok=True)
+        Path(self.path).mkdir(parents=True, exist_ok=True)
 
         # log run learning
         self.filename_log_learning = "log_learn.csv"
