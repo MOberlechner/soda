@@ -22,7 +22,10 @@ def learn_strategies(mechanism, game, cfg_learner):
     learner = create_learner(cfg_learner)
 
     # initialize strategies
-    init_method = cfg_learner.init_method if "init_method" in cfg_learner else "random"
+    if "init_method" in cfg_learner:
+        init_method = cfg_learner["init_method"]
+    else:
+        init_method = "random"
     strategies = {}
     for i in game.set_bidder:
         strategies[i] = Strategy(i, game)
@@ -151,7 +154,7 @@ def run_sim(
                 strategies[i].load_scale(name, setting, path, n_scaled, m_scaled)
 
         # compute metrics if BNE is known
-        if cfg.bne_known:
+        if cfg["bne_known"]:
             l2_norm = compute_l2_norm(mechanism, strategies, n_obs)
             util_bne, util_vs_bne, util_loss = compute_utility(
                 mechanism, strategies, n_obs
