@@ -462,9 +462,25 @@ class Strategy:
         fig = plt.figure(figsize=(5 * num_plots, 5), tight_layout=True)
 
         # plot strategy
-        ax_strat = fig.add_subplot(1, num_plots, counter)
-        self._plot_strategy(ax_strat, strategy, param, iter, beta)
-        counter += 1
+        if self.dim_a == 1:
+            ax_strat = fig.add_subplot(1, num_plots, counter)
+            self._plot_strategy(ax_strat, strategy, param, iter, beta)
+            counter += 1
+        elif self.dim_a == 2:
+            # Special case: Split Award Auction
+            ax_strat = fig.add_subplot(1, num_plots, counter)
+            self._plot_strategy(
+                ax_strat, strategy.sum(axis=2), param, iter, beta, axis_a=0
+            )
+            counter += 1
+            ax_strat = fig.add_subplot(1, num_plots, counter)
+            self._plot_strategy(
+                ax_strat, strategy.sum(axis=1), param, iter, beta, axis_a=1
+            )
+            counter += 1
+
+        else:
+            raise NotImplementedError("Visualization not implemented for dim_a > 2")
 
         # plot gradient
         if grad:
@@ -487,7 +503,14 @@ class Strategy:
             )
 
     def _plot_strategy(
-        self, ax, strategy: np.ndarray, param: dict, iter: int = None, beta=None
+        self,
+        ax,
+        strategy: np.ndarray,
+        param: dict,
+        iter: int = None,
+        beta=None,
+        axis_a: int = 0,
+        axis_o: int = 0,
     ) -> None:
         """Plot Gradient (for standard incomplete information setting)
 
@@ -497,16 +520,31 @@ class Strategy:
             param (dict): specifies parameter (fontsize, ...) for plots
             iter (int, optional): show intermediate strategy. Defaults to None.
             beta (function, optional): Defaults to None.
+            axis_a (int, optional): Which axis to visualize, if multidimensional action space Defaults to 1.
         """
         # plot strategy
-        ax.imshow(
-            strategy.T / self.margin(),
-            extent=(
+        if self.dim_o > 1:
+            raise NotImplementedError(
+                "Visualization only implemented for dim_a = 1,2 and dim_o = 1"
+            )
+
+        if self.dim_a == 1:
+            param_extent = (
                 self.o_discr[0],
                 self.o_discr[-1],
                 self.a_discr[0],
                 self.a_discr[-1],
-            ),
+            )
+        else:
+            param_extent = (
+                self.o_discr[0],
+                self.o_discr[-1],
+                self.a_discr[axis_a][0],
+                self.a_discr[axis_a][-1],
+            )
+        ax.imshow(
+            strategy.T / self.margin(),
+            extent=param_extent,
             origin="lower",
             vmin=0,
             cmap="Greys",
@@ -519,6 +557,8 @@ class Strategy:
                 b = beta(self.o_discr)
             else:
                 b = beta
+            if self.dim_a == 2:
+                b = b[axis_a]
             ax.plot(
                 self.o_discr,
                 b,
