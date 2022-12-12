@@ -53,8 +53,11 @@ class SingleItemAuction(Mechanism):
         self.utility_type = param_util["utility_type"]
 
         # prior
-        if self.prior in ["affiliated_values", "common_value"]:
-            raise NotImplementedError
+        if self.prior == "affiliated_values":
+            self.values = "affiliated"
+        elif self.prior == "common_value":
+            self.values = "common"
+            self.v_space = {i: [0, o_space[i][1] / 2] for i in bidder}
 
         # use own gradient
         if (len(self.set_bidder) == 1) and (self.payment_rule == "first_price") & (
@@ -86,9 +89,14 @@ class SingleItemAuction(Mechanism):
             raise ValueError("bidder with index " + str(idx) + " not avaible")
 
         # if True: we want each outcome for every observation, else: each outcome belongs to one observation
-        if self.values == "private":
+        if (self.values == "private") or (self.values == "common"):
             if obs.shape != bids[idx].shape:
                 obs = obs.reshape(len(obs), 1)
+        elif self.values == "affiliated":
+            if obs[idx].shape != bids[idx].shape:
+                obs = 0.5 * (
+                    obs.reshape(len(obs), 1) + obs.reshape(1, len(obs))
+                ).reshape(len(obs), len(obs), 1)
         else:
             raise ValueError('value model "{}" unknown'.format(self.values))
 
