@@ -23,8 +23,8 @@ class SingleItemAuction(Mechanism):
 
     Parameter Utility (param_util)
         tiebreaking     str: specifies tiebreaking rule: "random" (default), "lose"
-
         payment_rule    str: choose betweem "first_price" and "second_price"
+        utility_type    str: QL (quasi-linear (corresponds to Auction, Default), ROI (return of investment), ROS (return of something)
 
     """
 
@@ -42,32 +42,26 @@ class SingleItemAuction(Mechanism):
         # check input
         if "tie_breaking" not in self.param_util:
             raise ValueError("specify tiebreaking rule")
-        elif "payment_rule" not in self.param_util:
+        if "payment_rule" not in self.param_util:
             raise ValueError("specify payment rule")
+        if "utility_type" not in self.param_util:
+            self.param_util["utility_type"] = "QL"
+            print("utility type not specified, quasi-linear (QL) chosen by default.")
 
         self.payment_rule = param_util["payment_rule"]
         self.tie_breaking = param_util["tie_breaking"]
-
-        # risk aversion
-        self.risk = (
-            param_util["risk"] if "risk" in param_util else [1.0] * self.n_bidder
-        )
-        if type(self.risk) is float:
-            self.risk = [self.risk] * self.n_bidder
+        self.utility_type = param_util["utility_type"]
 
         # prior
-        if self.prior == "affiliated_values":
-            self.values = "affiliated"
-        elif self.prior == "common_value":
-            self.values = "common"
-            self.v_space = {i: [0, o_space[i][1] / 2] for i in bidder}
+        if self.prior in ["affiliated_values", "common_value"]:
+            raise NotImplementedError
 
         # use own gradient
         if (len(self.set_bidder) == 1) and (self.payment_rule == "first_price") & (
             self.prior not in ["affiliated_values", "common_value"]
         ) & ("corr" not in self.param_prior):
             self.own_gradient = True
-            print("own_gradient method: {}".format(self.own_gradient))
+            print("own gradient")
 
     def utility(self, obs: np.ndarray, bids: np.ndarray, idx: int) -> None:
         """
@@ -92,14 +86,9 @@ class SingleItemAuction(Mechanism):
             raise ValueError("bidder with index " + str(idx) + " not avaible")
 
         # if True: we want each outcome for every observation, else: each outcome belongs to one observation
-        if (self.values == "private") or (self.values == "common"):
+        if self.values == "private":
             if obs.shape != bids[idx].shape:
                 obs = obs.reshape(len(obs), 1)
-        elif self.values == "affiliated":
-            if obs[idx].shape != bids[idx].shape:
-                obs = 0.5 * (
-                    obs.reshape(len(obs), 1) + obs.reshape(1, len(obs))
-                ).reshape(len(obs), len(obs), 1)
         else:
             raise ValueError('value model "{}" unknown'.format(self.values))
 
@@ -111,34 +100,44 @@ class SingleItemAuction(Mechanism):
         elif self.tie_breaking == "lose":
             win = np.where(bids[idx] > np.delete(bids, idx, 0).max(axis=0), 1, 0)
             num_winner = np.ones(win.shape)
-
         else:
             raise ValueError(
                 'Tie-breaking rule "' + self.param_util["tie_breaking"] + '" unknown'
             )
 
-        # determine payoff
+        # determine price
         if self.payment_rule == "first_price":
-            payoff = obs - bids[idx]
-            return (
-                1
-                / num_winner
-                * win
-                * np.sign(payoff)
-                * np.abs(payoff) ** self.risk[idx]
-            )
-
+            price = bids[idx]
         elif self.payment_rule == "second_price":
-            payoff = obs - np.delete(bids, idx, 0).max(axis=0)
-            return (
-                1
-                / num_winner
-                * win
-                * np.sign(payoff)
-                * np.abs(payoff) ** self.risk[idx]
-            )
+            price = np.delete(bids, idx, 0).max(axis=0)
         else:
             raise ValueError("payment rule " + self.payment_rule + " not available")
+
+        # utility type
+        if self.utility_type == "QL":
+            payoff = obs - price
+        elif self.utility_type == "ROI":
+            payoff = np.divide(
+                obs - price, price, out=np.zeros_like((obs - price)), where=price != 0
+            )
+        elif self.utility_type == "ROS":
+            payoff = np.divide(
+                obs,
+                price,
+                out=np.zeros_like((obs / np.ones(price.shape))),
+                where=price != 0,
+            )
+        elif self.utility_type == "ROSB":
+            payoff = np.divide(
+                obs,
+                price,
+                out=np.zeros_like((obs / np.ones(price.shape))),
+                where=price != 0,
+            ) + np.log(self.param_util["budget"] - price)
+        else:
+            raise ValueError("utility type " + self.utility_type + " not available")
+
+        return 1 / num_winner * win * payoff
 
     def get_bne(self, agent: str, obs: np.ndarray):
         """
@@ -154,20 +153,34 @@ class SingleItemAuction(Mechanism):
         np.ndarray : bids to corresponding observation
 
         """
+        if self.utility_type == "QL":
+            if self.prior == "uniform":
+                if (self.payment_rule == "first_price") & np.all(
+                    [self.o_space[i] == [0, 1] for i in self.set_bidder]
+                ):
+                    return (
+                        (self.n_bidder - 1) / (self.n_bidder - 1 + self.risk[0]) * obs
+                    )
+                elif self.payment_rule == "second_price":
+                    return obs
 
-        if self.prior == "uniform":
-            if (self.payment_rule == "first_price") & np.all(
-                [self.o_space[i] == [0, 1] for i in self.set_bidder]
+            elif self.prior == "affiliated_values":
+                return 2 / 3 * obs
+
+            elif self.prior == "common_value":
+                return 2 * obs / (2 + obs)
+
+        elif self.utility_type == "ROI":
+            if (
+                (self.prior == "uniform")
+                & (self.payment_rule == "first_price")
+                & (len(self.set_bidder == 1))
+                & (self.a_space[self.set_bidder[0]][0] > 0)
             ):
-                return (self.n_bidder - 1) / (self.n_bidder - 1 + self.risk[0]) * obs
-            elif self.payment_rule == "second_price":
-                return obs
-
-        elif self.prior == "affiliated_values":
-            return 2 / 3 * obs
-
-        elif self.prior == "common_value":
-            return 2 * obs / (2 + obs)
+                reserve_price = self.a_space[self.set_bidder[0]][0]
+                raise NotImplementedError(
+                    "Implement BNE for ROI with uniform prior and reserve price"
+                )
 
     def compute_gradient(self, game, strategies, agent: str):
         """Simplified computation of gradient for i.i.d. bidders and tie-breaking "lose"
@@ -200,10 +213,44 @@ class SingleItemAuction(Mechanism):
             )
         else:
             raise ValueError('Tie-breaking rule "{}" unknown'.format(self.tie_breaking))
-        payoff = (
+
+        # utility type
+        obs_grid = (
             np.ones((strategies[agent].m, strategies[agent].n))
             * strategies[agent].o_discr
-        ).T - np.ones((strategies[agent].n, strategies[agent].m)) * strategies[
-            agent
-        ].a_discr
-        return exp_win * np.sign(payoff) * np.abs(payoff) ** self.risk[0]
+        ).T
+        bid_grid = (
+            np.ones((strategies[agent].n, strategies[agent].m))
+            * strategies[agent].a_discr
+        )
+
+        if self.utility_type == "QL":
+            payoff = obs_grid - bid_grid
+
+        elif self.utility_type == "ROI":
+            payoff = np.divide(
+                obs_grid - bid_grid,
+                bid_grid,
+                out=np.zeros_like(obs_grid),
+                where=bid_grid != 0,
+            )
+        elif self.utility_type == "ROS":
+            payoff = np.divide(
+                obs_grid,
+                bid_grid,
+                out=np.zeros_like(obs_grid),
+                where=bid_grid != 0,
+            )
+        elif self.utility_type == "ROSB":
+            payoff = np.divide(
+                obs_grid + np.log(self.param_util["budget"] - bid_grid),
+                bid_grid,
+                out=np.zeros_like(obs_grid),
+                where=bid_grid != 0,
+            )
+        else:
+            raise ValueError(
+                "utility type " + self.utility_type + " not available in own gradient"
+            )
+
+        return exp_win * payoff

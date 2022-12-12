@@ -1,4 +1,7 @@
-import hydra
+import os
+
+import yaml
+from yaml.loader import SafeLoader
 
 from src.game import Game
 from src.learner.best_response import BestResponse
@@ -12,7 +15,6 @@ from src.mechanism.double_auction import DoubleAuction
 from src.mechanism.llg_auction import LLGAuction
 from src.mechanism.single_item import SingleItemAuction
 from src.mechanism.split_award import SplitAwardAuction
-from src.strategy import Strategy
 
 
 def create_setting(setting: str, cfg):
@@ -31,43 +33,71 @@ def create_setting(setting: str, cfg):
 
     if setting == "single_item":
         mechanism = SingleItemAuction(
-            cfg.bidder, cfg.o_space, cfg.a_space, cfg.param_prior, cfg.param_util
+            cfg["bidder"],
+            cfg["o_space"],
+            cfg["a_space"],
+            cfg["param_prior"],
+            cfg["param_util"],
         )
 
     elif setting == "llg_auction":
         mechanism = LLGAuction(
-            cfg.bidder, cfg.o_space, cfg.a_space, cfg.param_prior, cfg.param_util
+            cfg["bidder"],
+            cfg["o_space"],
+            cfg["a_space"],
+            cfg["param_prior"],
+            cfg["param_util"],
         )
 
     elif setting == "contest_game":
         mechanism = ContestGame(
-            cfg.bidder, cfg.o_space, cfg.a_space, cfg.param_prior, cfg.param_util
+            cfg["bidder"],
+            cfg["o_space"],
+            cfg["a_space"],
+            cfg["param_prior"],
+            cfg["param_util"],
         )
     elif setting == "all_pay":
         mechanism = AllPay(
-            cfg.bidder, cfg.o_space, cfg.a_space, cfg.param_prior, cfg.param_util
+            cfg["bidder"],
+            cfg["o_space"],
+            cfg["a_space"],
+            cfg["param_prior"],
+            cfg["param_util"],
         )
 
     elif setting == "crowdsourcing":
         mechanism = Crowdsourcing(
-            cfg.bidder, cfg.o_space, cfg.a_space, cfg.param_prior, cfg.param_util
+            cfg["bidder"],
+            cfg["o_space"],
+            cfg["a_space"],
+            cfg["param_prior"],
+            cfg["param_util"],
         )
 
     elif setting == "split_award":
         mechanism = SplitAwardAuction(
-            cfg.bidder, cfg.o_space, cfg.a_space, cfg.param_prior, cfg.param_util
+            cfg["bidder"],
+            cfg["o_space"],
+            cfg["a_space"],
+            cfg["param_prior"],
+            cfg["param_util"],
         )
 
     elif setting == "double_auction":
         mechanism = DoubleAuction(
-            cfg.bidder, cfg.o_space, cfg.a_space, cfg.param_prior, cfg.param_util
+            cfg["bidder"],
+            cfg["o_space"],
+            cfg["a_space"],
+            cfg["param_prior"],
+            cfg["param_util"],
         )
 
     else:
         raise ValueError('Mechanism "{}" not available'.format(setting))
 
     # create approximation game
-    game = Game(mechanism, cfg.n, cfg.m)
+    game = Game(mechanism, cfg["n"], cfg["m"])
 
     return mechanism, game
 
@@ -83,48 +113,48 @@ def create_learner(cfg_learner):
     -------
     learner
     """
-    if cfg_learner.name == "soda":
+    if cfg_learner["name"] == "soda":
         return SODA(
-            cfg_learner.max_iter,
-            cfg_learner.tol,
-            cfg_learner.stop_criterion,
-            cfg_learner.regularizer,
-            cfg_learner.steprule_bool,
-            cfg_learner.eta,
-            cfg_learner.beta,
+            cfg_learner["max_iter"],
+            cfg_learner["tol"],
+            cfg_learner["stop_criterion"],
+            cfg_learner["regularizer"],
+            cfg_learner["steprule_bool"],
+            cfg_learner["eta"],
+            cfg_learner["beta"],
         )
 
-    elif cfg_learner.name == "soma":
+    elif cfg_learner["name"] == "soma":
         return SOMA(
-            cfg_learner.max_iter,
-            cfg_learner.tol,
-            cfg_learner.stop_criterion,
-            cfg_learner.mirror_map,
-            cfg_learner.steprule_bool,
-            cfg_learner.eta,
-            cfg_learner.beta,
+            cfg_learner["max_iter"],
+            cfg_learner["tol"],
+            cfg_learner["stop_criterion"],
+            cfg_learner["mirror_map"],
+            cfg_learner["steprule_bool"],
+            cfg_learner["eta"],
+            cfg_learner["beta"],
         )
 
-    elif cfg_learner.name == "frank_wolfe":
+    elif cfg_learner["name"] == "frank_wolfe":
         return FrankWolfe(
-            cfg_learner.max_iter,
-            cfg_learner.tol,
-            cfg_learner.stop_criterion,
-            cfg_learner.method,
-            cfg_learner.steprule_bool,
-            cfg_learner.eta,
-            cfg_learner.beta,
+            cfg_learner["max_iter"],
+            cfg_learner["tol"],
+            cfg_learner["stop_criterion"],
+            cfg_learner["method"],
+            cfg_learner["steprule_bool"],
+            cfg_learner["eta"],
+            cfg_learner["beta"],
         )
 
-    elif cfg_learner.name == "best_response":
+    elif cfg_learner["name"] == "best_response":
         return BestResponse(
-            cfg_learner.max_iter,
-            cfg_learner.tol,
-            cfg_learner.stop_criterion,
+            cfg_learner["max_iter"],
+            cfg_learner["tol"],
+            cfg_learner["stop_criterion"],
         )
 
     else:
-        raise ValueError("Learner {} unknown.".format(cfg_learner.name))
+        raise ValueError("Learner {} unknown.".format(cfg_learner["name"]))
 
 
 def get_config(path_config: str, setting: str, experiment: str, learn_alg: str):
@@ -139,17 +169,33 @@ def get_config(path_config: str, setting: str, experiment: str, learn_alg: str):
     Returns:
         config files for experiment and learner
     """
-    # add this s.t. we start in the project directory, i.e. path_config should be "configs" or "data_paper/publication/configs"
-    path_config = "../../" + path_config
+    # path to project
+    root_dir = os.path.dirname(os.path.dirname(os.path.abspath("")))
+    # path from soda into configs
+    path_config = f"soda/{path_config}/".replace("//", "/")
 
     # get auction game
-    hydra.initialize(config_path=path_config + setting, job_name="run")
-    cfg_exp = hydra.compose(config_name=experiment)
-    hydra.core.global_hydra.GlobalHydra().clear()
+    with open(f"{root_dir}/{path_config}{setting}/{experiment}.yaml") as f:
+        cfg_exp = yaml.load(f, Loader=SafeLoader)
 
     # get learner
-    hydra.initialize(config_path=path_config + setting + "/learner", job_name="run")
-    cfg_learner = hydra.compose(config_name=learn_alg)
-    hydra.core.global_hydra.GlobalHydra().clear()
+    with open(f"{root_dir}/{path_config}{setting}/learner/{learn_alg}.yaml") as f:
+        cfg_learner = yaml.load(f, Loader=SafeLoader)
+
+    # test file
+    if any(
+        key not in cfg_exp
+        for key in ["bidder", "o_space", "a_space", "param_prior", "param_util"]
+    ):
+        raise ValueError(
+            "config file for mechanism/game is not feasible. key is missing."
+        )
+    elif experiment != cfg_exp["name"]:
+        raise ValueError("name in config file does not coincide with name of the file")
+    elif isinstance(cfg_learner["tol"], str):
+        try:
+            cfg_learner["tol"] = float(cfg_learner["tol"])
+        except:
+            raise ValueError("tol in config learner is not a float")
 
     return cfg_exp, cfg_learner

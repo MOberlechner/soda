@@ -1,9 +1,0 @@
-name: 'soda'
-max_iter: 2000
-tol: 1e-4
-stop_criterion: 'util_loss'
-regularizer: 'entropic'
-steprule_bool: True
-eta: 100
-beta: 0.5
-init_method: 'random'

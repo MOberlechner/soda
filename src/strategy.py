@@ -42,8 +42,8 @@ class Strategy:
         self.m = game.m
 
         # dimension of spaces
-        self.dim_o = 1 if len(self.o_discr.shape) == 1 else self.o_discr.shape[0]
-        self.dim_a = 1 if len(self.a_discr.shape) == 1 else self.a_discr.shape[0]
+        self.dim_o = game.dim_o
+        self.dim_a = game.dim_a
 
         # prior (marginal) distribution
         self.prior = game.prior[agent]
@@ -207,21 +207,25 @@ class Strategy:
         Returns:
             np.ndarray: best response
         """
-        # number of discretization points observations
-        n = self.x.shape[0]
         # create array for best response
         best_response = np.zeros(gradient.shape)
 
         # determine largest entry of gradient for each valuation und put all the weight on the respective entry
         if self.dim_o == self.dim_a == 1:
             index_max = gradient.argmax(axis=1)
-            best_response[range(n), index_max] = self.prior
-        else:
-            for i in product(range(n), repeat=self.dim_o):
+            best_response[range(self.n), index_max] = self.prior
+
+        elif self.dim_o == 1:
+            for i in range(self.n):
                 index_max = np.unravel_index(
                     np.argmax(gradient[i], axis=None), gradient[i].shape
                 )
                 best_response[i][index_max] = self.margin()[i]
+
+        else:
+            raise NotImplementedError(
+                "Best Response not implemented for multi-dimensional observation space"
+            )
 
         return best_response
 

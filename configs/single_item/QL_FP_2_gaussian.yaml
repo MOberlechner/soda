@@ -1,0 +1,9 @@
+name: 'QL_FP_2_gaussian'
+mechanism: 'single_item'
+bidder: ['1', '1']
+o_space: {'1': [0.05 ,1.0]}
+a_space: {'1': [0.05 ,1.0],}
+param_prior: {'distribution':'gaussian', 'mu': 0.5, 'sigma': 0.1}
+param_util: {'payment_rule': 'first_price', 'tie_breaking': 'lose', 'utility_type':'QL'}
+n: 64
+m: 64
