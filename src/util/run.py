@@ -121,7 +121,7 @@ def run_sim(
 
     print(f"Simulation '{experiment}' with '{learn_alg}' started!")
     # create settings (standard or scaled)
-    if cfg.bne_known:
+    if cfg["bne_known"]:
         mechanism, game = create_setting(setting, cfg)
     else:
         cfg.n = n_scaled
@@ -148,7 +148,7 @@ def run_sim(
             strategies[i] = Strategy(i, game)
 
         for i in strategies:
-            if cfg.bne_known:
+            if cfg["bne_known"]:
                 strategies[i].load(name, setting, path)
             else:
                 strategies[i].load_scale(name, setting, path, n_scaled, m_scaled)

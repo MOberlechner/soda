@@ -1,3 +1,4 @@
+import os
 from itertools import product
 
 import matplotlib.pyplot as plt
@@ -730,9 +731,15 @@ class Strategy:
         -------
 
         """
+        # current directory:
+        current_dir = os.getcwd()
+        # path to project
+        dir_project = current_dir.split("soda")[0] + "soda/"
+
         try:
             self.x = np.load(
-                path
+                dir_project
+                + path
                 + "strategies/"
                 + setting
                 + "/"
@@ -749,8 +756,11 @@ class Strategy:
                 + self.agent
                 + ".npy"
                 + '" is not available in directory "'
+                + dir_project
                 + path
                 + "strategies/"
+                + setting
+                + "/"
                 + '"'
             )
 

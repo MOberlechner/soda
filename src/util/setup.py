@@ -169,18 +169,19 @@ def get_config(path_config: str, setting: str, experiment: str, learn_alg: str):
     Returns:
         config files for experiment and learner
     """
-    # path to project
     # current directory:
     current_dir = os.getcwd()
+    # path to project
+    dir_project = current_dir.split("soda")[0] + "soda/"
     # path from soda into configs
     path_config = f"{path_config}/".replace("//", "/")
 
     # get auction game
-    with open(f"{current_dir}/{path_config}{setting}/{experiment}.yaml") as f:
+    with open(f"{dir_project}{path_config}{setting}/{experiment}.yaml") as f:
         cfg_exp = yaml.load(f, Loader=SafeLoader)
 
     # get learner
-    with open(f"{current_dir}/{path_config}{setting}/learner/{learn_alg}.yaml") as f:
+    with open(f"{dir_project}{path_config}{setting}/learner/{learn_alg}.yaml") as f:
         cfg_learner = yaml.load(f, Loader=SafeLoader)
 
     # test file
