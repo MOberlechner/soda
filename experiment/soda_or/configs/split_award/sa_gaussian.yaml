@@ -1,0 +1,9 @@
+name: 'sa_gaussian'
+bidder: ['1', '1']
+o_space: {'1': [1.0 ,1.4]}
+a_space: {'1': [[0.4 ,2.5], [0.4 ,2.5]]}
+param_prior: {'distribution':'gaussian', 'mu': 1.2, 'sigma': 0.05}
+param_util: { 'tie_breaking': 'lose', 'scale': 0.3}
+n: 32
+m: 64
+bne_known: True
