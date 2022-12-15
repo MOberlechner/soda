@@ -5,6 +5,7 @@ from yaml.loader import SafeLoader
 
 from src.game import Game
 from src.learner.best_response import BestResponse
+from src.learner.fictitious_play import FictitiousPlay
 from src.learner.frank_wolfe import FrankWolfe
 from src.learner.soda import SODA
 from src.learner.soma import SOMA
@@ -144,6 +145,13 @@ def create_learner(cfg_learner):
             cfg_learner["steprule_bool"],
             cfg_learner["eta"],
             cfg_learner["beta"],
+        )
+
+    elif cfg_learner["name"] == "fictitious_play":
+        return FictitiousPlay(
+            cfg_learner["max_iter"],
+            cfg_learner["tol"],
+            cfg_learner["stop_criterion"],
         )
 
     elif cfg_learner["name"] == "best_response":
