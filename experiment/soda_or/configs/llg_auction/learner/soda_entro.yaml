@@ -5,6 +5,5 @@ stop_criterion: 'util_loss'
 regularizer: 'entropic'
 steprule_bool: True
 eta: 100
-beta: 0.5
+beta: 0.05
 init_method: 'random'
-bne_known: 'true'
