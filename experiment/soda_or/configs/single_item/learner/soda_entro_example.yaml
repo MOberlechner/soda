@@ -1,9 +1,9 @@
-name: 'soma'
+name: 'soda'
 max_iter: 1000
 tol: 1e-4
 stop_criterion: 'util_loss'
-mirror_map: 'euclidean'
+regularizer: 'entropic'
 steprule_bool: True
-eta: 50
-beta: 0.5
+eta: 10
+beta: 0.05
 init_method: 'random'
