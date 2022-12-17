@@ -39,7 +39,7 @@ class SplitAwardAuction(Mechanism):
 
         Args:
             obs (np.ndarray): observations/valuations from each agent
-            bids (np.ndarray): bids (2 dim: single,split) from each agent
+            bids (np.ndarray): bids (2 dim: single, split) from each agent
             idx (int): index of agent
 
         """
