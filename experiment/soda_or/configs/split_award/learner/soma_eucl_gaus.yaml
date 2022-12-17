@@ -4,7 +4,7 @@ tol: 1e-4
 stop_criterion: 'util_loss'
 mirror_map: 'euclidean'
 steprule_bool: True
-eta: 0.1
+eta: 0.05
 beta: 0.5
 init_method: 'random'
 bne_known: 'true'
