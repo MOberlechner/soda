@@ -5,14 +5,13 @@ from src.learner.learner import Learner
 
 class FictitiousPlay(Learner):
     """Fictitious Play
+    Note that the current state of each agent (i.e. Strategy.x) is the empirical mean of historical play.
+    This means we do not actually play the best response, but rather just update the empirical mean accordingly.
 
     Attributes:
         max_iter (int): maximal number of iterations
         tol (float): stopping criterion (relative utility loss)
         stop_criterion (str): specify stopping criterion. Defaults to 'util_loss'
-
-        method (str, optional): Choose between standard and online version of FW. Defaults to 'standard'.
-        param_step (float, optional): parameter for step size for online version of FW
     """
 
     def __init__(
