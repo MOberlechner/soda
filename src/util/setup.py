@@ -201,7 +201,9 @@ def get_config(path_config: str, setting: str, experiment: str, learn_alg: str):
             "config file for mechanism/game is not feasible. key is missing."
         )
     elif experiment != cfg_exp["name"]:
-        raise ValueError("name in config file does not coincide with name of the file")
+        raise ValueError(
+            f"name in config file {experiment} does not coincide with name of the file"
+        )
     elif isinstance(cfg_learner["tol"], str):
         try:
             cfg_learner["tol"] = float(cfg_learner["tol"])
