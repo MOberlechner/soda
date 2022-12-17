@@ -124,8 +124,8 @@ def run_sim(
     if cfg["bne_known"]:
         mechanism, game = create_setting(setting, cfg)
     else:
-        cfg.n = n_scaled
-        cfg.m = m_scaled
+        cfg["n"] = n_scaled
+        cfg["m"] = m_scaled
         mechanism, game = create_setting(setting, cfg)
 
         if not mechanism.own_gradient:
