@@ -4,7 +4,7 @@ tol: 1e-4
 stop_criterion: 'util_loss'
 regularizer: 'entropic'
 steprule_bool: True
-eta: 10
+eta: 20
 beta: 0.05
 init_method: 'random'
 bne_known: 'true'
