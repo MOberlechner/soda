@@ -475,15 +475,14 @@ class Strategy:
             # Special case: Split Award Auction
             ax_strat = fig.add_subplot(1, num_plots, counter)
             self._plot_strategy(
-                ax_strat, strategy.sum(axis=2), param, iter, beta, axis_a=0
+                ax_strat, strategy.sum(axis=1), param, iter, beta, axis_a=1
             )
             counter += 1
             ax_strat = fig.add_subplot(1, num_plots, counter)
             self._plot_strategy(
-                ax_strat, strategy.sum(axis=1), param, iter, beta, axis_a=1
+                ax_strat, strategy.sum(axis=2), param, iter, beta, axis_a=0
             )
             counter += 1
-
         else:
             raise NotImplementedError("Visualization not implemented for dim_a > 2")
 
