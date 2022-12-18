@@ -166,9 +166,7 @@ class SingleItemAuction(Mechanism):
                 if (self.payment_rule == "first_price") & np.all(
                     [self.o_space[i] == [0, 1] for i in self.set_bidder]
                 ):
-                    return (
-                        (self.n_bidder - 1) / (self.n_bidder - 1 + self.risk[0]) * obs
-                    )
+                    return (self.n_bidder - 1) / (self.n_bidder) * obs
                 elif self.payment_rule == "second_price":
                     return obs
 
