@@ -22,14 +22,17 @@ def learn_strategies(mechanism, game, cfg_learner):
     learner = create_learner(cfg_learner)
 
     # initialize strategies
-    init_method = cfg_learner.init_method if "init_method" in cfg_learner else "random"
+    if "init_method" in cfg_learner:
+        init_method = cfg_learner["init_method"]
+    else:
+        init_method = "random"
     strategies = {}
     for i in game.set_bidder:
         strategies[i] = Strategy(i, game)
         strategies[i].initialize(init_method)
 
     # run soda
-    learner.run(mechanism, game, strategies)
+    learner.run(mechanism, game, strategies, save_history_bool=False)
     return strategies, learner.convergence
 
 
@@ -62,16 +65,13 @@ def run_experiment(
     # get parameter
     cfg, cfg_learner = get_config(path_config, setting, experiment, learn_alg)
 
-    print('Experiment: "' + experiment + '" started!')
+    print(f"Experiment '{experiment}' with '{learn_alg}' started!")
     # initialize setting and compute utility
     t0 = time()
     mechanism, game = create_setting(setting, cfg)
     if not mechanism.own_gradient:
-        print('Computations of Utilities for experiment: "' + experiment + '" started!')
         game.get_utility(mechanism)
-        print(
-            'Computations of Utilities for experiment: "' + experiment + '" finished!'
-        )
+        print("- utilties computed")
     time_init = time() - t0
 
     # run soda
@@ -90,7 +90,7 @@ def run_experiment(
         if save_strat:
             for i in game.set_bidder:
                 name = (
-                    cfg_learner.name
+                    learn_alg
                     + "_"
                     + experiment
                     + ("_run_" + str(run) if num_runs > 1 else "")
@@ -99,7 +99,7 @@ def run_experiment(
                 strategies[i].save(name, setting, path, save_init=True)
 
     logger.log_experiment_learning()
-    print('Experiment: "' + experiment + '" finished!')
+    print(f"Experiment '{experiment}' with '{learn_alg}' finished!\n")
 
 
 def run_sim(
@@ -117,20 +117,20 @@ def run_sim(
 
     # get parameter
     cfg, cfg_learner = get_config(path_config, setting, experiment, learn_alg)
-    logger = Logger(path, setting, experiment, learn_alg, logging, round_decimal=5)
+    logger = Logger(path, setting, experiment, learn_alg, logging, round_decimal=3)
 
-    print('Simulation for experiments: "' + experiment + '" started!')
+    print(f"Simulation '{experiment}' with '{learn_alg}' started!")
     # create settings (standard or scaled)
-    if cfg.bne_known:
+    if cfg["bne_known"]:
         mechanism, game = create_setting(setting, cfg)
     else:
-        cfg.n = n_scaled
-        cfg.m = m_scaled
+        cfg["n"] = n_scaled
+        cfg["m"] = m_scaled
         mechanism, game = create_setting(setting, cfg)
 
         if not mechanism.own_gradient:
             game.get_utility(mechanism)
-            print("Utilties for experiments computed!")
+            print("- utilties computed")
 
     for run in tqdm(
         range(num_runs),
@@ -140,10 +140,7 @@ def run_sim(
 
         # import strategies: naming convention now includes learner !!!
         name = (
-            cfg_learner.name
-            + "_"
-            + experiment
-            + ("_run_" + str(run) if num_runs > 1 else "")
+            learn_alg + "_" + experiment + ("_run_" + str(run) if num_runs > 1 else "")
         )
 
         strategies = {}
@@ -151,13 +148,13 @@ def run_sim(
             strategies[i] = Strategy(i, game)
 
         for i in strategies:
-            if cfg.bne_known:
+            if cfg["bne_known"]:
                 strategies[i].load(name, setting, path)
             else:
                 strategies[i].load_scale(name, setting, path, n_scaled, m_scaled)
 
         # compute metrics if BNE is known
-        if cfg.bne_known:
+        if cfg["bne_known"]:
             l2_norm = compute_l2_norm(mechanism, strategies, n_obs)
             util_bne, util_vs_bne, util_loss = compute_utility(
                 mechanism, strategies, n_obs
@@ -169,7 +166,7 @@ def run_sim(
 
         # compute util loss for higher discretization
         else:
-            util_loss_approx = compute_util_loss_scaled(mechanism, game, strategies)
+            val = compute_util_loss_scaled(mechanism, game, strategies)
             logger.log_simulation(run, "util_loss_approx", val)
     logger.log_experiment_simulation()
-    print('Simulation for experiments: "' + experiment + '" finished!')
+    print(f"Simulation '{experiment}' with '{learn_alg}' finished!")

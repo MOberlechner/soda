@@ -24,7 +24,9 @@ class SingleItemAuction(Mechanism):
     Parameter Utility (param_util)
         tiebreaking     str: specifies tiebreaking rule: "random" (default), "lose"
         payment_rule    str: choose betweem "first_price" and "second_price"
-        utility_type    str: QL (quasi-linear), ROI (return of investment), ROS (return of something)
+        utility_type    str:    QL (quasi-linear (corresponds to Auction, Default),
+                                ROI (return of investment),
+                                ROS (return of something)
 
     """
 
@@ -42,10 +44,10 @@ class SingleItemAuction(Mechanism):
         # check input
         if "tie_breaking" not in self.param_util:
             raise ValueError("specify tiebreaking rule")
-        elif "payment_rule" not in self.param_util:
+        if "payment_rule" not in self.param_util:
             raise ValueError("specify payment rule")
-        elif "utility_type" not in self.param_util:
-            self.param_prior["utility_type"] = "QL"
+        if "utility_type" not in self.param_util:
+            self.param_util["utility_type"] = "QL"
             print("utility type not specified, quasi-linear (QL) chosen by default.")
 
         self.payment_rule = param_util["payment_rule"]
@@ -53,8 +55,11 @@ class SingleItemAuction(Mechanism):
         self.utility_type = param_util["utility_type"]
 
         # prior
-        if self.prior in ["affiliated_values", "common_value"]:
-            raise NotImplementedError
+        if self.prior == "affiliated_values":
+            self.values = "affiliated"
+        elif self.prior == "common_value":
+            self.values = "common"
+            self.v_space = {i: [0, o_space[i][1] / 2] for i in bidder}
 
         # use own gradient
         if (len(self.set_bidder) == 1) and (self.payment_rule == "first_price") & (
@@ -86,9 +91,14 @@ class SingleItemAuction(Mechanism):
             raise ValueError("bidder with index " + str(idx) + " not avaible")
 
         # if True: we want each outcome for every observation, else: each outcome belongs to one observation
-        if self.values == "private":
+        if (self.values == "private") or (self.values == "common"):
             if obs.shape != bids[idx].shape:
                 obs = obs.reshape(len(obs), 1)
+        elif self.values == "affiliated":
+            if obs[idx].shape != bids[idx].shape:
+                obs = 0.5 * (
+                    obs.reshape(len(obs), 1) + obs.reshape(1, len(obs))
+                ).reshape(len(obs), len(obs), 1)
         else:
             raise ValueError('value model "{}" unknown'.format(self.values))
 
@@ -158,9 +168,7 @@ class SingleItemAuction(Mechanism):
                 if (self.payment_rule == "first_price") & np.all(
                     [self.o_space[i] == [0, 1] for i in self.set_bidder]
                 ):
-                    return (
-                        (self.n_bidder - 1) / (self.n_bidder - 1 + self.risk[0]) * obs
-                    )
+                    return (self.n_bidder - 1) / (self.n_bidder) * obs
                 elif self.payment_rule == "second_price":
                     return obs
 

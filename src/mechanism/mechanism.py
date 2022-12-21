@@ -2,7 +2,7 @@ from abc import abstractclassmethod
 from typing import Dict, List
 
 import numpy as np
-from scipy.stats import norm, powerlaw, uniform
+from scipy.stats import norm, powerlaw, truncnorm, uniform
 
 # -------------------------------------------------------------------------------------------------------------------- #
 #                                         MECHANISM : CONTINUOUS AUCTION GAME                                          #
@@ -38,13 +38,17 @@ class Mechanism:
         self.bidder = bidder
         self.n_bidder = len(bidder)
         self.set_bidder = list(set(bidder))
+
         # type and action space
         self.o_space = o_space
         self.a_space = a_space
+
         # prior
         self.prior = param_prior["distribution"]
         self.param_prior = param_prior
+
         # further specifications
+        self.name = None
         self.param_util = param_util
         self.own_gradient = False
         self.values = "private"  # valuation depends only on own observation
@@ -147,6 +151,22 @@ class Mechanism:
                         size=n_vals,
                     )
                     for i in range(self.n_bidder)
+                ]
+            )
+
+        elif self.prior == "gaussian_trunc":
+            loc = self.param_prior["mu"]
+            scale = self.param_prior["sigma"]
+            return np.array(
+                [
+                    truncnorm.rvs(
+                        a=(self.o_space[i][0] - loc) / scale,
+                        b=(self.o_space[i][1] - loc) / scale,
+                        loc=loc,
+                        scale=scale,
+                        size=n_vals,
+                    )
+                    for i in self.bidder
                 ]
             )
 

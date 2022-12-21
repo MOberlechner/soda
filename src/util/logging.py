@@ -1,5 +1,6 @@
 from datetime import datetime
 from os.path import exists
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -28,12 +29,15 @@ class Logger:
             learn_alg (str): used learning algorithm
             logging (bool): store results in csv
         """
-        self.path = path
+        self.path = path + "log/" + setting + "/"
         self.setting = setting
         self.experiment = experiment
         self.learn_alg = learn_alg
         self.logging = logging
         self.round_decimal = round_decimal
+
+        # create directory for each setting
+        Path(self.path).mkdir(parents=True, exist_ok=True)
 
         # log run learning
         self.filename_log_learning = "log_learn.csv"
@@ -47,6 +51,7 @@ class Logger:
                 "agent",
                 "utility",
                 "utility_loss",
+                "dist_prev_iter",
                 "iterations",
                 "convergence",
                 "iter/sec",
@@ -96,7 +101,7 @@ class Logger:
                 "utility_loss": strategies[agent].utility_loss[-1],
                 "dist_prev_iter": strategies[agent].dist_prev_iter[-1],
                 "iterations": len(strategies[agent].utility),
-                "convergence": convergence,
+                "convergence": float(convergence),
                 "iter/sec": round(len(strategies[agent].utility) / time_run, 2),
                 "time_init": round(time_init, 2),
                 "time_run": round(time_run, 2),
@@ -215,21 +220,18 @@ class Logger:
         if self.file_log_simulation["run"].max() > 0:
             indices = ["experiment", "mechanism", "learner", "agent", "tag"]
             # mean
-            print(self.file_log_simulation)
             df_mean = (
                 self.file_log_simulation.groupby(indices)
                 .agg({"value": "mean"})
                 .reset_index()
             )
             df_mean = df_mean.rename(columns={"tag": "metric", "value": "mean"})
-            print(df_mean)
             # std
             df_std = (
                 self.file_log_simulation.groupby(indices)
                 .agg({"value": "std"})
                 .reset_index()
             )
-            print(df_std)
             df_std = df_std.rename(columns={"tag": "metric", "value": "std"})
             # combine
             return (
@@ -247,7 +249,6 @@ class Logger:
     def save_agg_log_simulation(self):
         """Save aggregated csv from simulation experiment"""
         df = self.agg_log_simulation()
-        print(df)
         if df is not None:
             if exists(self.path + self.filename_log_simulation_agg):
                 log = pd.read_csv(self.path + self.filename_log_simulation_agg)

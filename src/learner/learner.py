@@ -53,7 +53,7 @@ class Learner:
         strategies: dict,
         disable_tqdm_bool: bool = True,
         print_result_bool: bool = False,
-        save_history_bool: bool = True,
+        save_history_bool: bool = False,
     ) -> None:
         """Run learning algorithm
 
@@ -63,7 +63,7 @@ class Learner:
             strategies (dict): strategy profile
             disable_tqdm_bool (bool): Disable progess bar. Defaults to True
             print_result_bool (bool): Print result. Defaults to False
-            save_history_bool (bool): Save history of iterates (apart from first iteration). Defaults to True
+            save_history_bool (bool): Save history of iterates (apart from first iteration). Defaults to False
         """
 
         # prepare gradients, i.e., compute path and indices

@@ -1,3 +1,10 @@
+# My changes
+.csv
+log/
+strategies/
+test/
+tests/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -122,6 +129,7 @@ dmypy.json
 /test/
 /notebooks/visualizations
 /notebooks/tests
+/data
 
 # numpy (results)
 .npy

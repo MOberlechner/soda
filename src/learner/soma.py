@@ -131,11 +131,20 @@ class SOMA(Learner):
         Returns:
             np.ndarray: projection of x
         """
+        bool_split_award = False
         if len(x.shape) > 2:
-            raise NotImplementedError(
-                "Projection only implemented for 1-dim action space and valuation space"
-            )
+            # Split Award (1-dim observation space, 2-dim action space)
+            if (len(prior.shape) == 1) & (len(x.shape) == 3):
+                bool_split_award = True
+                n, m1, m2 = x.shape
+                x = x.reshape(n, m1 * m2)
+            else:
+                raise NotImplementedError(
+                    "Projection only implemented for 1-dim action space and valuation space"
+                )
+
         n, m = x.shape
+
         assert n == len(prior), "dimensions of strategy and prior not compatible"
 
         # sort
@@ -150,7 +159,13 @@ class SOMA(Learner):
         )
         # define lambda
         lamb = 1 / rho * (prior - x_cumsum[range(n), rho - 1])
-        return (x + np.repeat(lamb, m).reshape(n, m)).clip(min=0)
+        x_proj = (x + np.repeat(lamb, m).reshape(n, m)).clip(min=0)
+
+        # Split Award (1-dim observation space, 2-dim action space)
+        if bool_split_award:
+            return x_proj.reshape(n, m1, m2)
+        else:
+            return x_proj
 
     def step_rule(self, t: int, grad: np.ndarray, dim_o: int, dim_a: int) -> np.ndarray:
         """Compute step size:

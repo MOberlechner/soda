@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.stats import norm, powerlaw, uniform
+from scipy.stats import norm, powerlaw, truncnorm, uniform
 
 
 def marginal_prior_pdf(mechanism, obs: np.ndarray, agent: str):
@@ -23,7 +23,7 @@ def marginal_prior_pdf(mechanism, obs: np.ndarray, agent: str):
             scale=0.2 * (mechanism.o_space[agent][-1] - mechanism.o_space[agent][0]),
         )
 
-    elif mechanism.prior == "gaussian":
+    elif mechanism.prior in ["gaussian", "gaussian_trunc"]:
         return norm.pdf(
             obs, loc=mechanism.param_prior["mu"], scale=mechanism.param_prior["sigma"]
         )
@@ -62,6 +62,10 @@ def marginal_prior_pdf(mechanism, obs: np.ndarray, agent: str):
 def compute_weights(game, mechanism):
 
     if "corr" in mechanism.param_prior:
+        if mechanism.param_prior["corr"] == 0.0:
+            # this is used to avoid own mechanism
+            return None
+
         if mechanism.prior == "uniform":
             if mechanism.n_bidder == 2:
                 # correlated prior with Bernoulli Paramater (according to Ausubel & Baranov 2020)
