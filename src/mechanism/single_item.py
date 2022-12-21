@@ -24,7 +24,9 @@ class SingleItemAuction(Mechanism):
     Parameter Utility (param_util)
         tiebreaking     str: specifies tiebreaking rule: "random" (default), "lose"
         payment_rule    str: choose betweem "first_price" and "second_price"
-        utility_type    str: QL (quasi-linear (corresponds to Auction, Default), ROI (return of investment), ROS (return of something)
+        utility_type    str:    QL (quasi-linear (corresponds to Auction, Default),
+                                ROI (return of investment),
+                                ROS (return of something)
 
     """
 
