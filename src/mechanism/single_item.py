@@ -164,13 +164,36 @@ class SingleItemAuction(Mechanism):
 
         """
         if self.utility_type == "QL":
-            if self.prior == "uniform":
-                if (self.payment_rule == "first_price") & np.all(
-                    [self.o_space[i] == [0, 1] for i in self.set_bidder]
+            if (self.prior == "uniform") & (self.payment_rule == "first_price"):
+                if np.all([self.o_space[i] == [0, 1] for i in self.set_bidder]):
+                    if np.all([self.a_space[i] == [0, 1] for i in self.set_bidder]):
+                        return (self.n_bidder - 1) / (self.n_bidder) * obs
+                    elif np.all(
+                        [
+                            self.a_space[i][1] == 1
+                            and self.a_space[i][0] > 0
+                            and self.a_space[i][0] <= 1
+                            for i in self.set_bidder
+                        ]
+                    ):
+                        reserve_price = self.a_space[self.set_bidder[0]][0]
+                        obs_clipped = np.clip(obs, reserve_price, None)
+                        bne = ((self.n_bidder - 1) / self.n_bidder) * obs_clipped + (
+                            1 / self.n_bidder
+                        ) * (
+                            reserve_price**self.n_bidder
+                            / obs_clipped ** (self.n_bidder - 1)
+                        )
+                        return bne
+
+                elif ((self.prior == "uniform") | (self.prior == "gaussian")) & (
+                    self.payment_rule == "second_price"
                 ):
-                    return (self.n_bidder - 1) / (self.n_bidder) * obs
-                elif self.payment_rule == "second_price":
-                    return obs
+                    if np.all([self.o_space[i][0] == 0 for i in self.set_bidder]):
+                        return obs
+                    elif np.all([self.a_space[i][0] > 0 for i in self.set_bidder]):
+                        reserve_price = self.a_space[self.set_bidder[0]][0]
+                        return np.clip(obs, reserve_price, None)
 
             elif self.prior == "affiliated_values":
                 return 2 / 3 * obs
@@ -186,9 +209,21 @@ class SingleItemAuction(Mechanism):
                 & (self.a_space[self.set_bidder[0]][0] > 0)
             ):
                 reserve_price = self.a_space[self.set_bidder[0]][0]
-                raise NotImplementedError(
-                    "Implement BNE for ROI with uniform prior and reserve price"
-                )
+                x = np.clip(x, reserve_price, None)
+                if self.n_bidder == 2:
+                    return x / (-np.log(reserve_price) + np.log(x) + 1)
+
+                elif self.n_bidder == 5:
+                    return -3 * x**4 / (reserve_price**3 - 4 * x**3)
+
+            elif ((self.prior == "uniform") | (self.prior == "gaussian")) & (
+                self.payment_rule == "second_price"
+            ):
+                if np.all([self.o_space[i][0] == 0 for i in self.set_bidder]):
+                    return obs
+                elif np.all([self.a_space[i][0] > 0 for i in self.set_bidder]):
+                    reserve_price = self.a_space[self.set_bidder[0]][0]
+                    return np.clip(obs, reserve_price, None)
 
     def compute_gradient(self, game, strategies, agent: str):
         """Simplified computation of gradient for i.i.d. bidders and tie-breaking "lose"

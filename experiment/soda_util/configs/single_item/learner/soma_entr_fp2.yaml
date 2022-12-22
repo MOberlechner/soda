@@ -1,0 +1,9 @@
+name: 'soma'
+max_iter: 5000
+tol: 1e-5
+stop_criterion: 'dist_euclidean'
+regularizer: 'entropic'
+steprule_bool: True
+eta: 10
+beta: 0.05
+init_method: 'random'
