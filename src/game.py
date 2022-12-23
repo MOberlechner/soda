@@ -29,6 +29,8 @@ class Game:
         self.n = n
         self.m = m
 
+        self.mechanism = mechanism
+
         # we distinguish between private, affiliated, common values ... model
         self.values = mechanism.values
 
@@ -65,7 +67,7 @@ class Game:
         self.weights = self.get_weights(mechanism)
         self.utility = {}
 
-    def get_utility(self, mechanism) -> None:
+    def get_utility(self) -> None:
         """Compute utility array for discretized game
         For each agent an array is stored which contains all possible combinations of
         observations/valuations and bid profiles
@@ -78,50 +80,14 @@ class Game:
         """
 
         for i in self.set_bidder:
-
             idx = self.bidder.index(i)
-            if self.dim_a == 1:
-                # create all possible bids: 1-dim action space
-                bids = np.array(
-                    [
-                        np.array(
-                            [
-                                self.a_discr[self.bidder[k]][j[k]]
-                                for j in product(range(self.m), repeat=self.n_bidder)
-                            ]
-                        )
-                        for k in range(self.n_bidder)
-                    ]
-                )
-            else:
-                # create all possible bids: multi-dim action space
-                bids = np.array(
-                    [
-                        np.array(
-                            [
-                                np.array(
-                                    [
-                                        self.a_discr[self.bidder[i]][k][
-                                            j[self.dim_a * i + k]
-                                        ]
-                                        for j in product(
-                                            range(self.m),
-                                            repeat=self.n_bidder * self.dim_a,
-                                        )
-                                    ]
-                                )
-                                for k in range(self.dim_a)
-                            ]
-                        )
-                        for i in range(self.n_bidder)
-                    ]
-                )
+            bids = self.get_all_bids()
 
             if self.values == "private":
                 # valuation only depends on own observation
                 valuations = self.o_discr[i]
                 self.utility[i] = (
-                    mechanism.utility(valuations, bids, idx)
+                    self.mechanism.utility(valuations, bids, idx)
                     .transpose()
                     .reshape(
                         tuple(
@@ -135,7 +101,7 @@ class Game:
                 # affiliated values model with correlated observations and common value
                 valuations = self.o_discr[i]
                 self.utility[i] = (
-                    mechanism.utility(valuations, bids, idx)
+                    self.mechanism.utility(valuations, bids, idx)
                     .transpose()
                     .reshape(tuple([self.m] * self.n_bidder + [self.n] * self.n_bidder))
                 )
@@ -143,7 +109,7 @@ class Game:
             elif self.values == "common":
                 valuations = self.v_discr[i]
                 self.utility[i] = (
-                    mechanism.utility(valuations, bids, idx)
+                    self.mechanism.utility(valuations, bids, idx)
                     .transpose()
                     .reshape(
                         tuple(
@@ -154,6 +120,48 @@ class Game:
                 )
             else:
                 raise ValueError
+
+    def create_bid_profiles(self) -> np.ndarray:
+        """
+        Create all possible action profiles (bids) for utility computation
+
+        Returns:
+            np.ndarray
+        """
+        if self.dim_a == 1:
+            return np.array(
+                [
+                    np.array(
+                        [
+                            self.a_discr[self.bidder[k]][j[k]]
+                            for j in product(range(self.m), repeat=self.n_bidder)
+                        ]
+                    )
+                    for k in range(self.n_bidder)
+                ]
+            )
+        else:
+            return np.array(
+                [
+                    np.array(
+                        [
+                            np.array(
+                                [
+                                    self.a_discr[self.bidder[i]][k][
+                                        j[self.dim_a * i + k]
+                                    ]
+                                    for j in product(
+                                        range(self.m),
+                                        repeat=self.n_bidder * self.dim_a,
+                                    )
+                                ]
+                            )
+                            for k in range(self.dim_a)
+                        ]
+                    )
+                    for i in range(self.n_bidder)
+                ]
+            )
 
     def get_prior(self, mechanism, agent: str) -> np.ndarray:
         """Given prior distribution specified in mechanism, returns discretized prior
