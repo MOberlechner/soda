@@ -2,8 +2,8 @@ name: 'soma'
 max_iter: 5000
 tol: 1e-5
 stop_criterion: 'dist_euclidean'
-mirror_map: 'euclidean'
+mirror_map: 'entropic'
 steprule_bool: True
-eta: 1
-beta: 0.5
+eta: 10
+beta: 0.05
 init_method: 'random'

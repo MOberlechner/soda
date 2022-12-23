@@ -1,4 +1,4 @@
-name: 'QL_SP_5_gaussian'
+name: 'QL_SP_3_gaussian'
 mechanism: 'single_item'
 bidder: ['1', '1', '1']
 o_space: {'1': [0.0, 1.0]}

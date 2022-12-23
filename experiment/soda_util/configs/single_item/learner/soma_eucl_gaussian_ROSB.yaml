@@ -4,6 +4,6 @@ tol: 1e-5
 stop_criterion: 'dist_euclidean'
 mirror_map: 'euclidean'
 steprule_bool: True
-eta: 1
+eta: 2.5
 beta: 0.5
 init_method: 'random'

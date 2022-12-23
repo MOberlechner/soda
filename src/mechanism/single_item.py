@@ -186,14 +186,14 @@ class SingleItemAuction(Mechanism):
                         )
                         return bne
 
-                elif ((self.prior == "uniform") | (self.prior == "gaussian")) & (
-                    self.payment_rule == "second_price"
-                ):
-                    if np.all([self.o_space[i][0] == 0 for i in self.set_bidder]):
-                        return obs
-                    elif np.all([self.a_space[i][0] > 0 for i in self.set_bidder]):
-                        reserve_price = self.a_space[self.set_bidder[0]][0]
-                        return np.clip(obs, reserve_price, None)
+            elif ((self.prior == "uniform") | (self.prior == "gaussian")) & (
+                (self.payment_rule == "second_price")
+            ):
+                if np.all([self.o_space[i][0] == 0 for i in self.set_bidder]):
+                    return obs
+                elif np.all([self.a_space[i][0] > 0 for i in self.set_bidder]):
+                    reserve_price = self.a_space[self.set_bidder[0]][0]
+                    return np.clip(obs, reserve_price, None)
 
             elif self.prior == "affiliated_values":
                 return 2 / 3 * obs
@@ -205,11 +205,11 @@ class SingleItemAuction(Mechanism):
             if (
                 (self.prior == "uniform")
                 & (self.payment_rule == "first_price")
-                & (len(self.set_bidder == 1))
+                & (len(self.set_bidder) == 1)
                 & (self.a_space[self.set_bidder[0]][0] > 0)
             ):
                 reserve_price = self.a_space[self.set_bidder[0]][0]
-                x = np.clip(x, reserve_price, None)
+                x = np.clip(obs, reserve_price, None)
                 if self.n_bidder == 2:
                     return x / (-np.log(reserve_price) + np.log(x) + 1)
 
@@ -217,7 +217,7 @@ class SingleItemAuction(Mechanism):
                     return -3 * x**4 / (reserve_price**3 - 4 * x**3)
 
             elif ((self.prior == "uniform") | (self.prior == "gaussian")) & (
-                self.payment_rule == "second_price"
+                (self.payment_rule == "second_price")
             ):
                 if np.all([self.o_space[i][0] == 0 for i in self.set_bidder]):
                     return obs

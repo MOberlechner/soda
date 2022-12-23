@@ -1,4 +1,4 @@
-name: 'QL_SP_5_uniform'
+name: 'QL_SP_3_uniform'
 mechanism: 'single_item'
 bidder: ['1', '1', '1']
 o_space: {'1': [0.0, 1.0]}
