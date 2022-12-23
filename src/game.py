@@ -22,14 +22,14 @@ class Game:
         m : int, number of discretization points in action space
         """
 
+        self.mechanism = mechanism
+        self.n = n
+        self.m = m
+
         self.name = mechanism.name
         self.bidder = mechanism.bidder
         self.set_bidder = mechanism.set_bidder
         self.n_bidder = mechanism.n_bidder
-        self.n = n
-        self.m = m
-
-        self.mechanism = mechanism
 
         # we distinguish between private, affiliated, common values ... model
         self.values = mechanism.values
@@ -50,22 +50,32 @@ class Game:
             }
 
         # dimension of spaces
-        self.dim_o = (
-            1
-            if len(self.o_discr[self.bidder[0]].shape) == 1
-            else self.o_discr[self.bidder[0]].shape[0]
-        )
-        self.dim_a = (
-            1
-            if len(self.a_discr[self.bidder[0]].shape) == 1
-            else self.a_discr[self.bidder[0]].shape[0]
-        )
+        self.dim_o, self.dim_a = self.get_dimension_spaces()
 
         # marginal prior for bidder
         self.prior = {i: self.get_prior(mechanism, i) for i in self.set_bidder}
 
         self.weights = self.get_weights(mechanism)
         self.utility = {}
+
+    def __repr__(self) -> str:
+        return f"Game({self.name, self.n, self.m})"
+
+    def get_dimension_spaces(self) -> tuple:
+        """
+        Get dimension for observation and action space (dim_o, dim_a)
+        """
+        dim_o = (
+            1
+            if len(self.o_discr[self.bidder[0]].shape) == 1
+            else self.o_discr[self.bidder[0]].shape[0]
+        )
+        dim_a = (
+            1
+            if len(self.a_discr[self.bidder[0]].shape) == 1
+            else self.a_discr[self.bidder[0]].shape[0]
+        )
+        return dim_o, dim_a
 
     def get_utility(self) -> None:
         """Compute utility array for discretized game
