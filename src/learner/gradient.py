@@ -97,18 +97,23 @@ class Gradient:
                 idx_opp = [i for i in range(n_bidder) if i != idx]
 
                 # indices of utility array
-                if game.values == "private" or game.values == "private_common":
+                if (
+                    game.value_model == "private"
+                    or game.value_model == "private_common"
+                ):
                     # utility depends only on own oversvation
                     start = indices_act + indices_obs[idx * dim_o : (idx + 1) * dim_o]
 
-                elif game.values == "affiliated":
+                elif game.value_model == "affiliated":
                     # utility depends on all observations (affiliated values model)
                     start = indices_act + indices_obs
-                elif game.values == "common":
+                elif game.value_model == "common":
                     # utility depends on common value, observations are independent (common value model)
                     start = indices_act + "V"
                 else:
-                    raise ValueError('value model "{}" unknown'.format(game.values))
+                    raise ValueError(
+                        'value model "{}" unknown'.format(game.value_model)
+                    )
 
                 # indices of bidder i's strategy
                 end = (
@@ -138,7 +143,7 @@ class Gradient:
                     )[0]
                 else:
                     # indices for weights
-                    if game.values == "common":
+                    if game.value_model == "common":
                         indices_weight = "V" + indices_obs
                     else:
                         indices_weight = indices_obs
