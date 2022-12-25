@@ -10,7 +10,7 @@ from scipy.stats import norm, powerlaw, truncnorm, uniform
 
 
 class Mechanism:
-    """Mechanism defines the underlying continuous Bayesian (auction) game
+    """Mechanism represents the underlying continuous Bayesian (auction) game
 
     Attributes:
         General
@@ -22,7 +22,16 @@ class Mechanism:
 
         Speficiations of Mechanism
             own_gradient    boolean: if true mechanism contains own function to compute gradient
-            private_values  boolean:
+            value_model     str: private, common, affiliated
+
+    Methods:
+        utility: abstract method to compute utilities, uses the following methods
+            - test_input_utility: test input to compute utility
+            - get_valuation: reformates observations/valuations and consideres different value models
+            - get_allocation, get_payment, get_payoff are used as well but implement in the respective child classes
+
+        draw_values: draws types (valuations/observations) according to given prior. The following priors are implemented
+            - uniform, gaussian, gaussian_trunc, powerlaw
 
     """
 
@@ -43,29 +52,18 @@ class Mechanism:
         self.o_space = o_space
         self.a_space = a_space
 
-        # prior
-        self.prior = param_prior["distribution"]
+        # param_prior
         self.param_prior = param_prior
+        self.prior = param_prior["distribution"]
+
+        # param_util
+        self.param_util = param_util
+        self.paran_util["tie_breaking"] = param_util["tie_breaking"]
 
         # further specifications
         self.name = None
-        self.param_util = param_util
         self.own_gradient = False
-        self.values = "private"  # valuation depends only on own observation
-
-    def check_bidder_symmetric(self) -> bool:
-        """check if bidder have the same observation and action space
-
-        Returns:
-            bool:
-        """
-        o_space_identical = np.all(
-            [self.o_space[0] == self.o_space[i] for i in self.set_bidder]
-        )
-        a_space_identical = np.all(
-            [self.a_space[0] == self.a_space[i] for i in self.set_bidder]
-        )
-        return o_space_identical and a_space_identical
+        self.value_model = "private"  # valuation depends only on own observation
 
     def utility(self, obs: np.ndarray, bids: np.ndarray, idx: int):
         """Compute utility according to specified mechanism
@@ -79,6 +77,38 @@ class Mechanism:
             np.ndarry: utilities of agend (idx)
         """
         raise NotImplementedError
+
+    def test_input_utility(self, obs: np.ndarray, bids: np.ndarray, idx: int):
+        if bids.shape[0] != self.n_bidder:
+            raise ValueError("wrong format of bids")
+        elif idx >= self.n_bidder:
+            raise ValueError("bidder with index " + str(idx) + " not avaible")
+        pass
+
+    def get_valuation(self, obs: np.ndarray, bids: np.ndarray, idx: int) -> np.ndarray:
+        """determine valuations (potentially from observations, might be equal for private value model)
+        and reformat vector depending on the use case:
+            - one valuation for each action profile (no reformatting), needed for simulation
+            - all valuations for each action profule (reformatting), needed for gradient computation (game.py)
+
+        Args:
+            obs (np.ndarray): observation of agent (idx)
+            bids (np.ndarray): bids of all agents
+            idx (int): index of agent
+
+        Returns:
+            np.ndarray: observations, possibly reformated
+        """
+        if self.value_model == "private":
+            if obs.shape != bids[idx].shape:
+                valuations = obs.reshape(len(obs), 1)
+            else:
+                valuations = obs
+        else:
+            raise NotImplementedError(
+                "get valuation only implemented for the private value model"
+            )
+        return valuations
 
     def draw_values(self, n_vals: int) -> np.ndarray:
         """samples observations (and valuations) for each agent according to the prior
@@ -244,3 +274,17 @@ class Mechanism:
                 for i in range(self.n_bidder)
             ]
         )
+
+    def check_bidder_symmetric(self) -> bool:
+        """check if bidder have the same observation and action space
+
+        Returns:
+            bool:
+        """
+        o_space_identical = np.all(
+            [self.o_space[0] == self.o_space[i] for i in self.set_bidder]
+        )
+        a_space_identical = np.all(
+            [self.a_space[0] == self.a_space[i] for i in self.set_bidder]
+        )
+        return o_space_identical and a_space_identical
