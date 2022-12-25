@@ -53,6 +53,20 @@ class Mechanism:
         self.own_gradient = False
         self.values = "private"  # valuation depends only on own observation
 
+    def check_bidder_symmetric(self) -> bool:
+        """check if bidder have the same observation and action space
+
+        Returns:
+            bool:
+        """
+        o_space_identical = np.all(
+            [self.o_space[0] == self.o_space[i] for i in self.set_bidder]
+        )
+        a_space_identical = np.all(
+            [self.a_space[0] == self.a_space[i] for i in self.set_bidder]
+        )
+        return o_space_identical and a_space_identical
+
     def utility(self, obs: np.ndarray, bids: np.ndarray, idx: int):
         """Compute utility according to specified mechanism
 
@@ -82,108 +96,16 @@ class Mechanism:
             )
 
         if self.prior == "uniform":
-            # independent prior
-            if "corr" not in self.param_prior:
-                return np.array(
-                    [
-                        uniform.rvs(
-                            loc=self.o_space[self.bidder[i]][0],
-                            scale=self.o_space[self.bidder[i]][-1]
-                            - self.o_space[self.bidder[i]][0],
-                            size=n_vals,
-                        )
-                        for i in range(self.n_bidder)
-                    ]
-                )
-            # correlated prior with Bernoulli Paramater (according to Ausubel & Baranov 2020)
-            else:
-                if self.n_bidder == 2 and "corr" in self.param_prior:
-                    gamma = self.param_prior["corr"]
-                    w = np.random.uniform(size=n_vals)
-                    u = uniform.rvs(
-                        loc=self.o_space[self.bidder[0]][0],
-                        scale=self.o_space[self.bidder[0]][-1]
-                        - self.o_space[self.bidder[0]][0],
-                        size=(3, n_vals),
-                    )
-                    return np.array(
-                        [
-                            np.where(w < gamma, 1, 0) * u[2]
-                            + np.where(w < gamma, 0, 1) * u[0],
-                            np.where(w < gamma, 1, 0) * u[2]
-                            + np.where(w < gamma, 0, 1) * u[1],
-                        ]
-                    )
-                elif self.name == "llg_auction":
-                    w = uniform.rvs(loc=0, scale=1, size=n_vals)
-                    u = uniform.rvs(
-                        loc=self.o_space[self.bidder[0]][0],
-                        scale=self.o_space[self.bidder[0]][-1]
-                        - self.o_space[self.bidder[0]][0],
-                        size=(3, n_vals),
-                    )
-                    return np.array(
-                        [
-                            # local 1
-                            np.where(w < self.gamma, 1, 0) * u[2]
-                            + np.where(w < self.gamma, 0, 1) * u[0],
-                            # local 2
-                            np.where(w < self.gamma, 1, 0) * u[2]
-                            + np.where(w < self.gamma, 0, 1) * u[1],
-                            # global
-                            uniform.rvs(
-                                loc=self.o_space["G"][0],
-                                scale=self.o_space["G"][1] - self.o_space["G"][0],
-                                size=n_vals,
-                            ),
-                        ]
-                    )
-
-                else:
-                    raise NotImplementedError
+            return self.draw_types_uniform(n_vals)
 
         elif self.prior == "gaussian":
-            return np.array(
-                [
-                    norm.rvs(
-                        loc=self.param_prior["mu"],
-                        scale=self.param_prior["sigma"],
-                        size=n_vals,
-                    )
-                    for i in range(self.n_bidder)
-                ]
-            )
+            return self.draw_types_gaussian(n_vals)
 
         elif self.prior == "gaussian_trunc":
-            loc = self.param_prior["mu"]
-            scale = self.param_prior["sigma"]
-            return np.array(
-                [
-                    truncnorm.rvs(
-                        a=(self.o_space[i][0] - loc) / scale,
-                        b=(self.o_space[i][1] - loc) / scale,
-                        loc=loc,
-                        scale=scale,
-                        size=n_vals,
-                    )
-                    for i in self.bidder
-                ]
-            )
+            return self.draw_types_gaussian_trunc(n_vals)
 
         elif self.prior == "powerlaw":
-            power = self.param_prior["power"]
-            return np.array(
-                [
-                    uniform.rvs(
-                        a=power,
-                        loc=self.o_space[self.bidder[i]][0],
-                        scale=self.o_space[self.bidder[i]][-1]
-                        - self.o_space[self.bidder[i]][0],
-                        size=n_vals,
-                    )
-                    for i in range(self.n_bidder)
-                ]
-            )
+            return self.draw_types_powerlaw(n_vals)
 
         elif self.prior == "affiliated_values":
             w = uniform.rvs(loc=0, scale=1, size=(3, n_vals))
@@ -195,3 +117,130 @@ class Mechanism:
 
         else:
             raise ValueError('prior "' + self.prior + '" not implement')
+
+    def draw_types_uniform(self, n_types: int) -> np.ndarray:
+        """draw types according to uniform distribution
+        Correlation (Bernoulli weights model) only implemented for 2 bidder
+
+        Args:
+            n_types (int): number of types per bidder
+
+        Returns:
+            np.ndarray: array with types for each bidder
+        """
+        if "corr" not in self.param_prior:
+            return np.array(
+                [
+                    uniform.rvs(
+                        loc=self.o_space[self.bidder[i]][0],
+                        scale=self.o_space[self.bidder[i]][-1]
+                        - self.o_space[self.bidder[i]][0],
+                        size=n_types,
+                    )
+                    for i in range(self.n_bidder)
+                ]
+            )
+        elif (
+            ("corr" in self.param_prior)
+            & (self.n_bidder == 2)
+            & self.check_bidder_symmetric()
+        ):
+            gamma = self.param_prior["corr"]
+            w = np.random.uniform(size=n_types)
+            u = uniform.rvs(
+                loc=self.o_space[self.bidder[0]][0],
+                scale=self.o_space[self.bidder[0]][-1]
+                - self.o_space[self.bidder[0]][0],
+                size=(3, n_types),
+            )
+            return np.array(
+                [
+                    np.where(w < gamma, 1, 0) * u[2] + np.where(w < gamma, 0, 1) * u[0],
+                    np.where(w < gamma, 1, 0) * u[2] + np.where(w < gamma, 0, 1) * u[1],
+                ]
+            )
+        else:
+            raise NotImplementedError(
+                "Correlation with Uniform Prior only implemented for 2 bidder"
+            )
+
+    def draw_types_gaussian(self, n_types: int) -> np.ndarray:
+        """draw types according to gaussian distribution
+
+        Args:
+            n_types (int): number of types per bidder
+
+        Returns:
+            np.ndarray: array with types for each bidder
+        """
+        if ("mu" in self.param_prior) & ("sigma" in self.param_prior):
+            mu, sigma = self.param_prior["mu"], self.param_prior["sigma"]
+        else:
+            raise ValueError("'mu' and 'sigma' must be specified in param_prior")
+
+        return np.array(
+            [
+                norm.rvs(
+                    loc=mu,
+                    scale=sigma,
+                    size=n_types,
+                )
+                for i in range(self.n_bidder)
+            ]
+        )
+
+    def draw_types_gaussian_trunc(self, n_types: int) -> np.ndarray:
+        """draw types according to truncated gaussian distribution
+
+        Args:
+            n_types (int): number of types per bidder
+
+        Returns:
+            np.ndarray: array with types for each bidder
+        """
+        if ("mu" in self.param_prior) & ("sigma" in self.param_prior):
+            mu, sigma = self.param_prior["mu"], self.param_prior["sigma"]
+        else:
+            raise ValueError("'mu' and 'sigma' must be specified in param_prior")
+
+        return np.array(
+            [
+                truncnorm.rvs(
+                    a=(self.o_space[i][0] - mu) / sigma,
+                    b=(self.o_space[i][1] - mu) / sigma,
+                    loc=mu,
+                    scale=sigma,
+                    size=n_types,
+                )
+                for i in self.bidder
+            ]
+        )
+
+    def draw_types_powerlaw(self, n_types: int) -> np.ndarray:
+        """draw types according to powerlaw distribution
+
+        Args:
+            n_types (int): number of types per bidder
+
+        Returns:
+            np.ndarray: array with types for each bidder
+        """
+        if "power" in self.param_prior:
+            power = self.param_prior["power"]
+        else:
+            raise ValueError(
+                "'power' must be specified in param_prior for powerlaw distribution"
+            )
+
+        return np.array(
+            [
+                uniform.rvs(
+                    a=power,
+                    loc=self.o_space[self.bidder[i]][0],
+                    scale=self.o_space[self.bidder[i]][-1]
+                    - self.o_space[self.bidder[i]][0],
+                    size=n_types,
+                )
+                for i in range(self.n_bidder)
+            ]
+        )
