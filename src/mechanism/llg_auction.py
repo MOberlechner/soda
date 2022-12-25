@@ -1,6 +1,7 @@
 from typing import Dict, List
 
 import numpy as np
+from scipy.stats import uniform
 
 from .mechanism import Mechanism
 
@@ -128,6 +129,46 @@ class LLGAuction(Mechanism):
                     * (obs - np.where(bids[idx] == bids[:2].max(axis=0), bids[2], 0))
                     + win_b * (obs - bids[idx] + delta)
                 )
+
+    def draw_types_uniform(self, n_types: int) -> np.ndarray:
+        """owerwrite method from mechanism class:
+        draw types according to uniform distribution
+        Correlation (Bernoulli weights model) implemented for local bidders
+
+        Args:
+            n_types (int): number of types per bidder
+
+        Returns:
+            np.ndarray: array with types for each bidder
+        """
+
+        # independent prior
+        if "corr" in self.param_prior:
+            w = uniform.rvs(loc=0, scale=1, size=n_types)
+            u = uniform.rvs(
+                loc=self.o_space[self.bidder[0]][0],
+                scale=self.o_space[self.bidder[0]][-1]
+                - self.o_space[self.bidder[0]][0],
+                size=(3, n_types),
+            )
+            return np.array(
+                [
+                    # local 1
+                    np.where(w < self.gamma, 1, 0) * u[2]
+                    + np.where(w < self.gamma, 0, 1) * u[0],
+                    # local 2
+                    np.where(w < self.gamma, 1, 0) * u[2]
+                    + np.where(w < self.gamma, 0, 1) * u[1],
+                    # global
+                    uniform.rvs(
+                        loc=self.o_space["G"][0],
+                        scale=self.o_space["G"][1] - self.o_space["G"][0],
+                        size=n_types,
+                    ),
+                ]
+            )
+        else:
+            return super().draw_types_uniform(n_types)
 
     def get_bne(self, agent: str, obs: np.ndarray):
         if agent == "G":
