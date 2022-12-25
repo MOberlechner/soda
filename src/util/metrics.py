@@ -68,11 +68,11 @@ def compute_utility(mechanism, strategies, n_obs):
             ]
         )
 
-        if mechanism.values == "private":
+        if mechanism.value_model == "private":
             valuations = obs[idx]
-        elif mechanism.values == "affiliated":
+        elif mechanism.value_model == "affiliated":
             valuations = obs
-        elif mechanism.values == "common":
+        elif mechanism.value_model == "common":
             valuations = obs[mechanism.n_bidder]
         else:
             raise NotImplementedError

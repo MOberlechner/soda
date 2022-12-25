@@ -32,7 +32,7 @@ class Game:
         self.n_bidder = mechanism.n_bidder
 
         # we distinguish between private, affiliated, common values ... model
-        self.values = mechanism.values
+        self.value_model = mechanism.value_model
 
         # discrete action and observation space (and optional valuation space)
         self.o_discr = {
@@ -93,7 +93,7 @@ class Game:
             idx = self.bidder.index(i)
             bids = self.get_all_bids()
 
-            if self.values == "private":
+            if self.value_model == "private":
                 # valuation only depends on own observation
                 valuations = self.o_discr[i]
                 self.utility[i] = (
@@ -107,7 +107,7 @@ class Game:
                     )
                 )
 
-            elif self.values == "affiliated":
+            elif self.value_model == "affiliated":
                 # affiliated values model with correlated observations and common value
                 valuations = self.o_discr[i]
                 self.utility[i] = (
@@ -116,7 +116,7 @@ class Game:
                     .reshape(tuple([self.m] * self.n_bidder + [self.n] * self.n_bidder))
                 )
 
-            elif self.values == "common":
+            elif self.value_model == "common":
                 valuations = self.v_discr[i]
                 self.utility[i] = (
                     self.mechanism.utility(valuations, bids, idx)
