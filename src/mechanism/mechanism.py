@@ -58,7 +58,6 @@ class Mechanism:
 
         # param_util
         self.param_util = param_util
-        self.paran_util["tie_breaking"] = param_util["tie_breaking"]
 
         # further specifications
         self.name = None
