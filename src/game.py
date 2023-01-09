@@ -91,7 +91,7 @@ class Game:
 
         for i in self.set_bidder:
             idx = self.bidder.index(i)
-            bids = self.get_all_bids()
+            bids = self.create_bid_profiles()
 
             if self.value_model == "private":
                 # valuation only depends on own observation
