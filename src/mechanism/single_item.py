@@ -41,15 +41,7 @@ class SingleItemAuction(Mechanism):
         super().__init__(bidder, o_space, a_space, param_prior, param_util)
         self.name = "single_item"
 
-        # check input
-        if "tie_breaking" not in self.param_util:
-            raise ValueError("specify tiebreaking rule")
-        if "payment_rule" not in self.param_util:
-            raise ValueError("specify payment rule")
-        if "utility_type" not in self.param_util:
-            self.param_util["utility_type"] = "QL"
-            print("utility type not specified, quasi-linear (QL) chosen by default.")
-
+        self.check_param()
         self.payment_rule = param_util["payment_rule"]
         self.tie_breaking = param_util["tie_breaking"]
         self.utility_type = param_util["utility_type"]
@@ -355,3 +347,13 @@ class SingleItemAuction(Mechanism):
             )
 
         return exp_win * payoff
+
+    def check_param(self):
+        """Check if input paremter are sufficient to define mechanism"""
+        if "tie_breaking" not in self.param_util:
+            raise ValueError("specify tiebreaking rule")
+        if "payment_rule" not in self.param_util:
+            raise ValueError("specify payment rule")
+        if "utility_type" not in self.param_util:
+            self.param_util["utility_type"] = "QL"
+            print("utility type not specified, quasi-linear (QL) chosen by default.")
