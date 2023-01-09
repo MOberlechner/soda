@@ -22,20 +22,16 @@ class LLGAuction(Mechanism):
 
         super().__init__(bidder, o_space, a_space, param_prior, param_util)
         self.name = "llg_auction"
-        self.param_util = param_util
+
+        self.check_param()
         self.payment_rule = param_util["payment_rule"]
-        self.tie_breaking = (
-            param_util["tie_breaking"] if "tie_breaking" in param_util else None
-        )
+        self.tie_breaking = param_util["tie_breaking"]
+
         if "corr" in param_prior:
             self.gamma = param_prior["corr"]
         else:
             self.gamma = 0.0
             print("No correlation for LLG Auction defined (gamma=0).")
-
-        # check input
-        if self.bidder[2] != "G":
-            raise ValueError('choose either ["L","L","G"] or  ["L1","L2","G"] ')
 
     def utility(self, obs: np.ndarray, bids: np.ndarray, idx: int):
         """Payoff function for first price sealed bid auctons
@@ -51,84 +47,83 @@ class LLGAuction(Mechanism):
         utility for the LLG-Auction under different bidder-optimal core-selecting rules
         """
 
-        # test input
-        if bids.shape[0] != self.n_bidder:
-            raise ValueError("wrong format of bids")
-        elif idx >= self.n_bidder:
-            raise ValueError("bidder with index " + str(idx) + " not avaible")
-        elif self.tie_breaking is None:
-            raise ValueError("specify tiebreaking rule")
-        elif self.tie_breaking not in ["random", "local", "lose"]:
-            raise ValueError("specified tiebreaking rule unkown")
+        self.test_input_utility(obs, bids, idx)
+        valuation = self.get_valuation(obs, bids, idx)
 
-        # if True: we want each outcome for every observation,  each outcome belongs to one observation
-        if obs.shape != bids[idx].shape:
-            obs = obs.reshape(len(obs), 1)
+        allocation = self.get_allocation(bids, idx)
+        payment = self.get_payment(bids, idx)
 
-        # tie-breaking rule
-        tie_local = (
-            bids[2]
-            == bids[:2].sum(axis=0)
-            * {"random": 0.5, "local": 0.0, "lose": 1.0}[self.tie_breaking]
-        )
-        tie_global = (
-            bids[2]
-            == bids[:2].sum(axis=0)
-            * {"random": 0.5, "local": 1.0, "lose": 1.0}[self.tie_breaking]
-        )
+        return allocation * (valuation - payment)
 
-        # determine payoff - global bidder (idx = 2)
+    def get_allocation(self, bids: np.ndarray, idx: int) -> tuple:
+        """compute allocation given action profiles
+
+        Args:
+            bids (np.ndarray): action profiles
+            idx (int): index of agent we consider
+
+        Returns:
+            tuple: 2x np.ndarray, allocation vector for agent idx, number of ties
+        """
+        # global bidder
         if idx == 2:
-            win = bids[2] >= bids[:2].sum(axis=0)
-            return win * (1 - tie_global) * (obs - bids[:2].sum(axis=0))
+            is_winner = np.where(bids[2] > bids[:2].sum(axis=0), 1, 0)
+            param_tie = {"random": 0.5, "local": 0.0, "lose": 0.0}[self.tie_breaking]
+            tie = np.where(bids[2] == bids[:2].sum(axis=0), param_tie, 0)
+        # local bidder
+        else:
+            is_winner = np.where(bids[2] < bids[:2].sum(axis=0), 1, 0)
+            param_tie = {"random": 0.5, "local": 1.0, "lose": 0.0}[self.tie_breaking]
+            tie = np.where(bids[2] == bids[:2].sum(axis=0), param_tie, 0)
+        allocation = is_winner + tie
+        return allocation
 
-        # determine payoff - local bidder (idx = 1,2)
+    def get_payment(self, bids, idx):
+        """compute payment (assuming bidder idx wins) for different payment rules
+
+        Args:
+            bids (np.ndarray): action profiles
+            idx (int): index of agent we consider
+
+        Returns:
+            np.ndarray: payment vector
+        """
+        # global bidder
+        if idx == 2:
+            payment = bids[:2].sum(axis=0)
+
+        # local bidder
         else:
             # Nearest-Zero (Proxy Rule)
             if self.payment_rule == "NZ":
-
-                win_a = bids[2] <= 2 * bids[:2].min(axis=0)
-                win_b = (2 * bids[:2].min(axis=0) < bids[2]) & (
-                    bids[2] <= bids[:2].sum(axis=0)
-                )
-                return (1 - tie_local) * (
-                    win_a * (obs - 0.5 * bids[2])
-                    + win_b
-                    * (
-                        obs
-                        - np.where(
-                            bids[idx] == bids[:2].min(axis=0),
-                            bids[idx],
-                            bids[2] - bids[:2].min(axis=0),
-                        )
-                    )
+                case_a = bids[2] <= 2 * bids[:2].min(axis=0)
+                payment = case_a * 0.5 * bids[2] + (1 - case_a) * np.where(
+                    bids[idx] == bids[:2].min(axis=0),
+                    bids[idx],
+                    bids[2] - bids[:2].min(axis=0),
                 )
 
             # Nearest-VCG Rule
             elif self.payment_rule == "NVCG":
-
-                win = bids[2] <= bids[:2].sum(axis=0)
-                payments_vcg = {
+                vcg_payments = {
                     0: -bids[1] + np.maximum(bids[1], bids[2]),
                     1: -bids[0] + np.maximum(bids[0], bids[2]),
                 }
-                delta = 0.5 * (bids[2] - payments_vcg[0] - payments_vcg[1])
-                return win * (1 - tie_local) * (obs - payments_vcg[idx] - delta)
+                delta = 0.5 * (bids[2] - vcg_payments[0] - vcg_payments[1])
+                payment = vcg_payments[idx] + delta
 
             # Nearest-Bid Rule
             elif self.payment_rule == "NB":
-
-                win_a = bids[2] <= bids[:2].max(axis=0) - bids[:2].min(axis=0)
-                win_b = (bids[2] > bids[:2].max(axis=0) - bids[:2].min(axis=0)) & (
-                    bids[2] <= bids[:2].sum(axis=0)
-                )
-
+                case_a = bids[2] <= bids[:2].max(axis=0) - bids[:2].min(axis=0)
                 delta = 0.5 * (bids[:2].sum(axis=0) - bids[2])
-                return (1 - tie_local) * (
-                    win_a
-                    * (obs - np.where(bids[idx] == bids[:2].max(axis=0), bids[2], 0))
-                    + win_b * (obs - bids[idx] + delta)
-                )
+                payment = case_a * np.where(
+                    bids[idx] == bids[:2].max(axis=0), bids[2], 0
+                ) + (1 - case_a) * (bids[idx] - delta)
+
+            else:
+                raise ValueError("payment rule unknown")
+
+        return payment
 
     def draw_types_uniform(self, n_types: int) -> np.ndarray:
         """owerwrite method from mechanism class:
@@ -170,7 +165,17 @@ class LLGAuction(Mechanism):
         else:
             return super().draw_types_uniform(n_types)
 
-    def get_bne(self, agent: str, obs: np.ndarray):
+    def get_bne(self, agent: str, obs: np.ndarray) -> np.ndarray:
+        """
+        Returns BNE for different payment rulse (assuming observations and actions for local bidders are [0,1])
+
+        Args:
+            agent (str): specifies bidder, either local L or global G
+            obs (np.ndarray): _description_
+
+        Returns:
+            np.ndarray: equilibrium bid for each observation
+        """
         if agent == "G":
             return obs
         elif agent == "L":
@@ -203,6 +208,22 @@ class LLGAuction(Mechanism):
 
             else:
                 raise ValueError("BNE not available: payment rule unknown")
-
         else:
             raise ValueError("BNE only for local (L) or global (G) bidder.")
+
+    def check_param(self):
+        """
+        Check if input paremter are sufficient to define mechanism
+        """
+        if "tie_breaking" not in self.param_util:
+            raise ValueError("specify tiebreaking rule")
+        elif self.param_util["tie_breaking"] not in ["local", "lose", "random"]:
+            raise ValueError("tiebreaking rule is not available")
+
+        if "payment_rule" not in self.param_util:
+            raise ValueError("specify payment rule")
+        elif self.param_util["payment_rule"] not in ["NVCG", "NZ", "NB"]:
+            raise ValueError("payment rule is not available")
+
+        if self.bidder[2] != "G":
+            raise ValueError('choose either ["L","L","G"] or  ["L1","L2","G"] ')
