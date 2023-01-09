@@ -43,16 +43,8 @@ class SplitAwardAuction(Mechanism):
             idx (int): index of agent
 
         """
-
-        # test input
-        if bids.shape[0] != self.n_bidder:
-            raise ValueError("wrong format of bids")
-        elif idx >= self.n_bidder:
-            raise ValueError("bidder with index {idx} not avaible".format(idx))
-
-        # if True: we want each outcome for every observation,  each outcome belongs to one observation
-        if obs.shape != bids[idx][0].shape:
-            obs = obs.reshape(len(obs), 1)
+        self.test_input_utility(obs, bids, idx)
+        self.reformat_observations(obs, bids, idx)
 
         idx_single, idx_split = 0, 1
         bids_single = np.array([bids[i][idx_single] for i in range(self.n_bidder)])

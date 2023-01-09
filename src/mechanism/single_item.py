@@ -26,7 +26,7 @@ class SingleItemAuction(Mechanism):
         payment_rule    str: choose betweem "first_price" and "second_price"
         utility_type    str:    QL (quasi-linear (corresponds to Auction, Default),
                                 ROI (return of investment),
-                                ROS (return of something)
+                                ROS (return of spent)
 
     """
 
@@ -56,9 +56,9 @@ class SingleItemAuction(Mechanism):
 
         # prior
         if self.prior == "affiliated_values":
-            self.values = "affiliated"
+            self.value_model = "affiliated"
         elif self.prior == "common_value":
-            self.values = "common"
+            self.value_model = "common"
             self.v_space = {i: [0, o_space[i][1] / 2] for i in bidder}
 
         # use own gradient
@@ -83,71 +83,129 @@ class SingleItemAuction(Mechanism):
         np.ndarray : payoff vector for agent idx
 
         """
+        self.test_input_utility(obs, bids, idx)
+        valuations = self.get_valuation(obs)
 
-        # test input
-        if bids.shape[0] != self.n_bidder:
-            raise ValueError("wrong format of bids")
-        elif idx >= self.n_bidder:
-            raise ValueError("bidder with index " + str(idx) + " not avaible")
+        allocation = self.get_allocation(bids, idx)
+        payment = self.get_payment(bids, idx)
+        payoff = self.get_payoff(valuations, allocation, payment)
 
-        # if True: we want each outcome for every observation, else: each outcome belongs to one observation
-        if (self.values == "private") or (self.values == "common"):
-            if obs.shape != bids[idx].shape:
-                obs = obs.reshape(len(obs), 1)
-        elif self.values == "affiliated":
-            if obs[idx].shape != bids[idx].shape:
-                obs = 0.5 * (
-                    obs.reshape(len(obs), 1) + obs.reshape(1, len(obs))
-                ).reshape(len(obs), len(obs), 1)
-        else:
-            raise ValueError('value model "{}" unknown'.format(self.values))
+        return payoff
 
-        # determine allocation
+    def get_allocation(self, bids: np.ndarray, idx: int) -> tuple:
+        """compute allocation given action profiles
+
+        Args:
+            bids (np.ndarray): action profiles
+            idx (int): index of agent we consider
+
+        Returns:
+            tuple: 2x np.ndarray, allocation vector for agent idx, number of ties
+        """
         if self.tie_breaking == "random":
-            win = np.where(bids[idx] >= np.delete(bids, idx, 0).max(axis=0), 1, 0)
+            is_winner = np.where(bids[idx] >= np.delete(bids, idx, 0).max(axis=0), 1, 0)
             num_winner = (bids.max(axis=0) == bids).sum(axis=0)
 
         elif self.tie_breaking == "lose":
-            win = np.where(bids[idx] > np.delete(bids, idx, 0).max(axis=0), 1, 0)
-            num_winner = np.ones(win.shape)
+            is_winner = np.where(bids[idx] > np.delete(bids, idx, 0).max(axis=0), 1, 0)
+            num_winner = np.ones(is_winner.shape)
         else:
             raise ValueError(
                 'Tie-breaking rule "' + self.param_util["tie_breaking"] + '" unknown'
             )
+        allocation = is_winner / num_winner
+        return allocation
 
-        # determine price
+    def get_payment(self, bids: np.ndarray, idx: int) -> np.ndarray:
+        """compute payment (assuming bidder idx wins)
+
+        Args:
+            bids (np.ndarray): action profiles
+            idx (int): index of agent we consider
+
+        Returns:
+            np.ndarray: payment vector
+        """
         if self.payment_rule == "first_price":
-            price = bids[idx]
+            payment = bids[idx]
         elif self.payment_rule == "second_price":
-            price = np.delete(bids, idx, 0).max(axis=0)
+            payment = np.delete(bids, idx, 0).max(axis=0)
         else:
             raise ValueError("payment rule " + self.payment_rule + " not available")
+        return payment
 
-        # utility type
+    def get_payoff(
+        self, valuation: np.ndarray, allocation: np.ndarray, payment: np.ndarray
+    ) -> np.ndarray:
+        """compute payoff given allocation and payment vector for different utility types:
+        QL: quasi-linear, ROI: return of investement, ROS: return on spend, ROSB: return on spend with budget
+
+        Args:
+            valuation (np.ndarray) : valuation of bidder (idx), equal to observation in private value model
+            allocation (np.ndarray): allocation vector for agent
+            payment (np.ndarray): payment vector for agent ()
+
+        Returns:
+            np.ndarray: payoff
+        """
         if self.utility_type == "QL":
-            payoff = obs - price
+            payoff = allocation * (valuation - payment)
+
         elif self.utility_type == "ROI":
-            payoff = np.divide(
-                obs - price, price, out=np.zeros_like((obs - price)), where=price != 0
+            # if payment is zero, payoff is set to zero
+            payoff = allocation * np.divide(
+                valuation - payment,
+                payment,
+                out=np.zeros_like((allocation)),
+                where=payment != 0,
             )
         elif self.utility_type == "ROS":
-            payoff = np.divide(
-                obs,
-                price,
-                out=np.zeros_like((obs / np.ones(price.shape))),
-                where=price != 0,
+            payoff = allocation * np.divide(
+                valuation,
+                payment,
+                out=np.zeros_like((valuation / np.ones(allocation.shape))),
+                where=payment != 0,
             )
         elif self.utility_type == "ROSB":
             payoff = np.divide(
-                obs,
-                price,
-                out=np.zeros_like((obs / np.ones(price.shape))),
-                where=price != 0,
-            ) + np.log(self.param_util["budget"] - price)
+                valuation,
+                payment,
+                out=np.zeros_like((valuation / np.ones(allocation.shape))),
+                where=payment != 0,
+            ) + np.log(self.param_util["budget"] - payment)
         else:
             raise ValueError("utility type " + self.utility_type + " not available")
+        return payoff
 
-        return 1 / num_winner * win * payoff
+    def get_valuation(self, obs: np.ndarray, bids: np.ndarray, idx: int) -> np.ndarray:
+        """determine valuations (potentially from observations, might be equal for private value model)
+        and reformat vector depending on the use case:
+            - one valuation for each action profile (no reformatting), needed for simulation
+            - all valuations for each action profule (reformatting), needed for gradient computation (game.py)
+
+        Args:
+            obs (np.ndarray): observation of agent (idx)
+            bids (np.ndarray): bids of all agents
+            idx (int): index of agent
+
+        Returns:
+            np.ndarray: observations, possibly reformated
+        """
+        if (self.value_model == "private") or (self.value_model == "common"):
+            if obs.shape != bids[idx].shape:
+                valuations = obs.reshape(len(obs), 1)
+            else:
+                valuations = obs
+        elif self.value_model == "affiliated":
+            if obs[idx].shape != bids[idx].shape:
+                valuations = 0.5 * (
+                    obs.reshape(len(obs), 1) + obs.reshape(1, len(obs))
+                ).reshape(len(obs), len(obs), 1)
+            else:
+                valuations = obs.mean(axis=0)
+        else:
+            raise NotImplementedError(f"value model {self.value_model} unknown")
+        return valuations
 
     def get_bne(self, agent: str, obs: np.ndarray):
         """
