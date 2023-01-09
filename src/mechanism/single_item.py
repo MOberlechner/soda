@@ -62,7 +62,7 @@ class SingleItemAuction(Mechanism):
 
     def utility(self, obs: np.ndarray, bids: np.ndarray, idx: int) -> None:
         """
-        Payoff function for first price sealed bid auctons
+        Payoff function for first price sealed bid auctions
 
         Parameters
         ----------
@@ -76,11 +76,11 @@ class SingleItemAuction(Mechanism):
 
         """
         self.test_input_utility(obs, bids, idx)
-        valuations = self.get_valuation(obs)
+        valuation = self.get_valuation(obs, bids, idx)
 
         allocation = self.get_allocation(bids, idx)
         payment = self.get_payment(bids, idx)
-        payoff = self.get_payoff(valuations, allocation, payment)
+        payoff = self.get_payoff(valuation, allocation, payment)
 
         return payoff
 
@@ -349,7 +349,9 @@ class SingleItemAuction(Mechanism):
         return exp_win * payoff
 
     def check_param(self):
-        """Check if input paremter are sufficient to define mechanism"""
+        """
+        Check if input paremter are sufficient to define mechanism
+        """
         if "tie_breaking" not in self.param_util:
             raise ValueError("specify tiebreaking rule")
         if "payment_rule" not in self.param_util:
