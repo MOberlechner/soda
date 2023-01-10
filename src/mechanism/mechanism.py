@@ -64,6 +64,9 @@ class Mechanism:
         self.own_gradient = False
         self.value_model = "private"  # valuation depends only on own observation
 
+    def __repr__(self) -> str:
+        return f"Mechanism({self.name})"
+
     def utility(self, obs: np.ndarray, bids: np.ndarray, idx: int):
         """Compute utility according to specified mechanism
 
