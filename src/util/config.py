@@ -94,23 +94,8 @@ class Config:
             strategies[i].initialize(init_method, param_init)
         return strategies
 
-    def create_game(self, mechanism, n: int, m: int):
-        """Create approximation game given the mechanism
-
-        Args:
-            mechanism (Mechanism):
-            n (int): discretization points type space
-            m (int): discretization points action space
-
-        Returns:
-            Game:
-        """
-        return Game(mechanism, n, m)
-
-    def create_mechanism(
-        self,
-    ):
-        """_summary_
+    def create_game_mechanism(self):
+        """Create Mechanism and approximation game for configuration
 
         Args:
             setting (str): name of mechanism
@@ -121,15 +106,18 @@ class Config:
             param_util (dict): dict with parameter for utility function
 
         Raises:
+            ValueError: Configuration not found
             ValueError: Mechanism unknown
 
         Returns:
-            Mechanism
+            Game, Mechanism
         """
         if not hasattr(self, "config_game"):
             raise ValueError("configuration for mechanism/game not created")
 
         setting = self.config_game["mechanism"]
+
+        # TODO arguments = [bidder, o_space, ...] SingleItemAuction(*args): does this work?
 
         if setting == "single_item":
             mechanism = SingleItemAuction(
@@ -205,82 +193,102 @@ class Config:
             )
         else:
             raise ValueError('Mechanism "{}" not available'.format(setting))
-        return mechanism
 
-    def create_learner(
+        game = Game(mechanism, self.config_game["n"], self.config_game["m"])
+        return game, mechanism
+
+    def create_config_learner(
         self,
-        name: str,
+        learn_alg: str,
         max_iter: int,
         tol: float,
-        stop_criterion: str,
-        regularizer: str = None,
-        mirror_map: str = None,
+        stop_criteration: str,
         method: str = None,
-        step_rule: bool = True,
+        steprule_bool: bool = None,
         eta: float = None,
         beta: float = None,
     ):
-        """_summary_
+        """create config file to create learn algorithm
 
         Args:
-            max_iter (int): _description_
-            tol (float): _description_
-            stop_criteration (str): _description_
-            regularizer (str, optional): _description_. Defaults to None.
-            mirror_map (str, optional): _description_. Defaults to None.
-            step_rule (bool, optional): _description_. Defaults to True.
-            eta (float, optional): _description_. Defaults to None.
-            beta (float, optional): _description_. Defaults to None.
+            learn_alg (str): name of learn algorithm
+            max_iter (int): max number of iterations
+            tol (float): tolerance for stop criterion
+            stop_criteration (str): stop criterion (e.g. util_loss)
+            method (str, optional): specify method for learner (e.g. mirror map, regularizer,...). Defaults to None.
+            steprule_bool (bool, optional): use step rule. Defaults to None.
+            eta (float, optional): parameter1 for steprule. Defaults to None.
+            beta (float, optional): parameter2 for steprule. Defaults to None.
         """
-        if name == "soda":
+        self.config_learner = {
+            "learner": learn_alg,
+            "max_iter": max_iter,
+            "tol": tol,
+            "stop_criteration": stop_criteration,
+        }
+        if method is not None:
+            self.config_learner["method"] = method
+        if steprule_bool is not None:
+            self.config_learner["steprule_bool"] = steprule_bool
+        if eta is not None:
+            self.config_learner["eta"] = eta
+        if beta is not None:
+            self.config_learner["beta"] = beta
+
+    def create_learner(self):
+        """create learn algorithm from learner configurations"""
+        if not hasattr(self, "config_learner"):
+            raise ValueError("configuration for learner not created")
+
+        learn_alg = self.config_learner["learner"]
+        if learn_alg == "soda":
             return SODA(
-                max_iter,
-                tol,
-                stop_criterion,
-                regularizer,
-                step_rule,
-                eta,
-                beta,
+                self.config_learner["max_iter"],
+                self.config_learner["tol"],
+                self.config_learner["stop_criterion"],
+                self.config_learner["regularizer"],
+                self.config_learner["steprule_bool"],
+                self.config_learner["eta"],
+                self.config_learner["beta"],
             )
 
-        elif name == "soma":
+        elif learn_alg == "soma":
             return SOMA(
-                max_iter,
-                tol,
-                stop_criterion,
-                mirror_map,
-                step_rule,
-                eta,
-                beta,
+                self.config_learner["max_iter"],
+                self.config_learner["tol"],
+                self.config_learner["stop_criterion"],
+                self.config_learner["mirror_map"],
+                self.config_learner["steprule_bool"],
+                self.config_learner["eta"],
+                self.config_learner["beta"],
             )
 
-        elif name == "frank_wolfe":
+        elif learn_alg == "frank_wolfe":
             return FrankWolfe(
-                max_iter,
-                tol,
-                stop_criterion,
-                method,
-                step_rule,
-                eta,
-                beta,
+                self.config_learner["max_iter"],
+                self.config_learner["tol"],
+                self.config_learner["stop_criterion"],
+                self.config_learner["method"],
+                self.config_learner["steprule_bool"],
+                self.config_learner["eta"],
+                self.config_learner["beta"],
             )
 
-        elif name == "fictitious_play":
+        elif learn_alg == "fictitious_play":
             return FictitiousPlay(
-                max_iter,
-                tol,
-                stop_criterion,
+                self.config_learner["max_iter"],
+                self.config_learner["tol"],
+                self.config_learner["stop_criterion"],
             )
 
-        elif name == "best_response":
+        elif learn_alg == "best_response":
             return BestResponse(
-                max_iter,
-                tol,
-                stop_criterion,
+                self.config_learner["max_iter"],
+                self.config_learner["tol"],
+                self.config_learner["stop_criterion"],
             )
-
         else:
-            raise ValueError(f"Learner {name} unknown.")
+            raise ValueError(f"Learner {learn_alg} unknown.")
 
     def get_path(self, path):
         """get path into config directory
