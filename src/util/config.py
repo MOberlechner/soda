@@ -116,81 +116,32 @@ class Config:
             raise ValueError("configuration for mechanism/game not created")
 
         setting = self.config_game["mechanism"]
-
-        # TODO arguments = [bidder, o_space, ...] SingleItemAuction(*args): does this work?
+        args = [
+            self.config_game["bidder"],
+            self.config_game["o_space"],
+            self.config_game["a_space"],
+            self.config_game["param_prior"],
+            self.config_game["param_util"],
+        ]
 
         if setting == "single_item":
-            mechanism = SingleItemAuction(
-                self.config_game["bidder"],
-                self.config_game["o_space"],
-                self.config_game["a_space"],
-                self.config_game["param_prior"],
-                self.config_game["param_util"],
-            )
+            mechanism = SingleItemAuction(*args)
         elif setting == "llg_auction":
-            mechanism = LLGAuction(
-                self.config_game["bidder"],
-                self.config_game["o_space"],
-                self.config_game["a_space"],
-                self.config_game["param_prior"],
-                self.config_game["param_util"],
-            )
+            mechanism = LLGAuction(*args)
         elif setting == "contest_game":
-            mechanism = ContestGame(
-                self.config_game["bidder"],
-                self.config_game["o_space"],
-                self.config_game["a_space"],
-                self.config_game["param_prior"],
-                self.config_game["param_util"],
-            )
+            mechanism = ContestGame(*args)
         elif setting == "all_pay":
-            mechanism = AllPay(
-                self.config_game["bidder"],
-                self.config_game["o_space"],
-                self.config_game["a_space"],
-                self.config_game["param_prior"],
-                self.config_game["param_util"],
-            )
+            mechanism = AllPay(*args)
         elif setting == "crowdsourcing":
-            mechanism = Crowdsourcing(
-                self.config_game["bidder"],
-                self.config_game["o_space"],
-                self.config_game["a_space"],
-                self.config_game["param_prior"],
-                self.config_game["param_util"],
-            )
+            mechanism = Crowdsourcing(*args)
         elif setting == "split_award":
-            mechanism = SplitAwardAuction(
-                self.config_game["bidder"],
-                self.config_game["o_space"],
-                self.config_game["a_space"],
-                self.config_game["param_prior"],
-                self.config_game["param_util"],
-            )
+            mechanism = SplitAwardAuction(*args)
         elif setting == "double_auction":
-            mechanism = DoubleAuction(
-                self.config_game["bidder"],
-                self.config_game["o_space"],
-                self.config_game["a_space"],
-                self.config_game["param_prior"],
-                self.config_game["param_util"],
-            )
+            mechanism = DoubleAuction(*args)
         elif setting == "bertrand_pricing":
-            mechanism = BertrandPricing(
-                self.config_game["bidder"],
-                self.config_game["o_space"],
-                self.config_game["a_space"],
-                self.config_game["param_prior"],
-                self.config_game["param_util"],
-            )
+            mechanism = BertrandPricing(*args)
         elif setting == "multi_unit":
-            mechanism = MultiUnitAuction(
-                self.config_game["bidder"],
-                self.config_game["o_space"],
-                self.config_game["a_space"],
-                self.config_game["param_prior"],
-                self.config_game["param_util"],
-            )
+            mechanism = MultiUnitAuction(*args)
         else:
             raise ValueError('Mechanism "{}" not available'.format(setting))
 
