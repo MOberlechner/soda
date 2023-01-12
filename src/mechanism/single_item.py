@@ -3,7 +3,9 @@ from typing import Dict, List
 import numpy as np
 from scipy.special import binom
 
-from .mechanism import Mechanism
+from src.game import Game
+from src.mechanism.mechanism import Mechanism
+from src.strategy import Strategy
 
 # -------------------------------------------------------------------------------------------------------------------- #
 #                                             SINGLE-ITEM AUCTION                                                      #
@@ -84,7 +86,7 @@ class SingleItemAuction(Mechanism):
 
         return payoff
 
-    def get_allocation(self, bids: np.ndarray, idx: int) -> tuple:
+    def get_allocation(self, bids: np.ndarray, idx: int) -> np.ndarray:
         """compute allocation given action profiles
 
         Args:
@@ -92,7 +94,7 @@ class SingleItemAuction(Mechanism):
             idx (int): index of agent we consider
 
         Returns:
-            tuple: 2x np.ndarray, allocation vector for agent idx, number of ties
+            np.ndarray: allocation vector for agent idx
         """
         if self.tie_breaking == "random":
             is_winner = np.where(bids[idx] >= np.delete(bids, idx, 0).max(axis=0), 1, 0)
@@ -105,8 +107,7 @@ class SingleItemAuction(Mechanism):
             raise ValueError(
                 'Tie-breaking rule "' + self.param_util["tie_breaking"] + '" unknown'
             )
-        allocation = is_winner / num_winner
-        return allocation
+        return is_winner / num_winner
 
     def get_payment(self, bids: np.ndarray, idx: int) -> np.ndarray:
         """compute payment (assuming bidder idx wins)
@@ -275,7 +276,7 @@ class SingleItemAuction(Mechanism):
                     reserve_price = self.a_space[self.set_bidder[0]][0]
                     return np.clip(obs, reserve_price, None)
 
-    def compute_gradient(self, game, strategies, agent: str):
+    def compute_gradient(self, game: Game, strategies: Dict[str, Strategy], agent: str):
         """Simplified computation of gradient for i.i.d. bidders and tie-breaking "lose"
 
         Parameters
@@ -288,24 +289,7 @@ class SingleItemAuction(Mechanism):
         -------
 
         """
-        pdf = strategies[agent].x.sum(axis=0)
-        cdf = np.insert(pdf, 0, 0.0).cumsum()[:-1]
-        exp_win = cdf ** (self.n_bidder - 1)
-
-        if self.tie_breaking == "lose":
-            pass
-        elif self.tie_breaking == "random":
-            exp_win += sum(
-                [
-                    binom(self.n_bidder - 1, i)
-                    * cdf ** (self.n_bidder - i - 1)
-                    / (i + 1)
-                    * pdf**i
-                    for i in range(1, self.n_bidder)
-                ]
-            )
-        else:
-            raise ValueError('Tie-breaking rule "{}" unknown'.format(self.tie_breaking))
+        prob_win = self.compute_probability_winning(game, strategies, agent)
 
         # utility type
         obs_grid = (
@@ -346,7 +330,45 @@ class SingleItemAuction(Mechanism):
                 "utility type " + self.utility_type + " not available in own gradient"
             )
 
-        return exp_win * payoff
+        return prob_win * payoff
+
+    def compute_probability_winning(
+        self, game: Game, strategies: Dict[str, Strategy], agent: str
+    ) -> np.ndarray:
+        """Compute probability of winning for each bid given the symmetric (!) strategies
+
+        Args:
+            game (Game): approximation game
+            strategies (Dict[str, Strategy]): strategy profile
+            agent (str): bidder
+
+        Raises:
+            ValueError: wront tie breaking rule
+
+        Returns:
+            np.ndarray: probability of winning
+        """
+
+        pdf = strategies[agent].x.sum(axis=0)
+        cdf = np.insert(pdf, 0, 0.0).cumsum()[:-1]
+        prob_win = cdf ** (self.n_bidder - 1)
+
+        if self.tie_breaking == "lose":
+            pass
+        elif self.tie_breaking == "random":
+            prob_win += sum(
+                [
+                    binom(self.n_bidder - 1, i)
+                    * cdf ** (self.n_bidder - i - 1)
+                    / (i + 1)
+                    * pdf**i
+                    for i in range(1, self.n_bidder)
+                ]
+            )
+        else:
+            raise ValueError('Tie-breaking rule "{}" unknown'.format(self.tie_breaking))
+
+        return prob_win
 
     def check_param(self):
         """
