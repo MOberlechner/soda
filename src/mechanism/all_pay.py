@@ -44,11 +44,11 @@ class AllPay(Mechanism):
     ):
         super().__init__(bidder, o_space, a_space, param_prior, param_util)
         self.name = "all_pay"
-        self.util_setting = (
-            param_util["util_setting"]
-            if "util_setting" in param_util
-            else "first_price"
-        )
+
+        self.check_param()
+        self.tie_breaking = param_util["tie_breaking"]
+        self.payment_rule = param_util["payment_rule"]
+        self.type = param_util["type"]
 
     def utility(self, obs: np.ndarray, bids: np.ndarray, idx: int) -> np.ndarray:
         """
@@ -65,92 +65,68 @@ class AllPay(Mechanism):
         np.ndarray : payoff vector for agent idx
 
         """
+        self.test_input_utility(obs, bids, idx)
 
-        # test input
-        if bids.shape[0] != self.n_bidder:
-            raise ValueError("wrong format of bids")
-        elif idx >= self.n_bidder:
-            raise ValueError("bidder with index " + str(idx) + " not avaible")
-        elif "type" not in self.param_util:
-            raise ValueError("specify param_util - type: cost or valuation")
-        elif "tiebreaking" not in self.param_util:
-            raise ValueError("specify tiebreaking rule")
-        else:
-            pass
+        valuation = self.get_valuation(obs, bids, idx)
+        allocation = self.get_allocation(bids, idx)
+        payment = self.get_payment(bids, allocation, idx)
 
-        # if True: we want each outcome for every observation,  each outcome belongs to one observation
-        if obs.shape != bids[idx].shape:
-            obs = obs.reshape(len(obs), 1)
+        return allocation * valuation - payment
 
-        # determine allocation
-        if self.param_util["tiebreaking"] == "random":
-            win = np.where(bids[idx] >= bids.max(axis=0), 1, 0)
+    def get_allocation(self, bids: np.ndarray, idx: int) -> np.ndarray:
+        """compute allocation given action profiles for agent i
+
+        Args:
+            bids (np.ndarray): action profiles
+            idx (int): index of agent we consider
+
+        Returns:
+            np.ndarray: allocation vector for agent idx
+        """
+        if self.tie_breaking == "random":
+            is_winner = np.where(bids[idx] >= np.delete(bids, idx, 0).max(axis=0), 1, 0)
             num_winner = (bids.max(axis=0) == bids).sum(axis=0)
-        elif self.param_util["tiebreaking"] == "index":
-            if idx == 0:
-                win = np.where(bids[idx] >= np.delete(bids, idx, 0).max(axis=0), 1, 0)
-                num_winner = np.ones(win.shape)
-            else:
-                win = np.where(bids[idx] > np.delete(bids, idx, 0).max(axis=0), 1, 0)
-                num_winner = np.ones(win.shape)
-        elif self.param_util["tiebreaking"] == "lose":
-            win = bids[idx] > np.delete(bids, idx, 0).max(axis=0)
-            num_winner = np.ones(win.shape)
+
+        elif self.tie_breaking == "lose":
+            is_winner = np.where(bids[idx] > np.delete(bids, idx, 0).max(axis=0), 1, 0)
+            num_winner = np.ones(is_winner.shape)
         else:
-            raise ValueError("tiebreaking rule unknown (random/index/lose)")
-
-        # determine payoff
-        if self.util_setting == "first_price":
-            if self.param_util["type"] == "valuation":
-                return obs * win * 1 / num_winner - bids[idx]
-            elif self.param_util["type"] == "cost":
-                return win * 1 / num_winner - obs * bids[idx]
-            else:
-                raise ValueError("type in param_util unknown")
-
-        elif self.util_setting == "generalized":
-            lamb = self.param_util["price_rule"]
-            if self.n_bidder > 2:
-                raise ValueError(
-                    "For more than two bidders only first-price rule available"
-                )
-
-            else:
-                # using the homotopy between first-price (param=0) and second-price (param=1)
-                # from [Aumann&Leininger, 1996] for two bidders
-                return (
-                    win
-                    * (obs / num_winner - (1 - lamb) * bids[idx] - lamb * bids[1 - idx])
-                    - (1 - win) * bids[idx]
-                )
-
-        elif self.util_setting == "loss_aversion":
-            lamb = self.param_util["lambda"]
-            eta = self.param_util["eta"]
-
-            return (
-                # bidder is winning
-                1 / num_winner * win * (obs - bids[idx] + eta * obs)
-                # bidder is losing bc of tiebreaking
-                + (num_winner - 1) / num_winner * win * (-bids[idx] - eta * lamb * obs)
-                # bidder is losing
-                + (1 - win) * (-bids[idx] - eta * lamb * obs)
+            raise ValueError(
+                'Tie-breaking rule "' + self.param_util["tie_breaking"] + '" unknown'
             )
+        allocation = is_winner / num_winner
+        return allocation
 
-        elif self.util_setting == "loss_aversion_simple":
+    def get_payment(
+        self, bids: np.ndarray, allocation: np.ndarray, idx: int
+    ) -> np.ndarray:
+        """compute payment for bidder idx
 
-            lamb = self.param_util["lambda"]
+        Args:
+            bids (np.ndarray): action profiles
+            allocation (np.ndarray): allocation vector for agent i
+            idx (int): index of agent we consider
+
+        Returns:
+            np.ndarray: payment vector
+        """
+        if self.payment_rule == "first_price":
+            payment = bids[idx]
+
+        elif self.payment_rule == "generalized":
+            alpha = self.param_util["payment_parameter"]
+            winning = np.where(allocation > 0, 1, 0)
+            second_price = np.delete(bids, idx, 0).max(axis=0)
 
             return (
-                # bidder is winning
-                win * 1 / num_winner * (obs - bids[idx])
-                # bidder is losing (strictly losing + losing bc of tie breaking
-                + ((1 - win) + win * (num_winner - 1) / num_winner)
-                * (-lamb * bids[idx])
+                winning * ((1 - alpha) * bids[idx] + alpha * second_price)
+                + (1 - winning) * bids[idx]
             )
 
         else:
-            raise ValueError('util_setting "' + self.util_setting + '" unknown')
+            raise NotImplementedError(
+                f"payment rule {self.payment_rule} not implemented"
+            )
 
     def get_bne(self, agent: str, obs: np.ndarray):
         """
@@ -202,3 +178,31 @@ class AllPay(Mechanism):
 
         else:
             return None
+
+    def check_param(self):
+        """
+        Check if input paremter are sufficient to define mechanism
+        """
+        if "tiebreaking" not in self.param_util:
+            raise ValueError("specify tiebreaking in param_util")
+        if "type" not in self.param_util:
+            raise ValueError("specify param_util - type: cost or valuation")
+        if "payment_rule" not in self.param_util:
+            raise ValueError(
+                "specify payment_rule in param_util - payment_rule: first_price, generalized, "
+            )
+        else:
+            if self.param_util["payment_rule"] == "generalized":
+                if self.n_bidder != 2:
+                    raise ValueError(
+                        "Generalized Payment rule only available for two bidders"
+                    )
+                if "payment_parameter" not in self.param_util:
+                    raise ValueError(
+                        "Specify payment_parameter in param_util for generalized payment_rule"
+                    )
+                else:
+                    if (self.param_util["payment_param"] < 0) or (
+                        self.param_util["payment_parameter"] > 1
+                    ):
+                        raise ValueError("payment_param has to be between 0 and 1")
