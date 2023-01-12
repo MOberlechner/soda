@@ -299,13 +299,13 @@ class Mechanism:
         """
         dim_o = (
             1
-            if len(self.o_space[self.bidder[0]].shape) == 1
-            else self.o_space[self.bidder[0]].shape[0]
+            if len(np.array(self.o_space[self.bidder[0]]).shape) == 1
+            else np.array(self.o_space[self.bidder[0]]).shape[0]
         )
         dim_a = (
             1
-            if len(self.a_space[self.bidder[0]].shape) == 1
-            else self.a_space[self.bidder[0]].shape[0]
+            if len(np.array(self.a_space[self.bidder[0]]).shape) == 1
+            else np.array(self.a_space[self.bidder[0]]).shape[0]
         )
         return dim_o, dim_a
 
