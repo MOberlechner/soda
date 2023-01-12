@@ -30,6 +30,8 @@ class Strategy:
             agent (str): name of repr. bidder/agent
             game (Game): approximation game
         """
+        self.game = game
+        self.mechanism = game.mechanism
 
         # name of the bidder
         self.agent = agent
