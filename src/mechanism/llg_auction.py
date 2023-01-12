@@ -26,12 +26,7 @@ class LLGAuction(Mechanism):
         self.check_param()
         self.payment_rule = param_util["payment_rule"]
         self.tie_breaking = param_util["tie_breaking"]
-
-        if "corr" in param_prior:
-            self.gamma = param_prior["corr"]
-        else:
-            self.gamma = 0.0
-            print("No correlation for LLG Auction defined (gamma=0).")
+        self.gamma = param_util["corr"]
 
     def utility(self, obs: np.ndarray, bids: np.ndarray, idx: int):
         """Payoff function for first price sealed bid auctons
@@ -78,7 +73,7 @@ class LLGAuction(Mechanism):
         allocation = is_winner + tie
         return allocation
 
-    def get_payment(self, bids, idx):
+    def get_payment(self, bids: np.ndarray, idx: int):
         """compute payment (assuming bidder idx wins) for different payment rules
 
         Args:
@@ -125,7 +120,7 @@ class LLGAuction(Mechanism):
 
         return payment
 
-    def draw_types_uniform(self, n_types: int) -> np.ndarray:
+    def sample_types_uniform(self, n_types: int) -> np.ndarray:
         """owerwrite method from mechanism class:
         draw types according to uniform distribution
         Correlation (Bernoulli weights model) implemented for local bidders
@@ -138,7 +133,7 @@ class LLGAuction(Mechanism):
         """
 
         # independent prior
-        if "corr" in self.param_prior:
+        if self.gamma > 0:
             w = uniform.rvs(loc=0, scale=1, size=n_types)
             u = uniform.rvs(
                 loc=self.o_space[self.bidder[0]][0],
@@ -163,7 +158,17 @@ class LLGAuction(Mechanism):
                 ]
             )
         else:
-            return super().draw_types_uniform(n_types)
+            return np.array(
+                [
+                    uniform.rvs(
+                        loc=self.o_space[self.bidder[i]][0],
+                        scale=self.o_space[self.bidder[i]][-1]
+                        - self.o_space[self.bidder[i]][0],
+                        size=n_types,
+                    )
+                    for i in range(self.n_bidder)
+                ]
+            )
 
     def get_bne(self, agent: str, obs: np.ndarray) -> np.ndarray:
         """
@@ -227,3 +232,10 @@ class LLGAuction(Mechanism):
 
         if self.bidder[2] != "G":
             raise ValueError('choose either ["L","L","G"] or  ["L1","L2","G"] ')
+
+        if "corr" not in self.param_prior:
+            self.param_prior["corr"] = 0.0
+        else:
+            print(
+                "No correlation for LLG Auction defined. We assume no correlation (corr=0)."
+            )
