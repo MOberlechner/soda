@@ -28,10 +28,8 @@ class AllPay(Mechanism):
 
         type            str: agent's type can be interpreted as "valuation" or "cost"
 
-        price_rule      float:  relevant if util_setting = generalized:
-                        parameter to go between first-price (lambda=0) to second-price (lambda=1) all-pay auction
-
-        lambda, eta     float, float: relevant if util_setting = loss aversion
+        payment_rule    str:  choose between first_price, second_price and generalized (convex combination of both)
+                        for the latter we need additional payment_param in param_util
     """
 
     def __init__(
@@ -94,8 +92,7 @@ class AllPay(Mechanism):
             raise ValueError(
                 'Tie-breaking rule "' + self.param_util["tie_breaking"] + '" unknown'
             )
-        allocation = is_winner / num_winner
-        return allocation
+        return is_winner / num_winner
 
     def get_payment(
         self, bids: np.ndarray, allocation: np.ndarray, idx: int
@@ -111,16 +108,19 @@ class AllPay(Mechanism):
             np.ndarray: payment vector
         """
         if self.payment_rule == "first_price":
-            payment = bids[idx]
+            return bids[idx]
+
+        elif self.payment_rule == "second_price":
+            second_price = np.delete(bids, idx, 0).max(axis=0)
+            return allocation * second_price + (1 - allocation) * bids[idx]
 
         elif self.payment_rule == "generalized":
             alpha = self.param_util["payment_parameter"]
-            winning = np.where(allocation > 0, 1, 0)
             second_price = np.delete(bids, idx, 0).max(axis=0)
 
             return (
-                winning * ((1 - alpha) * bids[idx] + alpha * second_price)
-                + (1 - winning) * bids[idx]
+                allocation * ((1 - alpha) * bids[idx] + alpha * second_price)
+                + (1 - allocation) * bids[idx]
             )
 
         else:
