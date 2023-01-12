@@ -4,7 +4,7 @@ from itertools import product
 import matplotlib.pyplot as plt
 import numpy as np
 
-from src.game import Game, discr_interval
+from src.game import Game
 
 
 class Strategy:
@@ -30,11 +30,9 @@ class Strategy:
             agent (str): name of repr. bidder/agent
             game (Game): approximation game
         """
+        self.agent = agent
         self.game = game
         self.mechanism = game.mechanism
-
-        # name of the bidder
-        self.agent = agent
 
         # observation and action space
         self.o_discr = game.o_discr[agent]
@@ -813,7 +811,7 @@ class Strategy:
             if len(self.x.shape) == 2:
                 # idea: put probability measure of action two closest action in new discretization
                 n, m = strat.shape
-                a_discr = discr_interval(
+                a_discr = self.game.discr_interval(
                     self.a_discr[0], self.a_discr[-1], m, midpoint=False
                 )
                 strat_new = np.zeros((n_scaled, m_scaled))

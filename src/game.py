@@ -3,6 +3,7 @@ from typing import List
 
 import numpy as np
 
+from src.mechanism.mechanism import Mechanism
 from src.prior import compute_weights, marginal_prior_pdf
 
 # -------------------------------------------------------------------------------------------------------------------- #
@@ -11,7 +12,7 @@ from src.prior import compute_weights, marginal_prior_pdf
 
 
 class Game:
-    def __init__(self, mechanism, n: int, m: int):
+    def __init__(self, mechanism: Mechanism, n: int, m: int):
         """Given a mechanism and number of discretization points, we can create approximation game by
         discretizating the respective spaces.
 
@@ -31,26 +32,29 @@ class Game:
         self.set_bidder = mechanism.set_bidder
         self.n_bidder = mechanism.n_bidder
 
+        self.dim_o = mechanism.dim_o
+        self.dim_a = mechanism.dim_a
+
         # we distinguish between private, affiliated, common values ... model
         self.value_model = mechanism.value_model
 
+        # dimension of spaces
+        self.dim_o, self.dim_a = self.mechanism.dim_o, self.mechanism.dim_a
+
         # discrete action and observation space (and optional valuation space)
         self.o_discr = {
-            i: discr_spaces(mechanism.o_space[i], n, midpoint=True)
+            i: self.discr_spaces(mechanism.o_space[i], n, midpoint=True)
             for i in self.set_bidder
         }
         self.a_discr = {
-            i: discr_spaces(mechanism.a_space[i], m, midpoint=True)
+            i: self.discr_spaces(mechanism.a_space[i], m, midpoint=True)
             for i in self.set_bidder
         }
         if hasattr(mechanism, "v_space"):
             self.v_discr = {
-                i: discr_spaces(mechanism.v_space[i], m, midpoint=True)
+                i: self.discr_spaces(mechanism.v_space[i], m, midpoint=True)
                 for i in self.set_bidder
             }
-
-        # dimension of spaces
-        self.dim_o, self.dim_a = self.get_dimension_spaces()
 
         # marginal prior for bidder
         self.prior = {i: self.get_prior(mechanism, i) for i in self.set_bidder}
@@ -60,22 +64,6 @@ class Game:
 
     def __repr__(self) -> str:
         return f"Game({self.name, self.n, self.m})"
-
-    def get_dimension_spaces(self) -> tuple:
-        """
-        Get dimension for observation and action space (dim_o, dim_a)
-        """
-        dim_o = (
-            1
-            if len(self.o_discr[self.bidder[0]].shape) == 1
-            else self.o_discr[self.bidder[0]].shape[0]
-        )
-        dim_a = (
-            1
-            if len(self.a_discr[self.bidder[0]].shape) == 1
-            else self.a_discr[self.bidder[0]].shape[0]
-        )
-        return dim_o, dim_a
 
     def get_utility(self) -> None:
         """Compute utility array for discretized game
@@ -193,67 +181,64 @@ class Game:
     def get_weights(self, mechanism):
         return compute_weights(self, mechanism)
 
+    def discr_spaces(
+        self, interval: List, n_discrete: int, midpoint: bool
+    ) -> np.ndarray:
+        """Discretize Spaces (possibly multidimensional)
 
-# -------------------------------------------------------------------------------------------------------------------- #
-#                                                 HELPERFUNCTIONS                                                      #
-# -------------------------------------------------------------------------------------------------------------------- #
+        Args:
+            interval (List): contains lists with space intervals for each bidder
+            n_discrete (int):  number of discretization points
+            midpoint (bool): take midpoints of discretization
 
+        Returns:
+            np.ndarray: discretized space, shape (dimension, n_discrete)
+        """
 
-def discr_spaces(interval: List, n_discrete: int, midpoint: bool) -> np.ndarray:
-    """Discretize Spaces (possibly multidimensional)
-
-    Args:
-        interval (List): contains lists with space intervals for each bidder
-        n_discrete (int):  number of discretization points
-        midpoint (bool): take midpoints of discretization
-
-    Returns:
-        np.ndarray: discretized space, shape (dimension, n_discrete)
-    """
-
-    # check dimension of observation space (if more dimensional, interval is nested list)
-    if len(np.array(interval).shape) > 1:
-        return np.array(
-            [
-                discr_interval(interv[0], interv[1], n_discrete, midpoint)
-                for interv in interval
-            ]
-        )
-    else:
-        return discr_interval(interval[0], interval[1], n_discrete, midpoint)
-
-
-def discr_interval(
-    lower_bound: float, upper_bound: float, n_discrete: int, midpoint: bool
-) -> np.ndarray:
-    """Discretize interval
-
-    Args:
-        lower_bound (float): lower bound of interval
-        b (float): upper bound of interval
-        n_discrete (int): number of discretization points
-        midpoint (bool): if True returns midpoints of n subintervals, else a, b and n-2 points in between
-
-    Returns:
-        np.ndarray: discretized interval
-    """
-    if midpoint:
-        return (
-            lower_bound
-            + (0.5 + np.arange(n_discrete)) * (upper_bound - lower_bound) / n_discrete
-        )
-    else:
-        if (lower_bound == upper_bound) & (n_discrete > 1):
-            raise ValueError(
-                "Discretized interval with n_discrete > 1 cannot have same lower and upper bound"
+        # check dimension of observation space (if more dimensional, interval is nested list)
+        if len(np.array(interval).shape) > 1:
+            return np.array(
+                [
+                    self.discr_interval(interv[0], interv[1], n_discrete, midpoint)
+                    for interv in interval
+                ]
             )
-        elif (lower_bound != upper_bound) & (n_discrete == 1):
-            raise ValueError(
-                "Discretized interval with n_discrete == 1 and midpoint=False cannot have different lower and upper bounds "
-            )
-        elif (lower_bound == upper_bound) & (n_discrete == 1):
-            return np.array([lower_bound])
         else:
-            return lower_bound + (np.arange(n_discrete)) * (
-                upper_bound - lower_bound
-            ) / (n_discrete - 1)
+            return self.discr_interval(interval[0], interval[1], n_discrete, midpoint)
+
+    def discr_interval(
+        self, lower_bound: float, upper_bound: float, n_discrete: int, midpoint: bool
+    ) -> np.ndarray:
+        """Discretize interval
+
+        Args:
+            lower_bound (float): lower bound of interval
+            b (float): upper bound of interval
+            n_discrete (int): number of discretization points
+            midpoint (bool): if True returns midpoints of n subintervals, else a, b and n-2 points in between
+
+        Returns:
+            np.ndarray: discretized interval
+        """
+        if midpoint:
+            return (
+                lower_bound
+                + (0.5 + np.arange(n_discrete))
+                * (upper_bound - lower_bound)
+                / n_discrete
+            )
+        else:
+            if (lower_bound == upper_bound) & (n_discrete > 1):
+                raise ValueError(
+                    "Discretized interval with n_discrete > 1 cannot have same lower and upper bound"
+                )
+            elif (lower_bound != upper_bound) & (n_discrete == 1):
+                raise ValueError(
+                    "Discretized interval with n_discrete == 1 and midpoint=False cannot have different lower and upper bounds "
+                )
+            elif (lower_bound == upper_bound) & (n_discrete == 1):
+                return np.array([lower_bound])
+            else:
+                return lower_bound + (np.arange(n_discrete)) * (
+                    upper_bound - lower_bound
+                ) / (n_discrete - 1)

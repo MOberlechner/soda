@@ -52,6 +52,8 @@ class Mechanism:
         self.o_space = o_space
         self.a_space = a_space
 
+        self.dim_o, self.dim_a = self.get_dimensionen_spaces()
+
         # param_prior
         self.param_prior = param_prior
         self.prior = param_prior["distribution"]
@@ -290,6 +292,22 @@ class Mechanism:
             [self.a_space[0] == self.a_space[i] for i in self.set_bidder]
         )
         return o_space_identical and a_space_identical
+
+    def get_dimension_spaces(self) -> tuple:
+        """
+        Get dimension for observation and action space (dim_o, dim_a)
+        """
+        dim_o = (
+            1
+            if len(self.o_space[self.bidder[0]].shape) == 1
+            else self.o_space[self.bidder[0]].shape[0]
+        )
+        dim_a = (
+            1
+            if len(self.a_space[self.bidder[0]].shape) == 1
+            else self.a_space[self.bidder[0]].shape[0]
+        )
+        return dim_o, dim_a
 
     def get_bne(self, agent: str, obs: np.ndarray) -> np.ndarray:
         """return bne bids for given agent and observations
