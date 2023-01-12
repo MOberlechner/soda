@@ -349,19 +349,9 @@ class Strategy:
         -------
         np.ndarray, returns bids sampled from the respective mixed strategies given through the observations
         """
-
-        # number of discretization points observations
-        n = self.x.shape[0]
-
         if self.dim_o == 1:
-            # determine corresponding discrete observation
-            idx_obs = np.floor(
-                (observation - self.o_discr[0])
-                / (self.o_discr[-1] - self.o_discr[0])
-                * n
-            ).astype(int)
-            idx_obs = np.maximum(0, np.minimum(n - 1, idx_obs))
 
+            idx_obs = self.find_nearest_discrete_point(observation, self.o_discr)
             uniques, counts = np.unique(
                 idx_obs, return_inverse=False, return_counts=True
             )
@@ -402,6 +392,25 @@ class Strategy:
             raise NotImplementedError(
                 "Bids can only be sampled for one-dimensional observations"
             )
+
+    def find_nearest_discrete_point(
+        self, vec_continuous: np.ndarray, vec_discrete: np.ndarray
+    ) -> np.ndarray:
+        """
+
+        Args:
+            vec_continuous (np.ndarray): continuous values
+            vec_discrete (np.ndarray): discrete values
+
+        Returns:
+            np.ndarray: index of discrete values
+        """
+        idx_obs = np.floor(
+            (vec_continuous - vec_discrete.min())
+            / (vec_discrete.max() - vec_discrete.min())
+            * len(vec_discrete)
+        ).astype(int)
+        return np.maximum(0, np.minimum(len(vec_discrete) - 1, idx_obs))
 
     def plot(
         self,
