@@ -3,13 +3,15 @@ from time import time
 
 from tqdm import tqdm
 
+from src.game import Game
+from src.mechanism.mechanism import Mechanism
 from src.strategy import Strategy
 from src.util.logging import Logger
 from src.util.metrics import compute_l2_norm, compute_util_loss_scaled, compute_utility
 from src.util.setup import create_learner, create_setting, get_config
 
 
-def learn_strategies(mechanism, game, cfg_learner):
+def learn_strategies(mechanism: Mechanism, game: Game, cfg_learner):
     """Runs Learner to compute strategies given the specified setting.
 
     Args:
@@ -103,10 +105,10 @@ def run_experiment(
 
 
 def run_sim(
-    learn_alg,
-    setting,
-    experiment,
-    path,
+    learn_alg: str,
+    setting: str,
+    experiment: str,
+    path: str,
     path_config,
     num_runs: int = 1,
     n_obs: int = int(2 * 22),
