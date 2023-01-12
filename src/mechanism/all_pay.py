@@ -49,19 +49,15 @@ class AllPay(Mechanism):
         self.type = param_util["type"]
 
     def utility(self, obs: np.ndarray, bids: np.ndarray, idx: int) -> np.ndarray:
-        """
-        Payoff function for all-pay auction
+        """Utility function for All-Pay Auction
 
-        Parameters
-        ----------
-        obs : obs corresponds to skill paramater
-        bids : effort
-        idx : agent
+        Args:
+            obs (np.ndarray): valuation/skill parameter
+            bids (np.ndarray): bid
+            idx (int): agent
 
-        Returns
-        -------
-        np.ndarray : payoff vector for agent idx
-
+        Returns:
+            np.ndarray: payoff vector for agent
         """
         self.test_input_utility(obs, bids, idx)
 

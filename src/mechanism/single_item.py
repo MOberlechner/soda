@@ -37,7 +37,7 @@ class SingleItemAuction(Mechanism):
         bidder: List[str],
         o_space: Dict[str, List],
         a_space: Dict[str, List],
-        param_prior: Dict[str, str],
+        param_prior: Dict,
         param_util: Dict,
     ):
         super().__init__(bidder, o_space, a_space, param_prior, param_util)
@@ -63,8 +63,7 @@ class SingleItemAuction(Mechanism):
             print("own gradient")
 
     def utility(self, obs: np.ndarray, bids: np.ndarray, idx: int) -> None:
-        """
-        Payoff function for first price sealed bid auctions
+        """Utility function for Single-Item Auction
 
         Parameters
         ----------
