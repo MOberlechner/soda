@@ -52,7 +52,7 @@ class Mechanism:
         self.o_space = o_space
         self.a_space = a_space
 
-        self.dim_o, self.dim_a = self.get_dimensionen_spaces()
+        self.dim_o, self.dim_a = self.get_dimension_spaces()
 
         # param_prior
         self.param_prior = param_prior
