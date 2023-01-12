@@ -31,13 +31,13 @@ class Config:
     ):
         """Initialize Config Class"""
 
-    def create_experiment(setting: str, experiment: str, learner: str):
+    def create_experiment(self, setting: str, experiment: str, learn_alg: str):
         """create mechanism, game, strategies and learner according to config file
 
         Args:
             setting (str): mechanism
             experiment (str): name of config file in mechanism directory
-            learner (str): name of config file for learner in mechanism/learner directory
+            learn_alg (str): name of config file for learner in mechanism/learner directory
         """
         pass
 
@@ -76,7 +76,7 @@ class Config:
         }
 
     def create_strategies(
-        self, game, init_method: str = "random", param_init: dict = {}
+        self, game: Game, init_method: str = "random", param_init: dict = {}
     ) -> dict:
         """Create strategy profile
 
@@ -114,34 +114,26 @@ class Config:
         """
         if not hasattr(self, "config_game"):
             raise ValueError("configuration for mechanism/game not created")
-
         setting = self.config_game["mechanism"]
-        args = [
-            self.config_game["bidder"],
-            self.config_game["o_space"],
-            self.config_game["a_space"],
-            self.config_game["param_prior"],
-            self.config_game["param_util"],
-        ]
 
         if setting == "single_item":
-            mechanism = SingleItemAuction(*args)
+            mechanism = SingleItemAuction(**self.config_game)
         elif setting == "llg_auction":
-            mechanism = LLGAuction(*args)
+            mechanism = LLGAuction(**self.config_game)
         elif setting == "contest_game":
-            mechanism = ContestGame(*args)
+            mechanism = ContestGame(**self.config_game)
         elif setting == "all_pay":
-            mechanism = AllPay(*args)
+            mechanism = AllPay(**self.config_game)
         elif setting == "crowdsourcing":
-            mechanism = Crowdsourcing(*args)
+            mechanism = Crowdsourcing(**self.config_game)
         elif setting == "split_award":
-            mechanism = SplitAwardAuction(*args)
+            mechanism = SplitAwardAuction(**self.config_game)
         elif setting == "double_auction":
-            mechanism = DoubleAuction(*args)
+            mechanism = DoubleAuction(**self.config_game)
         elif setting == "bertrand_pricing":
-            mechanism = BertrandPricing(*args)
+            mechanism = BertrandPricing(**self.config_game)
         elif setting == "multi_unit":
-            mechanism = MultiUnitAuction(*args)
+            mechanism = MultiUnitAuction(**self.config_game)
         else:
             raise ValueError('Mechanism "{}" not available'.format(setting))
 
@@ -192,52 +184,22 @@ class Config:
             raise ValueError("configuration for learner not created")
 
         learn_alg = self.config_learner["learner"]
+
         if learn_alg == "soda":
-            return SODA(
-                self.config_learner["max_iter"],
-                self.config_learner["tol"],
-                self.config_learner["stop_criterion"],
-                self.config_learner["regularizer"],
-                self.config_learner["steprule_bool"],
-                self.config_learner["eta"],
-                self.config_learner["beta"],
-            )
+            return SODA(**self.config_learner)
 
         elif learn_alg == "soma":
-            return SOMA(
-                self.config_learner["max_iter"],
-                self.config_learner["tol"],
-                self.config_learner["stop_criterion"],
-                self.config_learner["mirror_map"],
-                self.config_learner["steprule_bool"],
-                self.config_learner["eta"],
-                self.config_learner["beta"],
-            )
+            return SOMA(**self.config_learner)
 
         elif learn_alg == "frank_wolfe":
-            return FrankWolfe(
-                self.config_learner["max_iter"],
-                self.config_learner["tol"],
-                self.config_learner["stop_criterion"],
-                self.config_learner["method"],
-                self.config_learner["steprule_bool"],
-                self.config_learner["eta"],
-                self.config_learner["beta"],
-            )
+            return FrankWolfe(**self.config_learner)
 
         elif learn_alg == "fictitious_play":
-            return FictitiousPlay(
-                self.config_learner["max_iter"],
-                self.config_learner["tol"],
-                self.config_learner["stop_criterion"],
-            )
+            return FictitiousPlay(**self.config_learner)
 
         elif learn_alg == "best_response":
-            return BestResponse(
-                self.config_learner["max_iter"],
-                self.config_learner["tol"],
-                self.config_learner["stop_criterion"],
-            )
+            return BestResponse(**self.config_learner)
+
         else:
             raise ValueError(f"Learner {learn_alg} unknown.")
 
