@@ -142,42 +142,29 @@ class AllPay(Mechanism):
         np.ndarray : bids to corresponding observation
         """
 
-        if (self.n_bidder == 2) & (len(self.set_bidder) == 1):
-            pass
-            """
-            # symmatric 2 player all pay auction with uniform prior
+        if (self.n_bidder == 2) & self.check_bidder_symmetric:
+
             if (self.prior == "uniform") & (self.o_space[self.bidder[0]] == [0, 1]):
-                if self.param_allpay == 0:
-                    return 1 / 2 * obs ** 2
-                elif (self.param_allpay > 0) & (self.param_allpay < 1):
-                    return (
-                        -obs / self.param_allpay
-                        - 1
-                        / self.param_allpay ** 2
-                        * np.log(1 - self.param_allpay * obs)
+                if self.payment_rule == "first_price":
+                    return 1 / 2 * obs**2
+                elif self.payment_rule == "generalized":
+                    alpha = self.param_util["payment_parameter"]
+                    return -obs / self.param_allpay - 1 / self.param_allpay**2 * np.log(
+                        1 - self.param_allpay * obs
                     )
                 else:
                     return None
 
-            # symmatric 2 player all pay auction with powerlaw prior
             elif (self.prior == "powerlaw") & (self.o_space[self.bidder[0]] == [0, 1]):
                 power = self.param_prior["power"]
                 return power / (power + 1) * obs ** (power + 1)
-            """
 
-        # BNE for uniform prior over [0,1], 2 bidders and the simple loss aversion model
-        if (
-            (self.util_setting == "loss_aversion_simple")
-            & (self.n_bidder == 2)
-            & (self.prior == "uniform")
-            & (self.o_space[self.bidder[0]] == [0, 1])
-        ):
-
-            lamb = self.param_util["lambda"]
-            return 1 / 2 * 1 / (lamb - (lamb - 1) * obs) * obs**2
-
+            else:
+                raise NotImplemented(
+                    "BNE not implemented for this setting (prior, spaces)"
+                )
         else:
-            return None
+            raise NotImplemented("BNE not implemented for more than 2 agents")
 
     def check_param(self):
         """
