@@ -1,9 +1,12 @@
 from datetime import datetime
 from os.path import exists
 from pathlib import Path
+from typing import Dict
 
 import numpy as np
 import pandas as pd
+
+from src.strategy import Strategy
 
 
 class Logger:
@@ -78,7 +81,12 @@ class Logger:
         )
 
     def log_learning(
-        self, strategies, run: int, convergence: bool, time_init: float, time_run: float
+        self,
+        strategies: Dict[str, Strategy],
+        run: int,
+        convergence: bool,
+        time_init: float,
+        time_run: float,
     ):
         """Log metrics created by learning process
 
