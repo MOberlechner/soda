@@ -1,30 +1,34 @@
+from typing import Dict
+
 import numpy as np
 from scipy.stats import wasserstein_distance
 
+from src.game import Game
+from src.learner.gradient import Gradient
 from src.learner.soda import SODA
+from src.mechanism.mechanism import Mechanism
+from src.strategy import Strategy
 
 
-def compute_l2_norm(mechanism, strategies, n_obs):
-    """Compute L2 distance between computed strategies and BNE
+def compute_l2_norm(
+    mechanism: Mechanism, strategies: Dict[str, Strategy], n_type: int
+) -> Dict[str, float]:
+    """Computes the approximated L2 norm between computed strategy and analytical BNE
 
-        Parameters
-        ----------
-        mechanism : class
-        strategies : class
-        n_obs : int, number of observations sampled
+    Args:
+        mechanism (Mechanism):
+        strategies (Dict[str, Strategy]):
+        n_type (int): number of sampled types
 
-        Returns
-        -------
-        dict, l2 norm for each strategy
-    ö
+    Returns:
+        Dict[str, float]
     """
-
     l2_norm = {}
     for i in mechanism.set_bidder:
         idx = mechanism.bidder.index(i)
 
         # get observations
-        obs = mechanism.draw_values(n_obs)
+        obs = mechanism.sample_types(n_type)
 
         # get bids & bne for agent i
         bids = strategies[i].bid(obs[idx])
@@ -34,23 +38,23 @@ def compute_l2_norm(mechanism, strategies, n_obs):
             l2_norm[i] = -1
             print("BNE is unknown")
         else:
-            l2_norm[i] = np.sqrt(1 / n_obs * ((bids - bne) ** 2).sum())
+            l2_norm[i] = np.sqrt(1 / n_type * ((bids - bne) ** 2).sum())
 
     return l2_norm
 
 
-def compute_utility(mechanism, strategies, n_obs):
-    """Compute utilities and utility loss when playing computed strategies against BNE
+def compute_utility(
+    mechanism: Mechanism, strategies: Dict[str, Strategy], n_type: int
+) -> Dict[str, float]:
+    """Computes Utility of BNE vs. BNE and Strategy vs. BNE as well as relative utility loss for all agents
 
-    Parameters
-    ----------
-    mechanism : class
-    strategies : class
-    n_obs : int, number of observations sampled
+    Args:
+        mechanism (Mechanism):
+        strategies (Dict[str, Strategy]):
+        n_type (int): number of sampled types
 
-    Returns
-    -------
-    dict, utility in BNE, utility and utility loss playing against BNE
+    Returns:
+        Dict[str, float]
     """
 
     util_bne, util_vs_bne = {}, {}
@@ -59,7 +63,7 @@ def compute_utility(mechanism, strategies, n_obs):
         idx = mechanism.bidder.index(i)
 
         # get bids (for i) and bne (for all)
-        obs = mechanism.draw_values(n_obs)
+        obs = mechanism.sample_types(n_type)
         bids = strategies[i].bid(obs[idx])
         bne = np.array(
             [
@@ -68,18 +72,9 @@ def compute_utility(mechanism, strategies, n_obs):
             ]
         )
 
-        if mechanism.value_model == "private":
-            valuations = obs[idx]
-        elif mechanism.value_model == "affiliated":
-            valuations = obs
-        elif mechanism.value_model == "common":
-            valuations = obs[mechanism.n_bidder]
-        else:
-            raise NotImplementedError
-
+        valuations = mechanism.get_valuation(obs, bids, idx)
         # get utility in bne
         util_bne[i] = mechanism.utility(valuations, bne, idx).mean()
-
         # get utility vs. bne
         bne[idx] = bids
         util_vs_bne[i] = mechanism.utility(valuations, bne, idx).mean()
@@ -90,32 +85,32 @@ def compute_utility(mechanism, strategies, n_obs):
     return util_bne, util_vs_bne, util_loss
 
 
-def compute_util_loss_scaled(mechanism_scaled, game_scaled, strategies_scaled):
-    """Compute Utility Loss
+def compute_util_loss_scaled(
+    mechanism: Mechanism, game: Game, strategies: Dict[str, Strategy]
+) -> Dict[str, float]:
+    """Compute relative utility loss in discretized game
 
-    Parameters
-    ----------
-    mechanism_scaled : class, mechanism
-    game_scaled : class, discretized game
-    strategies_scaled : class, strategy induced by lower dimensional strategy
+    Args:
+        mechanism_scaled (Mechanism): mechanism
+        game_scaled (Game): approximation game (discretized mechanism)
+        strategies_scaled (Dict[str, Strategy]): strategy profile
 
-    Returns
-    -------
-    Dict, utility loss in larger (scaled) game
+    Returns:
+        Dict[str, float]: util loss for each agent
     """
 
     # create learner and prepare gradient computation
-    soda = SODA(max_iter=0, tol=0, steprule_bool=True, eta=1, beta=1)
-    if not mechanism_scaled.own_gradient:
-        soda.prepare_grad(game_scaled, strategies_scaled)
+    gradient = Gradient()
+    if not mechanism.own_gradient:
+        gradient.prepare(mechanism, game, strategies)
 
-    util_loss_scaled = {}
-    for i in mechanism_scaled.set_bidder:
-        grad = soda.compute_gradient(strategies_scaled, game_scaled, i)
-        strategies_scaled[i].update_utility_loss(grad)
-        util_loss_scaled[i] = strategies_scaled[i].utility_loss[-1]
+    util_loss = {}
+    for i in mechanism.set_bidder:
+        gradient.compute(mechanism, game, strategies, i)
+        strategies[i].update_utility_loss(gradient.x[i])
+        util_loss[i] = strategies[i].utility_loss[-1]
 
-    return util_loss_scaled
+    return util_loss
 
 
 def monotonicity(strategies, game):
