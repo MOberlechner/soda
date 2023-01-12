@@ -30,7 +30,7 @@ class Mechanism:
             - get_valuation: reformates observations/valuations and consideres different value models
             - get_allocation, get_payment, get_payoff are used as well but implement in the respective child classes
 
-        draw_values: draws types (valuations/observations) according to given prior. The following priors are implemented
+        sample_types: draws types (valuations/observations) according to given prior. The following priors are implemented
             - uniform, gaussian, gaussian_trunc, powerlaw
 
     """
@@ -112,8 +112,8 @@ class Mechanism:
             )
         return valuations
 
-    def draw_values(self, n_vals: int) -> np.ndarray:
-        """samples observations (and valuations) for each agent according to the prior
+    def sample_types(self, n_vals: int) -> np.ndarray:
+        """draw types, i.e. observations and/or valuations, for each agent according to the prior
 
         Args:
             n_vals (int): number of observations per agent
@@ -128,16 +128,16 @@ class Mechanism:
             )
 
         if self.prior == "uniform":
-            return self.draw_types_uniform(n_vals)
+            return self.sample_types_uniform(n_vals)
 
         elif self.prior == "gaussian":
-            return self.draw_types_gaussian(n_vals)
+            return self.sample_types_gaussian(n_vals)
 
         elif self.prior == "gaussian_trunc":
-            return self.draw_types_gaussian_trunc(n_vals)
+            return self.sample_types_gaussian_trunc(n_vals)
 
         elif self.prior == "powerlaw":
-            return self.draw_types_powerlaw(n_vals)
+            return self.sample_types_powerlaw(n_vals)
 
         elif self.prior == "affiliated_values":
             w = uniform.rvs(loc=0, scale=1, size=(3, n_vals))
@@ -150,7 +150,7 @@ class Mechanism:
         else:
             raise ValueError('prior "' + self.prior + '" not implement')
 
-    def draw_types_uniform(self, n_types: int) -> np.ndarray:
+    def sample_types_uniform(self, n_types: int) -> np.ndarray:
         """draw types according to uniform distribution
         Correlation (Bernoulli weights model) only implemented for 2 bidder
 
@@ -196,7 +196,7 @@ class Mechanism:
                 "Correlation with Uniform Prior only implemented for 2 bidder"
             )
 
-    def draw_types_gaussian(self, n_types: int) -> np.ndarray:
+    def sample_types_gaussian(self, n_types: int) -> np.ndarray:
         """draw types according to gaussian distribution
 
         Args:
@@ -221,7 +221,7 @@ class Mechanism:
             ]
         )
 
-    def draw_types_gaussian_trunc(self, n_types: int) -> np.ndarray:
+    def sample_types_gaussian_trunc(self, n_types: int) -> np.ndarray:
         """draw types according to truncated gaussian distribution
 
         Args:
@@ -248,7 +248,7 @@ class Mechanism:
             ]
         )
 
-    def draw_types_powerlaw(self, n_types: int) -> np.ndarray:
+    def sample_types_powerlaw(self, n_types: int) -> np.ndarray:
         """draw types according to powerlaw distribution
 
         Args:
@@ -266,7 +266,7 @@ class Mechanism:
 
         return np.array(
             [
-                uniform.rvs(
+                powerlaw.rvs(
                     a=power,
                     loc=self.o_space[self.bidder[i]][0],
                     scale=self.o_space[self.bidder[i]][-1]
@@ -290,3 +290,15 @@ class Mechanism:
             [self.a_space[0] == self.a_space[i] for i in self.set_bidder]
         )
         return o_space_identical and a_space_identical
+
+    def get_bne(self, agent: str, obs: np.ndarray) -> np.ndarray:
+        """return bne bids for given agent and observations
+
+        Args:
+            agent (str): bidder
+            obs (np.ndarray): observations for bidder
+
+        Returns:
+            np.ndarray: equilibrium bids
+        """
+        return None
