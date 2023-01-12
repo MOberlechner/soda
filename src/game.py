@@ -47,7 +47,7 @@ class Game:
             for i in self.set_bidder
         }
         self.a_discr = {
-            i: self.discr_spaces(mechanism.a_space[i], m, midpoint=True)
+            i: self.discr_spaces(mechanism.a_space[i], m, midpoint=False)
             for i in self.set_bidder
         }
         if hasattr(mechanism, "v_space"):
