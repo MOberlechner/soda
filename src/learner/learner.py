@@ -40,7 +40,7 @@ class Learner:
             tol (float): stopping criterion (relative utility loss)
             stop_criterion (str): specify stopping criterion. Defaults to "util_loss"
         """
-        self.learner = "not defined"
+        self.name = "not defined"
         self.max_iter = max_iter
         self.tol = tol
         self.stop_criterion = stop_criterion
@@ -50,7 +50,7 @@ class Learner:
         self,
         mechanism: Mechanism,
         game: Game,
-        strategies: dict,
+        strategies: Dict[str, Strategy],
         disable_tqdm_bool: bool = True,
         print_result_bool: bool = False,
         save_history_bool: bool = False,
@@ -103,7 +103,7 @@ class Learner:
         if print_result_bool:
             self.print_result(self.convergence, min_max_value, max_value, t_max)
 
-    def update_strategy(self, strategy: Strategy, gradient: np.ndarray, t):
+    def update_strategy(self, strategy: Strategy, gradient: np.ndarray, t: int):
         """Update strategy according to update rule from specific learning method
 
         Args:
@@ -153,7 +153,7 @@ class Learner:
 
     def print_result(
         self, convergence: bool, min_max_value: float, max_value: float, t_max: int
-    ):
+    ) -> None:
         """Print result of run
 
         Args:
