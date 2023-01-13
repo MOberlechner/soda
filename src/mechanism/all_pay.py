@@ -53,7 +53,7 @@ class AllPay(Mechanism):
 
         Args:
             obs (np.ndarray): valuation/skill parameter
-            bids (np.ndarray): bid
+            bids (np.ndarray): bid profiles
             idx (int): agent
 
         Returns:
