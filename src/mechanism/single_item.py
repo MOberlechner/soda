@@ -120,8 +120,14 @@ class SingleItemAuction(Mechanism):
         """
         if self.payment_rule == "first_price":
             payment = bids[idx]
+
         elif self.payment_rule == "second_price":
             payment = np.delete(bids, idx, 0).max(axis=0)
+
+        elif self.payment_rule == "third_price":
+            payment = np.delete(bids, idx, 0)
+            payment = np.sort(bids, axis=0)[-3, :]
+
         else:
             raise ValueError("payment rule " + self.payment_rule + " not available")
         return payment
@@ -377,6 +383,11 @@ class SingleItemAuction(Mechanism):
             raise ValueError("specify tiebreaking rule")
         if "payment_rule" not in self.param_util:
             raise ValueError("specify payment rule")
+        else:
+            if (self.param_util["payment_rule"] == "third_price") & (self.n_bidder < 3):
+                raise ValueError(
+                    "Third-price payment rule only available for more than 2 agents"
+                )
         if "utility_type" not in self.param_util:
             self.param_util["utility_type"] = "QL"
-            print("utility type not specified, quasi-linear (QL) chosen by default.")
+            print("utility_type not specified, quasi-linear (QL) chosen by default.")
