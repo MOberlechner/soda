@@ -125,7 +125,6 @@ class SingleItemAuction(Mechanism):
             payment = np.delete(bids, idx, 0).max(axis=0)
 
         elif self.payment_rule == "third_price":
-            payment = np.delete(bids, idx, 0)
             payment = np.sort(bids, axis=0)[-3, :]
 
         else:
