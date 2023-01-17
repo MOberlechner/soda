@@ -337,7 +337,7 @@ class Strategy:
 
     # --------------------------------------- METHODS USED TO ANALYZE RESULTS ---------------------------------------- #
 
-    def bid(self, observation: np.ndarray):
+    def sample_bids(self, observation: np.ndarray):
         """
         Sample bids from the strategy
 
@@ -351,7 +351,7 @@ class Strategy:
         """
         if self.dim_o == 1:
 
-            idx_obs = self.find_nearest_discrete_point(observation, self.o_discr)
+            idx_obs = self._find_nearest_discrete_point(observation, self.o_discr)
             uniques, counts = np.unique(
                 idx_obs, return_inverse=False, return_counts=True
             )
@@ -393,7 +393,7 @@ class Strategy:
                 "Bids can only be sampled for one-dimensional observations"
             )
 
-    def find_nearest_discrete_point(
+    def _find_nearest_discrete_point(
         self, vec_continuous: np.ndarray, vec_discrete: np.ndarray
     ) -> np.ndarray:
         """
