@@ -28,7 +28,7 @@ class SOMA(Learner):
         super().__init__(max_iter, tol, stop_criterion)
         self.check_input(param)
 
-        self.learner = "soma" + param["mirror_map"][:4]
+        self.name = "soma" + param["mirror_map"][:4]
         self.mirror_map = param["mirror_map"]
         self.steprule_bool = ["steprule_bool"]
         self.eta = ["eta"]

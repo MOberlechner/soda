@@ -23,7 +23,7 @@ class MultiplicativeWeights(Learner):
         super().__init__(max_iter, tol, stop_criterion)
         self.check_input(param)
 
-        self.learner = "multiplicative_weights"
+        self.name = "multiplicative_weights"
         self.stepsize = param["stepsize"]
 
     def update_strategy(self, strategy, gradient: np.ndarray, t: int) -> None:

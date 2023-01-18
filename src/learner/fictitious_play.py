@@ -21,7 +21,7 @@ class FictitiousPlay(Learner):
         stop_criterion: str,
     ):
         super().__init__(max_iter, tol, stop_criterion)
-        self.learner = "fictitious_play"
+        self.name = "fictitious_play"
 
     def update_strategy(self, strategy, gradient: np.ndarray, t: int) -> None:
         """Update strategy according to Fictitious Play

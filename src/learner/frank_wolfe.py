@@ -25,7 +25,7 @@ class FrankWolfe(Learner):
         super().__init__(max_iter, tol, stop_criterion)
         self.check_input(param)
 
-        self.learner = "frank_wolfe"
+        self.name = "frank_wolfe"
         self.method = param["method"]
         self.steprule_bool = param["steprule_bool"]
         self.eta = param["eta"]

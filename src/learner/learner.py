@@ -49,6 +49,9 @@ class Learner:
 
         self.convergence = False
 
+    def __repr__(self) -> str:
+        return f"Learner({self.name})"
+
     def run(
         self,
         mechanism: Mechanism,

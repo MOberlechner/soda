@@ -28,13 +28,11 @@ class SODA(Learner):
         super().__init__(max_iter, tol, stop_criterion)
         self.check_input(param)
 
-        self.learner = "soda" + param["regularizer"]
+        self.name = "soda" + param["regularizer"]
         self.steprule_bool = param["steprule_bool"]
         self.eta = param["eta"]
         self.beta = param["beta"]
         self.regularizer = param["regularizer"]
-
-        self.check_input()
 
     def check_input(self):
         """Check Paramaters for Learner

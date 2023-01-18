@@ -19,7 +19,7 @@ class BestResponse(Learner):
         stop_criterion: str,
     ):
         super().__init__(max_iter, tol, stop_criterion)
-        self.learner = "best_response"
+        self.name = "best_response"
 
     def update_strategy(self, strategy, gradient: np.ndarray, t: int) -> None:
         """_summary_
