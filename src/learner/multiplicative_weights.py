@@ -18,11 +18,13 @@ class MultiplicativeWeights(Learner):
         max_iter: int,
         tol: float,
         stop_criterion: str,
-        stepsize: float,
+        param: dict,
     ):
         super().__init__(max_iter, tol, stop_criterion)
+        self.check_input(param)
+
         self.learner = "multiplicative_weights"
-        self.stepsize = stepsize
+        self.stepsize = param["stepsize"]
 
     def update_strategy(self, strategy, gradient: np.ndarray, t: int) -> None:
         """
@@ -66,3 +68,8 @@ class MultiplicativeWeights(Learner):
             list(prior.shape) + [1] * dim_a
         )
         return 1 / x_upd_sum * prior.reshape(list(prior.shape) + [1] * dim_a) * x_upd
+
+    def check_input(self, param: dict) -> None:
+
+        if "stepsize" not in param:
+            raise ValueError("stepsize not defined in param")

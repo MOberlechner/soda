@@ -20,17 +20,16 @@ class FrankWolfe(Learner):
         max_iter: int,
         tol: float,
         stop_criterion: str,
-        method: str,
-        steprule_bool: bool,
-        eta: float,
-        beta: float,
+        param: dict,
     ):
         super().__init__(max_iter, tol, stop_criterion)
+        self.check_input(param)
+
         self.learner = "frank_wolfe"
-        self.method = method
-        self.steprule_bool = steprule_bool
-        self.eta = eta
-        self.beta = beta
+        self.method = param["method"]
+        self.steprule_bool = param["steprule_bool"]
+        self.eta = param["eta"]
+        self.beta = param["beta"]
 
         # check input
         if self.steprule_bool:
@@ -92,3 +91,16 @@ class FrankWolfe(Learner):
         else:
             # standard FW
             return 2 / (t + 2)
+
+    def check_input(self, param: dict):
+        """Check if all necessary parameters are in dict
+
+        Args:
+            param (dict): parameter for Frank-Wolfe algorithm
+
+        Raises:
+            ValueError: something is missing
+        """
+        for key in ["method", "steprule_bool", "eta", "beta"]:
+            if key not in param:
+                raise ValueError(f"Define {key} in param")

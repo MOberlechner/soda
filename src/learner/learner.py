@@ -31,6 +31,7 @@ class Learner:
         max_iter: int,
         tol: float,
         stop_criterion: str = "util_loss",
+        param: Dict = {},
     ):
         """Initialize learner
 
@@ -44,6 +45,8 @@ class Learner:
         self.max_iter = max_iter
         self.tol = tol
         self.stop_criterion = stop_criterion
+        self.param = param
+
         self.convergence = False
 
     def run(
@@ -67,8 +70,8 @@ class Learner:
         """
 
         # prepare gradients, i.e., compute path and indices
-        gradient = Gradient()
-        gradient.prepare(mechanism, game, strategies)
+        self.gradient = Gradient()
+        self.gradient.prepare(mechanism, game, strategies)
 
         # init parameters
         min_max_value = 999
@@ -83,11 +86,11 @@ class Learner:
 
             # compute gradients
             for i in game.set_bidder:
-                gradient.compute(mechanism, game, strategies, i)
+                self.gradient.compute(mechanism, game, strategies, i)
 
             # update history (utility, utility loss, dist_prev_iter, optional: strategy, gradient)
             for i in game.set_bidder:
-                strategies[i].update_history(gradient.x[i], save_history_bool)
+                strategies[i].update_history(self.gradient.x[i], save_history_bool)
 
             # check convergence
             min_max_value, max_value = self.check_convergence(strategies, min_max_value)
@@ -97,7 +100,7 @@ class Learner:
 
             # update strategy
             for i in game.set_bidder:
-                self.update_strategy(strategies[i], gradient.x[i], t)
+                self.update_strategy(strategies[i], self.gradient.x[i], t)
 
         # print result
         if print_result_bool:

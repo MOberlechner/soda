@@ -23,17 +23,16 @@ class SODA(Learner):
         max_iter: int,
         tol: float,
         stop_criterion: str,
-        regularizer: str,
-        steprule_bool: bool,
-        eta: float,
-        beta: float = 1 / 20,
+        param: dict,
     ):
         super().__init__(max_iter, tol, stop_criterion)
-        self.learner = "soda" + regularizer[:4]
-        self.steprule_bool = steprule_bool
-        self.eta = eta
-        self.beta = beta
-        self.regularizer = regularizer
+        self.check_input(param)
+
+        self.learner = "soda" + param["regularizer"]
+        self.steprule_bool = param["steprule_bool"]
+        self.eta = param["eta"]
+        self.beta = param["beta"]
+        self.regularizer = param["regularizer"]
 
         self.check_input()
 
@@ -199,3 +198,16 @@ class SODA(Learner):
             scale[scale < 1e-100] = 1e-100
             stepsize = self.eta / scale
             return stepsize.reshape(list(stepsize.shape) + [1] * dim_a)
+
+    def check_input(self, param: dict) -> None:
+        """Check if all necessary parameters are in dict
+
+        Args:
+            param (dict): parameter for SODA algorithm
+
+        Raises:
+            ValueError: something is missing
+        """
+        for key in ["regularizer", "steprule_bool", "eta", "beta"]:
+            if key not in param:
+                raise ValueError(f"Define {key} in param")

@@ -23,19 +23,16 @@ class SOMA(Learner):
         max_iter: int,
         tol: float,
         stop_criterion: str,
-        mirror_map: str,
-        steprule_bool: bool,
-        eta: float,
-        beta: float = 1 / 20,
+        param: dict,
     ):
         super().__init__(max_iter, tol, stop_criterion)
-        self.learner = "soma" + mirror_map[:4]
-        self.mirror_map = mirror_map
-        self.steprule_bool = steprule_bool
-        self.eta = eta
-        self.beta = beta
+        self.check_input(param)
 
-        self.check_input()
+        self.learner = "soma" + param["mirror_map"][:4]
+        self.mirror_map = param["mirror_map"]
+        self.steprule_bool = ["steprule_bool"]
+        self.eta = ["eta"]
+        self.beta = ["beta"]
 
     def check_input(self):
         """Check Paramaters for Learner
@@ -43,8 +40,6 @@ class SOMA(Learner):
         Raises:
             ValueError: mirror_map unkown
         """
-        if self.mirror_map not in ["euclidean", "entropic"]:
-            raise ValueError('Regularizer "{}" unknown'.format(self.mirror_map))
 
     def update_strategy(self, strategy, gradient: np.ndarray, t: int) -> None:
         """Update strategy: Projected Gradient Ascent
@@ -193,3 +188,19 @@ class SOMA(Learner):
             scale[scale < 1e-100] = 1e-100
             stepsize = self.eta / scale
             return stepsize.reshape(list(stepsize.shape) + [1] * dim_a)
+
+    def check_input(self, param: dict) -> None:
+        """Check if all necessary parameters are in dict
+
+        Args:
+            param (dict): parameter for SOMA algorithm
+
+        Raises:
+            ValueError: something is missing
+        """
+        for key in ["mirror_map", "steprule_bool", "eta", "beta"]:
+            if key not in param:
+                raise ValueError(f"Define {key} in param")
+
+        if param["mirror_map"] not in ["euclidean", "entropic"]:
+            raise ValueError(f"mirror map  unkown")
