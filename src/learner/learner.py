@@ -54,7 +54,6 @@ class Learner:
 
     def run(
         self,
-        mechanism: Mechanism,
         game: Game,
         strategies: Dict[str, Strategy],
         disable_tqdm_bool: bool = True,
@@ -64,7 +63,6 @@ class Learner:
         """Run learning algorithm
 
         Args:
-            mechanism (class): auction game
             game (class): discretized approximation game
             strategies (dict): strategy profile
             disable_tqdm_bool (bool): Disable progess bar. Defaults to True
@@ -74,7 +72,7 @@ class Learner:
 
         # prepare gradients, i.e., compute path and indices
         self.gradient = Gradient()
-        self.gradient.prepare(mechanism, game, strategies)
+        self.gradient.prepare(game, strategies)
 
         # init parameters
         min_max_value = 999
@@ -89,7 +87,7 @@ class Learner:
 
             # compute gradients
             for i in game.set_bidder:
-                self.gradient.compute(mechanism, game, strategies, i)
+                self.gradient.compute(game, strategies, i)
 
             # update history (utility, utility loss, dist_prev_iter, optional: strategy, gradient)
             for i in game.set_bidder:
