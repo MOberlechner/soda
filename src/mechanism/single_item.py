@@ -48,19 +48,14 @@ class SingleItemAuction(Mechanism):
         self.tie_breaking = param_util["tie_breaking"]
         self.utility_type = param_util["utility_type"]
 
+        self.check_own_gradient()
+
         # prior
         if self.prior == "affiliated_values":
             self.value_model = "affiliated"
         elif self.prior == "common_value":
             self.value_model = "common"
             self.v_space = {i: [0, o_space[i][1] / 2] for i in bidder}
-
-        # use own gradient
-        if (len(self.set_bidder) == 1) and (self.payment_rule == "first_price") & (
-            self.prior not in ["affiliated_values", "common_value"]
-        ) & ("corr" not in self.param_prior):
-            self.own_gradient = True
-            print("own gradient")
 
     def utility(self, obs: np.ndarray, bids: np.ndarray, idx: int) -> None:
         """Utility function for Single-Item Auction
@@ -390,3 +385,11 @@ class SingleItemAuction(Mechanism):
         if "utility_type" not in self.param_util:
             self.param_util["utility_type"] = "QL"
             print("utility_type not specified, quasi-linear (QL) chosen by default.")
+
+    def check_own_gradient(self):
+        """check if we can use gradient computation of mechanism"""
+        if (len(self.set_bidder) == 1) and (self.payment_rule == "first_price") & (
+            self.prior not in ["affiliated_values", "common_value"]
+        ) & ("corr" not in self.param_prior):
+            self.own_gradient = True
+            print("- gradient computation via mechanism -")
