@@ -3,6 +3,9 @@ from typing import Dict, List
 import numpy as np
 from opt_einsum import contract, contract_path
 
+from src.game import Game
+from src.strategy import Strategy
+
 
 class Gradient:
     """Class that handles the computation of the gradient for the discretized game
@@ -22,21 +25,16 @@ class Gradient:
         self.path = {}
         self.indices = {}
 
-    def compute(self, mechanism, game, strategies: Dict, agent: str) -> None:
+    def compute(self, game: Game, strategies: Dict[str, Strategy], agent: str) -> None:
         """Computes gradient for agent given a strategyprofile, utilities (and weights)
 
         Args:
-            strategies (Dict): contains strategies for agents
-            game (Game): approximation (discretized) game
-            agent (str): specifies agent
-            indices (Dict): contains str with indices
-
-        Returns:
-            np.ndarray: gradient
+            game (Game): approximation game
+            strategies (Dict[str, Strategy]): strategy profile
+            agent (str): _description_
         """
-
-        if mechanism.own_gradient:
-            self.x[agent] = mechanism.compute_gradient(game, strategies, agent)
+        if game.mechanism.own_gradient:
+            self.x[agent] = game.mechanism.compute_gradient(game, strategies, agent)
 
         else:
             opp = game.bidder.copy()
@@ -63,18 +61,17 @@ class Gradient:
                     optimize=self.path[agent]
                 )
 
-    def prepare(self, mechanism, game, strategies: Dict) -> None:
+    def prepare(self, game, strategies: Dict) -> None:
         """Computes path and indices used in opt_einsum to compute gradients.
         Respective attributes are updated.
 
         Args:
-            mechanism (Mechanism): auction mechanism
             game (Game): discretized game
             strategies (Dict): contains strategies for agents
 
         """
 
-        if mechanism.own_gradient:
+        if game.mechanism.own_gradient:
             # nothing to do here
             pass
 
