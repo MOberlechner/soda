@@ -28,13 +28,9 @@ class FrankWolfe(Learner):
         self.name = "frank_wolfe"
         self.method = param["method"]
         self.steprule_bool = param["steprule_bool"]
-        self.eta = param["eta"]
-        self.beta = param["beta"]
-
-        # check input
         if self.steprule_bool:
-            if self.eta > 1:
-                raise ValueError(f"eta={self.eta} not feasible (step > 1)")
+            self.eta = param["eta"]
+            self.beta = param["beta"]
 
     def update_strategy(self, strategy, gradient: np.ndarray, t: int) -> None:
         """Update strategy according to Frank-Wolfe (FW)
@@ -101,6 +97,13 @@ class FrankWolfe(Learner):
         Raises:
             ValueError: something is missing
         """
-        for key in ["method", "steprule_bool", "eta", "beta"]:
+        for key in ["method", "steprule_bool"]:
             if key not in param:
                 raise ValueError(f"Define {key} in param")
+        if param["steprule_bool"]:
+            for key in ["eta", "beta"]:
+                if key not in param:
+                    raise ValueError(f"Define {key} in param")
+            # check input
+            if param["eta"] > 1:
+                raise ValueError(f"eta is not feasible! Choose eta <= 1)")
