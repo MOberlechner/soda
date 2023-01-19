@@ -44,9 +44,9 @@ class Config:
         self.get_config_game(setting, experiment)
         self.get_config_learner(setting, learn_alg)
 
-        mechanism, game = self.create_mechanism_game()
+        game = self.create_game()
         learner = self.create_learner()
-        return mechanism, game, learner
+        return game, learner
 
     def get_config_game(self, setting: str, experiment: str):
         """get configuration to create mechanism and game
@@ -71,7 +71,7 @@ class Config:
 
     def create_config_game(
         self,
-        setting: str,
+        mechanism_type: str,
         bidder: list,
         o_space: dict,
         a_space: dict,
@@ -83,7 +83,7 @@ class Config:
         """Create config file to create mechanism and game
 
         Args:
-            setting (str): mechanism
+            mechanism_type (str): mechanism
             bidder (list): list of agents
             o_space (dict): contains intervals for observation space for bidders
             a_space (dict): contains intervals for action space for bidders
@@ -93,7 +93,7 @@ class Config:
             m (int): number discretization points action intervals
         """
         self.config_game = {
-            "name": setting,
+            "mechanism": mechanism_type,
             "bidder": bidder,
             "o_space": o_space,
             "a_space": a_space,
@@ -122,7 +122,7 @@ class Config:
             strategies[i].initialize(init_method, param_init)
         return strategies
 
-    def create_mechanism_game(self):
+    def create_game(self):
         """Create Mechanism and approximation game for configuration
 
         Args:
@@ -177,7 +177,7 @@ class Config:
             raise ValueError('Mechanism "{}" not available'.format(setting))
 
         game = Game(mechanism, self.config_game["n"], self.config_game["m"])
-        return mechanism, game
+        return game
 
     def get_config_learner(self, setting: str, learn_alg: str):
         """get configuration to create mechanism and game
@@ -202,14 +202,11 @@ class Config:
 
     def create_config_learner(
         self,
-        learn_alg: str,
+        learner_type: str,
         max_iter: int,
         tol: float,
         stop_criterion: str,
-        method: str = None,
-        steprule_bool: bool = None,
-        eta: float = None,
-        beta: float = None,
+        param: Dict = {},
     ):
         """create config file to create learn algorithm
 
@@ -224,19 +221,12 @@ class Config:
             beta (float, optional): parameter2 for steprule. Defaults to None.
         """
         self.config_learner = {
-            "name": learn_alg,
+            "learner": learner_type,
             "max_iter": max_iter,
             "tol": tol,
             "stop_criterion": stop_criterion,
+            "parameter": param,
         }
-        if method is not None:
-            self.config_learner["method"] = method
-        if steprule_bool is not None:
-            self.config_learner["steprule_bool"] = steprule_bool
-        if eta is not None:
-            self.config_learner["eta"] = eta
-        if beta is not None:
-            self.config_learner["beta"] = beta
 
     def create_learner(self) -> Learner:
         """create learn algorithm from learner configurationss
@@ -252,21 +242,27 @@ class Config:
             raise ValueError("configuration for learner not created")
 
         learn_alg = self.config_learner["learner"]
+        args = [
+            self.config_learner["max_iter"],
+            self.config_learner["tol"],
+            self.config_learner["stop_criterion"],
+        ]
+        param = self.config_learner["parameter"]
 
         if learn_alg == "soda":
-            return SODA(**self.config_learner)
+            return SODA(*args, param)
 
         elif learn_alg == "soma":
-            return SOMA(**self.config_learner)
+            return SOMA(*args, param)
 
         elif learn_alg == "frank_wolfe":
-            return FrankWolfe(**self.config_learner)
+            return FrankWolfe(*args, param)
 
         elif learn_alg == "fictitious_play":
-            return FictitiousPlay(**self.config_learner)
+            return FictitiousPlay(*args, param)
 
         elif learn_alg == "best_response":
-            return BestResponse(**self.config_learner)
+            return BestResponse(*args, param)
 
         else:
             raise ValueError(f"Learner {learn_alg} unknown.")
