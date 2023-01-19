@@ -30,16 +30,9 @@ class SOMA(Learner):
 
         self.name = "soma_" + param["mirror_map"]
         self.mirror_map = param["mirror_map"]
-        self.steprule_bool = ["steprule_bool"]
-        self.eta = ["eta"]
-        self.beta = ["beta"]
-
-    def check_input(self):
-        """Check Paramaters for Learner
-
-        Raises:
-            ValueError: mirror_map unkown
-        """
+        self.steprule_bool = param["steprule_bool"]
+        self.eta = param["eta"]
+        self.beta = param["beta"]
 
     def update_strategy(self, strategy, gradient: np.ndarray, t: int) -> None:
         """Update strategy: Projected Gradient Ascent
@@ -189,18 +182,20 @@ class SOMA(Learner):
             stepsize = self.eta / scale
             return stepsize.reshape(list(stepsize.shape) + [1] * dim_a)
 
-    def check_input(self, param: dict) -> None:
-        """Check if all necessary parameters are in dict
+    def check_input(self, param: dict):
+        """Check if all parameters are in dict
 
         Args:
-            param (dict): parameter for SOMA algorithm
+            param (dict): parameter for learning algorithmus
 
         Raises:
-            ValueError: something is missing
+            ValueError: mirror_map unkown
         """
-        for key in ["mirror_map", "steprule_bool", "eta", "beta"]:
-            if key not in param:
-                raise ValueError(f"Define {key} in param")
-
-        if param["mirror_map"] not in ["euclidean", "entropic"]:
-            raise ValueError(f"mirror map  unkown")
+        if "mirror_map" not in param:
+            raise ValueError("define mirror_map in param")
+        elif param["mirror_map"] not in ["euclidean", "entropic"]:
+            raise ValueError("mirror map unknown")
+        if "steprule_bool" not in param:
+            raise ValueError("define steprule_bool in param")
+        elif ("eta" not in param) or ("beta" not in param):
+            raise ValueError("define eta and beta in param")
