@@ -120,7 +120,7 @@ class SingleItemAuction(Mechanism):
             payment = np.delete(bids, idx, 0).max(axis=0)
 
         elif self.payment_rule == "third_price":
-            payment = np.sort(bids, axis=0)[-3, :]
+            payment = np.sort(np.delete(bids, idx, 0), axis=0)[-2, :]
 
         else:
             raise ValueError("payment rule " + self.payment_rule + " not available")
@@ -148,21 +148,21 @@ class SingleItemAuction(Mechanism):
             payoff = allocation * np.divide(
                 valuation - payment,
                 payment,
-                out=np.zeros_like((allocation)),
+                out=np.zeros_like((valuation - payment)),
                 where=payment != 0,
             )
         elif self.utility_type == "ROS":
             payoff = allocation * np.divide(
                 valuation,
                 payment,
-                out=np.zeros_like((valuation / np.ones(allocation.shape))),
+                out=np.zeros_like((valuation - payment)),
                 where=payment != 0,
             )
         elif self.utility_type == "ROSB":
             payoff = np.divide(
                 valuation,
                 payment,
-                out=np.zeros_like((valuation / np.ones(allocation.shape))),
+                out=np.zeros_like((valuation - payment)),
                 where=payment != 0,
             ) + np.log(self.param_util["budget"] - payment)
         else:
@@ -392,4 +392,4 @@ class SingleItemAuction(Mechanism):
             self.prior not in ["affiliated_values", "common_value"]
         ) & ("corr" not in self.param_prior):
             self.own_gradient = True
-            print("- gradient computation via mechanism -")
+            # print("- gradient computation via mechanism -")
