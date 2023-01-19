@@ -209,7 +209,7 @@ class Strategy:
             np.ndarray: best response
         """
         # create array for best response
-        best_response = np.zeros(gradient.shape)
+        best_response = np.zeros_like(gradient)
 
         # determine largest entry of gradient for each valuation und put all the weight on the respective entry
         if self.dim_o == self.dim_a == 1:
@@ -440,12 +440,6 @@ class Strategy:
             "fontsize_label": 12,
         }
 
-        # check input
-        if grad and (self.dim_a + self.dim_o != 2):
-            raise NotImplementedError(
-                "Plot of Gradient only for 1-dim actions and observations available"
-            )
-
         # choose correct strategy and gradient from history or take current one
         if iter is None:
             strategy = self.x
@@ -471,34 +465,41 @@ class Strategy:
                     gradient = self.history_gradient[iter]
 
         # create figure
-        num_plots = self.dim_a + metrics + grad
+        num_plots = self.dim_a + metrics + grad * self.dim_a
         counter = 1
         fig = plt.figure(figsize=(5 * num_plots, 5), tight_layout=True)
 
-        # plot strategy
+        # plot strategy with 1-dim action space
         if self.dim_a == 1:
             ax_strat = fig.add_subplot(1, num_plots, counter)
             self._plot_strategy(ax_strat, strategy, param, iter, beta)
             counter += 1
+        # plot strategy with 2-dim action space
         elif self.dim_a == 2:
-            # Special case: Split Award Auction
-            ax_strat = fig.add_subplot(1, num_plots, counter)
-            self._plot_strategy(
-                ax_strat, strategy.sum(axis=1), param, iter, beta, axis_a=1
-            )
-            counter += 1
             ax_strat = fig.add_subplot(1, num_plots, counter)
             self._plot_strategy(
                 ax_strat, strategy.sum(axis=2), param, iter, beta, axis_a=0
             )
             counter += 1
+            ax_strat = fig.add_subplot(1, num_plots, counter)
+            self._plot_strategy(
+                ax_strat, strategy.sum(axis=1), param, iter, beta, axis_a=1
+            )
+            counter += 1
         else:
             raise NotImplementedError("Visualization not implemented for dim_a > 2")
 
-        # plot gradient
-        if grad:
+        # plot gradient with 1-dim action space
+        if grad & (self.dim_a == 1):
             ax_grad = fig.add_subplot(1, num_plots, counter)
             self._plot_gradient(ax_grad, gradient, param, iter)
+            counter += 1
+        elif grad & (self.dim_a == 2):
+            ax_grad = fig.add_subplot(1, num_plots, counter)
+            self._plot_gradient(ax_grad, gradient, param, iter, axis_a=0)
+            counter += 1
+            ax_grad = fig.add_subplot(1, num_plots, counter)
+            self._plot_gradient(ax_grad, gradient, param, iter, axis_a=1)
             counter += 1
 
         # plot metrics
@@ -533,7 +534,7 @@ class Strategy:
             param (dict): specifies parameter (fontsize, ...) for plots
             iter (int, optional): show intermediate strategy. Defaults to None.
             beta (function, optional): Defaults to None.
-            axis_a (int, optional): Which axis to visualize, if multidimensional action space Defaults to 1.
+            axis_a (int, optional): Which axis to visualize, if multidimensional action space Defaults to 0.
         """
         # plot strategy
         if self.dim_o > 1:
@@ -581,10 +582,13 @@ class Strategy:
                 label="analyt. BNE",
             )
             ax.legend(fontsize=param["fontsize_legend"])
+            ax.set_ylim(param_extent[2], param_extent[3])
 
         # labels
-        title_label = f"Strategy - Agent {self.agent} " + (
-            f"(Iteration {iter})" if iter is not None else f""
+        title_label = (
+            f"Strategy - Agent {self.agent}"
+            + (f", Bid {axis_a+1}" if self.dim_a > 0 else f"")
+            + (f" (Iteration {iter})" if iter is not None else f"")
         )
         ax.set_title(
             title_label, fontsize=param["fontsize_title"], verticalalignment="bottom"
@@ -593,7 +597,12 @@ class Strategy:
         ax.set_ylabel("Bid b", fontsize=param["fontsize_label"])
 
     def _plot_gradient(
-        self, ax, gradient: np.ndarray, param: dict, iter: int = None
+        self,
+        ax,
+        gradient: np.ndarray,
+        param: dict,
+        iter: int = None,
+        axis_a: int = 0,
     ) -> None:
         """Plot Gradient (for standard incomplete information setting)
 
@@ -602,37 +611,51 @@ class Strategy:
             gradient (np.ndarray): gradient
             param (dict): specifies parameter (fontsize, ...) for plots
             iter (int, optional): show intermediate gradient. Defaults to None.
+            axis_a (int, optional): Which axis to visualize, if multidimensional action space Defaults to 0.
         """
 
-        # plot gradient
-        im = ax.imshow(
-            gradient.T,
-            extent=(
+        if self.dim_a == 1:
+            gradient_plot = gradient
+            param_extent = (
                 self.o_discr[0],
                 self.o_discr[-1],
                 self.a_discr[0],
                 self.a_discr[-1],
-            ),
+            )
+        else:
+            gradient_plot = gradient.sum(axis=2 - axis_a)
+            param_extent = (
+                self.o_discr[0],
+                self.o_discr[-1],
+                self.a_discr[axis_a][0],
+                self.a_discr[axis_a][-1],
+            )
+
+        # plot gradient
+        ax.imshow(
+            gradient_plot.T,
+            extent=param_extent,
             cmap="RdBu",
             origin="lower",
             aspect="auto",
-            vmin=-np.abs(gradient).max(),
-            vmax=+np.abs(gradient).max(),
+            vmin=-np.abs(gradient_plot).max(),
+            vmax=+np.abs(gradient_plot).max(),
         )
         # plot best response
         best_response = self.best_response(gradient)
-        best_response[best_response == 0] = np.nan
+
+        if self.dim_a == 1:
+            best_response[best_response == 0] = np.nan
+        elif self.dim_a == 2:
+            best_response = best_response.sum(axis=2 - axis_a)
+            best_response[best_response == 0] = np.nan
+
         ax.imshow(
             best_response.T / self.margin(),
             cmap="Wistia",
             vmin=0,
             vmax=1.1,
-            extent=(
-                self.o_discr[0],
-                self.o_discr[-1],
-                self.a_discr[0],
-                self.a_discr[-1],
-            ),
+            extent=param_extent,
             origin="lower",
             aspect="auto",
         )
@@ -641,8 +664,10 @@ class Strategy:
         )
 
         # labels
-        title_label = f"Gradient - Agent {self.agent} " + (
-            f"(Iteration {iter})" if iter is not None else f""
+        title_label = (
+            f"Gradient - Agent {self.agent} "
+            + (f", Bid {axis_a+1}" if self.dim_a > 0 else f"")
+            + (f" (Iteration {iter})" if iter is not None else f"")
         )
         ax.set_title(
             title_label, fontsize=param["fontsize_title"], verticalalignment="bottom"
