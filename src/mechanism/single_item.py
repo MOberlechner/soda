@@ -29,6 +29,8 @@ class SingleItemAuction(Mechanism):
         utility_type    str:    QL (quasi-linear (corresponds to Auction, Default),
                                 ROI (return of investment),
                                 ROS (return of spent)
+        reserve_price   float: specifies minimal payment if agent wins. Defaults to 0.
+                        Note that we reserve_price only affect the pricing rule, not the allocation (i.e., you can still win with lower bids)
 
     """
 
@@ -44,12 +46,12 @@ class SingleItemAuction(Mechanism):
         self.name = "single_item"
 
         self.check_param()
-        self.payment_rule = param_util["payment_rule"]
-        self.tie_breaking = param_util["tie_breaking"]
-        self.utility_type = param_util["utility_type"]
+        self.payment_rule = self.param_util["payment_rule"]
+        self.tie_breaking = self.param_util["tie_breaking"]
+        self.utility_type = self.param_util["utility_type"]
+        self.reserve_price = self.param_util["reserve_price"]
 
         self.check_own_gradient()
-        self.check_reserve_price()
 
         # prior
         if self.prior == "affiliated_values":
@@ -83,6 +85,7 @@ class SingleItemAuction(Mechanism):
 
     def get_allocation(self, bids: np.ndarray, idx: int) -> np.ndarray:
         """compute allocation given action profiles
+        you cannot win with zero bids
 
         Args:
             bids (np.ndarray): action profiles
@@ -92,7 +95,11 @@ class SingleItemAuction(Mechanism):
             np.ndarray: allocation vector for agent idx
         """
         if self.tie_breaking == "random":
-            is_winner = np.where(bids[idx] >= np.delete(bids, idx, 0).max(axis=0), 1, 0)
+            is_winner = np.where(
+                (bids[idx] >= np.delete(bids, idx, 0).max(axis=0)) & (bids[idx] > 0),
+                1,
+                0,
+            )
             num_winner = (bids.max(axis=0) == bids).sum(axis=0)
 
         elif self.tie_breaking == "lose":
@@ -115,14 +122,19 @@ class SingleItemAuction(Mechanism):
             np.ndarray: payment vector
         """
         if self.payment_rule == "first_price":
-            payment = bids[idx]
+            payment = np.clip(bids[idx], self.reserve_price, None)
 
         elif self.payment_rule == "second_price":
-            payment = np.delete(bids, idx, 0).max(axis=0)
+            payment = np.clip(
+                np.delete(bids, idx, 0).max(axis=0), self.reserve_price, None
+            )
 
         elif self.payment_rule == "third_price":
-            payment = np.sort(np.delete(bids, idx, 0), axis=0)[-2, :]
-
+            payment = np.clip(
+                np.sort(np.delete(bids, idx, 0), axis=0)[-2, :],
+                self.reserve_price,
+                None,
+            )
         else:
             raise ValueError("payment rule " + self.payment_rule + " not available")
         return payment
@@ -296,9 +308,12 @@ class SingleItemAuction(Mechanism):
             np.ones((strategies[agent].m, strategies[agent].n))
             * strategies[agent].o_discr
         ).T
-        bid_grid = (
+        # first-price (including reserve price)
+        bid_grid = np.clip(
             np.ones((strategies[agent].n, strategies[agent].m))
-            * strategies[agent].a_discr
+            * strategies[agent].a_discr,
+            self.reserve_price,
+            None,
         )
 
         if self.utility_type == "QL":
@@ -386,6 +401,8 @@ class SingleItemAuction(Mechanism):
         if "utility_type" not in self.param_util:
             self.param_util["utility_type"] = "QL"
             print("utility_type not specified, quasi-linear (QL) chosen by default.")
+        if "reserve_price" not in self.param_util:
+            self.param_util["reserve_price"] = 0.0
 
     def check_own_gradient(self):
         """check if we can use gradient computation of mechanism"""
@@ -394,7 +411,3 @@ class SingleItemAuction(Mechanism):
         ) & ("corr" not in self.param_prior):
             self.own_gradient = True
             # print("- gradient computation via mechanism -")
-
-    def check_reserve_price(self):
-        """check if we consider a reserve price"""
-        raise NotImplementedError
