@@ -2,8 +2,8 @@
 .csv
 log/
 strategies/
-test/
 tests/
+.vscode/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
