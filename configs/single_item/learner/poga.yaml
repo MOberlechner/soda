@@ -1,8 +1,0 @@
-name: 'poga'
-max_iter: 2000
-stop_criterion: 'util_loss'
-tol: 1e-4
-steprule_bool: True
-eta: 1
-beta: 0.5
-init_method: 'equal'
