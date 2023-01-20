@@ -1,9 +1,11 @@
-name: 'soma'
+learn_alg: 'soma'
 max_iter: 2000
 tol: 1e-4
 stop_criterion: 'util_loss'
-mirror_map: 'entropic'
-steprule_bool: True
-eta: 0.01
-beta: 0.05
+parameter: {
+  "mirror_map": 'entropic',
+  "steprule_bool": True,
+  "eta": 0.01,
+  "beta": 0.05,
+}
 init_method: 'random'
