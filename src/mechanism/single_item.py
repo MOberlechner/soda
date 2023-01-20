@@ -226,67 +226,125 @@ class SingleItemAuction(Mechanism):
         np.ndarray : bids to corresponding observation
 
         """
-        if self.utility_type == "QL":
-            if (self.prior == "uniform") & (self.payment_rule == "first_price"):
-                if np.all([self.o_space[i] == [0, 1] for i in self.set_bidder]):
-                    if np.all([self.a_space[i] == [0, 1] for i in self.set_bidder]):
-                        return (self.n_bidder - 1) / (self.n_bidder) * obs
-                    elif np.all(
-                        [
-                            self.a_space[i][1] == 1
-                            and self.a_space[i][0] > 0
-                            and self.a_space[i][0] <= 1
-                            for i in self.set_bidder
-                        ]
-                    ):
-                        reserve_price = self.a_space[self.set_bidder[0]][0]
-                        obs_clipped = np.clip(obs, reserve_price, None)
-                        bne = ((self.n_bidder - 1) / self.n_bidder) * obs_clipped + (
-                            1 / self.n_bidder
-                        ) * (
-                            reserve_price**self.n_bidder
-                            / obs_clipped ** (self.n_bidder - 1)
-                        )
-                        return bne
+        setting_fits, bne = self.bne_ql_first_price(agent, obs)
+        if setting_fits:
+            return bne
 
-            elif ((self.prior == "uniform") | (self.prior == "gaussian")) & (
-                (self.payment_rule == "second_price")
-            ):
-                if np.all([self.o_space[i][0] == 0 for i in self.set_bidder]):
-                    return obs
-                elif np.all([self.a_space[i][0] > 0 for i in self.set_bidder]):
-                    reserve_price = self.a_space[self.set_bidder[0]][0]
-                    return np.clip(obs, reserve_price, None)
+        setting_fits, bne = self.bne_second_price(agent, obs)
+        if setting_fits:
+            return bne
 
-            elif self.prior == "affiliated_values":
-                return 2 / 3 * obs
+        setting_fits, bne = self.bne_ql_first_price_affiliated(agent, obs)
+        if setting_fits:
+            return bne
 
-            elif self.prior == "common_value":
-                return 2 * obs / (2 + obs)
+        setting_fits, bne = self.bne_ql_second_price_common(agent, obs)
+        if setting_fits:
+            return bne
 
-        elif self.utility_type == "ROI":
-            if (
-                (self.prior == "uniform")
-                & (self.payment_rule == "first_price")
-                & (len(self.set_bidder) == 1)
-                & (self.a_space[self.set_bidder[0]][0] > 0)
-            ):
-                reserve_price = self.a_space[self.set_bidder[0]][0]
-                x = np.clip(obs, reserve_price, None)
-                if self.n_bidder == 2:
-                    return x / (-np.log(reserve_price) + np.log(x) + 1)
+        setting_fits, bne = self.bne_roi_first_price(agent, obs)
+        if setting_fits:
+            return bne
 
-                elif self.n_bidder == 5:
-                    return -3 * x**4 / (reserve_price**3 - 4 * x**3)
+        return None
 
-            elif ((self.prior == "uniform") | (self.prior == "gaussian")) & (
-                (self.payment_rule == "second_price")
-            ):
-                if np.all([self.o_space[i][0] == 0 for i in self.set_bidder]):
-                    return obs
-                elif np.all([self.a_space[i][0] > 0 for i in self.set_bidder]):
-                    reserve_price = self.a_space[self.set_bidder[0]][0]
-                    return np.clip(obs, reserve_price, None)
+    def bne_ql_first_price(self, agent: str, obs: np.ndarray):
+        """BNE for first-price auction for quasi-linear utilities"""
+        # check if setting applies
+        if (
+            (self.utility_type == "QL")
+            & (self.payment_rule == "first_price")
+            & (self.prior == "uniform")
+            & self.check_bidder_symmetric()
+            & (self.value_model == "private")
+        ):
+
+            obs_clipped = np.clip(obs, self.reserve_price, None)
+            bne = np.where(
+                obs >= self.reserve_price,
+                ((self.n_bidder - 1) / self.n_bidder) * obs_clipped
+                + (1 / self.n_bidder)
+                * (
+                    self.reserve_price**self.n_bidder
+                    / obs_clipped ** (self.n_bidder - 1)
+                ),
+                0,
+            )
+            return True, bne
+        else:
+            return False, None
+
+    def bne_ql_first_price_affiliated(self, agent: str, obs: np.ndarray):
+        """BNE for first-price auction for quasi-linear utilities with affiliated values"""
+        if (
+            (self.utility_type == "QL")
+            & (self.payment_rule == "first_price")
+            & self.check_bidder_symmetric([0, 2])
+            & (self.value_model == "affiliated")
+            & (self.n_bidder == 2)
+        ):
+            bne = 2 / 3 * obs
+            return True, bne
+        else:
+            return False, None
+
+    def bne_second_price(self, agent: str, obs: np.ndarray):
+        """BNE for second-price auction for quasi-linear utilities (IPV)"""
+        if (
+            (self.utility_type in ["QL", "ROI"])
+            & (self.payment_rule == "second_price")
+            & self.check_bidder_symmetric()
+            & (self.value_model == "private")
+        ):
+            bne = np.clip(obs, self.reserve_price, None)
+            return True, bne
+        else:
+            return False, None
+
+    def bne_ql_second_price_common(self, agent: str, obs: np.ndarray):
+        """BNE for second-price auction for quasi-linear utilities with common"""
+        if (
+            (self.utility_type == "QL")
+            & (self.payment_rule == "second_price")
+            & self.check_bidder_symmetric([0, 2])
+            & (self.value_model == "common")
+            & (self.n_bidder == 3)
+        ):
+            bne = 2 * obs / (2 + obs)
+            return True, bne
+        else:
+            return False, None
+
+    def bne_roi_first_price(self, agent: str, obs: np.ndarray):
+        """BNE for second-price auction for quasi-linear utilities with affiliated values"""
+        if (
+            (self.utility_type == "ROI")
+            & (self.payment_rule == "first_price")
+            & self.check_bidder_symmetric([0, 1])
+            & (self.value_model == "private")
+            & (self.reserve_price > 0)
+        ):
+            obs_clipped = np.clip(obs, self.reserve_price, None)
+            if self.n_bidder == 2:
+                bne = np.where(
+                    obs >= self.reserve_price,
+                    obs_clipped
+                    / (-np.log(self.reserve_price) + np.log(obs_clipped) + 1),
+                    0,
+                )
+            else:
+                bne = np.where(
+                    obs >= self.reserve_price,
+                    ((self.n_bidder - 2) * obs_clipped ** (self.n_bidder - 1))
+                    / (
+                        (self.n_bidder - 1) * (obs_clipped ** (self.n_bidder - 2))
+                        - self.reserve_price ** (self.n_bidder - 2)
+                    ),
+                    0,
+                )
+            return True, bne
+        else:
+            return False, None
 
     def compute_gradient(self, game: Game, strategies: Dict[str, Strategy], agent: str):
         """Simplified computation of gradient for i.i.d. bidders and tie-breaking "lose"
