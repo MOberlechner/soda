@@ -83,6 +83,7 @@ class Config:
                     f"config file for mechanism/game is not feasible. {key} is missing."
                 )
         self.config_game = config_game
+        self.config_game["mechanism_type"] = mechanism_type
 
     def create_config_game(
         self,
@@ -108,7 +109,7 @@ class Config:
             m (int): number discretization points action intervals
         """
         self.config_game = {
-            "mechanism": mechanism_type,
+            "mechanism_type": mechanism_type,
             "bidder": bidder,
             "o_space": o_space,
             "a_space": a_space,
@@ -198,8 +199,6 @@ class Config:
             raise ValueError("config_game doesn't contain parameter for discretization")
 
         game = Game(mechanism, self.config_game["n"], self.config_game["m"])
-        if not mechanism.own_gradient:
-            game.get_utility()
 
         return game
 
@@ -217,7 +216,7 @@ class Config:
         with open(f"{self.path_to_config}{setting}/learner/{learn_alg}.yaml") as f:
             config_learner = yaml.load(f, Loader=SafeLoader)
         # test config file for learner
-        for key in ["learn_alg", "max_iter", "tol", "stop_criterion, init_method"]:
+        for key in ["learn_alg", "max_iter", "tol", "stop_criterion", "init_method"]:
             if key not in config_learner:
                 raise ValueError(
                     f"config file for learner is not feasible. {key} is missing."
@@ -272,7 +271,7 @@ class Config:
         learn_alg = self.config_learner["learn_alg"]
         args = [
             self.config_learner["max_iter"],
-            self.config_learner["tol"],
+            float(self.config_learner["tol"]),
             self.config_learner["stop_criterion"],
         ]
         param = self.config_learner["parameter"]
