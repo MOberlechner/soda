@@ -25,7 +25,21 @@ from src.strategy import Strategy
 
 class Config:
     """
-    Config Class to create mechanism, approximation game and learner
+    Config Class to create mechanism, approximation game and learner.
+    This class allows us to either import configuration files to create the respective game, learner and strategies
+    or to enter these specifications manually. This can be used to run experiments in notebooks, or to run experiments.
+
+    Attributes:
+        config_game                 dict: either imported or created, contains all relevant parameters to create
+                                    a mechanism and the respective approximation game
+        config_leaner               dict: either imported or created, contains all relevant parameter to create
+                                    a learner and the initial strategies
+        path_to_config (optional)   str: using the get_path() method with the path from soda/ to the config directory
+                                    the attribute is created to import config files from there
+
+    Methods:
+        create_setting()            imports config files from path_to_config/mechanism_type/
+                                    and creates setting, i.e., game and learner, we want to consider.
     """
 
     def __init__(
@@ -33,22 +47,23 @@ class Config:
     ):
         """Initialize Config Class"""
 
-    def create_experiment(self, setting: str, experiment: str, learn_alg: str):
-        """create mechanism, game, strategies and learner according to config file
+    def create_setting(self, mechanism_type: str, experiment: str, learn_alg: str):
+        """create game and learner according to config file.
 
         Args:
-            setting (str): mechanism
+            mechanism_type (str): mechanism type
             experiment (str): name of config file in mechanism directory
             learn_alg (str): name of config file for learner in mechanism/learner directory
         """
-        self.get_config_game(setting, experiment)
-        self.get_config_learner(setting, learn_alg)
+        self.get_config_game(mechanism_type, experiment)
+        self.get_config_learner(mechanism_type, learn_alg)
 
         game = self.create_game()
         learner = self.create_learner()
+
         return game, learner
 
-    def get_config_game(self, setting: str, experiment: str):
+    def get_config_game(self, mechanism_type: str, experiment: str):
         """get configuration to create mechanism and game
 
         Args:
@@ -59,7 +74,7 @@ class Config:
             raise ValueError("Path to config not specified")
 
         # get config file for game
-        with open(f"{self.path_to_config}{setting}/{experiment}.yaml") as f:
+        with open(f"{self.path_to_config}{mechanism_type}/{experiment}.yaml") as f:
             config_game = yaml.load(f, Loader=SafeLoader)
         # test config file
         for key in ["bidder", "o_space", "a_space", "param_prior", "param_util"]:
@@ -143,7 +158,7 @@ class Config:
         if not hasattr(self, "config_game"):
             raise ValueError("configuration for mechanism/game not created")
 
-        setting = self.config_game["mechanism"]
+        mechanism_type = self.config_game["mechanism_type"]
         try:
             args = [
                 self.config_game["bidder"],
@@ -155,28 +170,37 @@ class Config:
         except:
             raise ValueError("config_game doesn't contain all arguments for mechanism")
 
-        if setting == "single_item":
+        if mechanism_type == "single_item":
             mechanism = SingleItemAuction(*args)
-        elif setting == "llg_auction":
+        elif mechanism_type == "llg_auction":
             mechanism = LLGAuction(*args)
-        elif setting == "contest_game":
+        elif mechanism_type == "contest_game":
             mechanism = ContestGame(*args)
-        elif setting == "all_pay":
+        elif mechanism_type == "all_pay":
             mechanism = AllPay(*args)
-        elif setting == "crowdsourcing":
+        elif mechanism_type == "crowdsourcing":
             mechanism = Crowdsourcing(*args)
-        elif setting == "split_award":
+        elif mechanism_type == "split_award":
             mechanism = SplitAwardAuction(*args)
-        elif setting == "double_auction":
+        elif mechanism_type == "double_auction":
             mechanism = DoubleAuction(*args)
-        elif setting == "bertrand_pricing":
+        elif mechanism_type == "bertrand_pricing":
             mechanism = BertrandPricing(*args)
-        elif setting == "multi_unit":
+        elif mechanism_type == "multi_unit":
             mechanism = MultiUnitAuction(*args)
         else:
-            raise ValueError('Mechanism "{}" not available'.format(setting))
+            raise ValueError(f"Mechanism {mechanism_type} not available")
+
+        try:
+            n = self.config_game["n"]
+            m = self.config_game["m"]
+        except:
+            raise ValueError("config_game doesn't contain parameter for discretization")
 
         game = Game(mechanism, self.config_game["n"], self.config_game["m"])
+        if not mechanism.own_gradient:
+            game.get_utility()
+
         return game
 
     def get_config_learner(self, setting: str, learn_alg: str):
@@ -192,17 +216,21 @@ class Config:
         # get config file for learner
         with open(f"{self.path_to_config}{setting}/learner/{learn_alg}.yaml") as f:
             config_learner = yaml.load(f, Loader=SafeLoader)
-        # test config file
-        for key in ["name", "max_iter", "tol", "stop_criterion"]:
+        # test config file for learner
+        for key in ["learn_alg", "max_iter", "tol", "stop_criterion, init_method"]:
             if key not in config_learner:
                 raise ValueError(
                     f"config file for learner is not feasible. {key} is missing."
                 )
+        # test config file for initialization parameter
+        if "param_init" not in config_learner:
+            config_learner["param_init"] = {}
+
         self.config_learner = config_learner
 
     def create_config_learner(
         self,
-        learner_type: str,
+        learn_alg: str,
         max_iter: int,
         tol: float,
         stop_criterion: str,
@@ -221,7 +249,7 @@ class Config:
             beta (float, optional): parameter2 for steprule. Defaults to None.
         """
         self.config_learner = {
-            "learner": learner_type,
+            "learn_alg": learn_alg,
             "max_iter": max_iter,
             "tol": tol,
             "stop_criterion": stop_criterion,
@@ -241,7 +269,7 @@ class Config:
         if not hasattr(self, "config_learner"):
             raise ValueError("configuration for learner not created")
 
-        learn_alg = self.config_learner["learner"]
+        learn_alg = self.config_learner["learn_alg"]
         args = [
             self.config_learner["max_iter"],
             self.config_learner["tol"],
