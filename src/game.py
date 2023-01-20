@@ -43,16 +43,16 @@ class Game:
 
         # discrete action and observation space (and optional valuation space)
         self.o_discr = {
-            i: self.discr_spaces(mechanism.o_space[i], n, midpoint=True)
+            i: Game.discr_spaces(mechanism.o_space[i], n, midpoint=True)
             for i in self.set_bidder
         }
         self.a_discr = {
-            i: self.discr_spaces(mechanism.a_space[i], m, midpoint=False)
+            i: Game.discr_spaces(mechanism.a_space[i], m, midpoint=False)
             for i in self.set_bidder
         }
         if hasattr(mechanism, "v_space"):
             self.v_discr = {
-                i: self.discr_spaces(mechanism.v_space[i], m, midpoint=True)
+                i: Game.discr_spaces(mechanism.v_space[i], m, midpoint=True)
                 for i in self.set_bidder
             }
 
@@ -181,9 +181,7 @@ class Game:
     def get_weights(self, mechanism):
         return compute_weights(self, mechanism)
 
-    def discr_spaces(
-        self, interval: List, n_discrete: int, midpoint: bool
-    ) -> np.ndarray:
+    def discr_spaces(interval: List, n_discrete: int, midpoint: bool) -> np.ndarray:
         """Discretize Spaces (possibly multidimensional)
 
         Args:
@@ -199,15 +197,15 @@ class Game:
         if len(np.array(interval).shape) > 1:
             return np.array(
                 [
-                    self.discr_interval(interv[0], interv[1], n_discrete, midpoint)
+                    Game.discr_interval(interv[0], interv[1], n_discrete, midpoint)
                     for interv in interval
                 ]
             )
         else:
-            return self.discr_interval(interval[0], interval[1], n_discrete, midpoint)
+            return Game.discr_interval(interval[0], interval[1], n_discrete, midpoint)
 
     def discr_interval(
-        self, lower_bound: float, upper_bound: float, n_discrete: int, midpoint: bool
+        lower_bound: float, upper_bound: float, n_discrete: int, midpoint: bool
     ) -> np.ndarray:
         """Discretize interval
 
