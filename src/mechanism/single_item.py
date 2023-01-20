@@ -296,7 +296,7 @@ class SingleItemAuction(Mechanism):
             & self.check_bidder_symmetric()
             & (self.value_model == "private")
         ):
-            bne = np.clip(obs, self.reserve_price, None)
+            bne = np.where(obs >= self.reserve_price, obs, 0)
             return True, bne
         else:
             return False, None
