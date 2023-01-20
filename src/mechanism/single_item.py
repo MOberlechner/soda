@@ -49,6 +49,7 @@ class SingleItemAuction(Mechanism):
         self.utility_type = param_util["utility_type"]
 
         self.check_own_gradient()
+        self.check_reserve_price()
 
         # prior
         if self.prior == "affiliated_values":
@@ -393,3 +394,7 @@ class SingleItemAuction(Mechanism):
         ) & ("corr" not in self.param_prior):
             self.own_gradient = True
             # print("- gradient computation via mechanism -")
+
+    def check_reserve_price(self):
+        """check if we consider a reserve price"""
+        raise NotImplementedError
