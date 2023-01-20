@@ -1,5 +1,3 @@
-name: 'common_value'
-mechanism: 'single_item'
 bidder: ['1', '1', '1']
 o_space: {'1': [0.0 ,2.0]}
 a_space: {'1': [0.0 ,1.5],}
