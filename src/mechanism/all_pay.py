@@ -23,9 +23,6 @@ class AllPay(Mechanism):
     Parameter Utility (param_util)
         tiebreaking     str: specifies tiebreaking rule: "random", "index" or "lose"
 
-        util_setting    str: first_price (standard), generalized (mixture of first and second price)
-                        or all-pay auction with loss aversion
-
         type            str: agent's type can be interpreted as "valuation" or "cost"
 
         payment_rule    str:  choose between first_price, second_price and generalized (convex combination of both)
@@ -166,7 +163,7 @@ class AllPay(Mechanism):
         """
         Check if input paremter are sufficient to define mechanism
         """
-        if "tiebreaking" not in self.param_util:
+        if "tie_breaking" not in self.param_util:
             raise ValueError("specify tiebreaking in param_util")
         if "type" not in self.param_util:
             raise ValueError("specify param_util - type: cost or valuation")
