@@ -1,5 +1,3 @@
-name: 'double_auction_1b1s_average_gaussian'
-mechanism: 'double_auction'
 bidder: ['S', 'B']
 o_space: {'S': [0.0 ,30.0], 'B':[0.0, 30.0]}
 a_space: {'S': [0.0 ,30.0], 'B':[0.0, 30.0]}

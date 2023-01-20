@@ -1,7 +1,6 @@
-name: 'split_award'
 bidder: ['1', '1']
 o_space: {'1': [1.0 ,1.4]}
-a_space: {'1': [[0.4 ,2.5], [0.4 ,2.5]]}
+a_space: {'1': [[1.0 ,2.5], [0.3 ,1.2]]}
 param_prior: {'distribution':'uniform'}
 param_util: { 'tie_breaking': 'lose', 'scale': 0.3}
 n: 32
