@@ -279,19 +279,25 @@ class Mechanism:
             ]
         )
 
-    def check_bidder_symmetric(self) -> bool:
+    def check_bidder_symmetric(self, o_space=None) -> bool:
         """check if bidder have the same observation and action space
 
         Returns:
             bool:
         """
+        agent_0 = self.bidder[0]
         o_space_identical = np.all(
-            [self.o_space[0] == self.o_space[i] for i in self.set_bidder]
+            [self.o_space[agent_0] == self.o_space[i] for i in self.set_bidder]
         )
         a_space_identical = np.all(
-            [self.a_space[0] == self.a_space[i] for i in self.set_bidder]
+            [self.a_space[agent_0] == self.a_space[i] for i in self.set_bidder]
         )
-        return o_space_identical and a_space_identical
+
+        if o_space:
+            o_space_correct = self.o_space[agent_0] == o_space
+            return o_space_identical and a_space_identical and o_space_correct
+        else:
+            return o_space_identical and a_space_identical
 
     def get_dimension_spaces(self) -> tuple:
         """
