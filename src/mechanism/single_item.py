@@ -111,11 +111,14 @@ class SingleItemAuction(Mechanism):
             )
         return is_winner / num_winner
 
-    def get_payment(self, bids: np.ndarray, idx: int) -> np.ndarray:
+    def get_payment(
+        self, bids: np.ndarray, allocation: np.ndarray, idx: int
+    ) -> np.ndarray:
         """compute payment (assuming bidder idx wins)
 
         Args:
             bids (np.ndarray): action profiles
+            alloaction (np.ndarray): allocation vector for agent idx
             idx (int): index of agent we consider
 
         Returns:
@@ -137,7 +140,7 @@ class SingleItemAuction(Mechanism):
             )
         else:
             raise ValueError("payment rule " + self.payment_rule + " not available")
-        return payment
+        return payment * np.where(allocation > 0, 1.0, 0.0)
 
     def get_payoff(
         self, valuation: np.ndarray, allocation: np.ndarray, payment: np.ndarray
