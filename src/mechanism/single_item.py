@@ -157,26 +157,26 @@ class SingleItemAuction(Mechanism):
             np.ndarray: payoff
         """
         if self.utility_type == "QL":
-            payoff = allocation * (valuation - payment)
+            payoff = allocation * valuation - payment
 
         elif self.utility_type == "ROI":
             # if payment is zero, payoff is set to zero
-            payoff = allocation * np.divide(
-                valuation - payment,
+            payoff = np.divide(
+                allocation * valuation - payment,
                 payment,
                 out=np.zeros_like((valuation - payment)),
                 where=payment != 0,
             )
         elif self.utility_type == "ROS":
-            payoff = allocation * np.divide(
-                valuation,
+            payoff = np.divide(
+                allocation * valuation,
                 payment,
                 out=np.zeros_like((valuation - payment)),
                 where=payment != 0,
             )
         elif self.utility_type == "ROSB":
             payoff = np.divide(
-                valuation,
+                allocation * valuation,
                 payment,
                 out=np.zeros_like((valuation - payment)),
                 where=payment != 0,
