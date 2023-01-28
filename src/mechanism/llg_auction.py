@@ -26,7 +26,7 @@ class LLGAuction(Mechanism):
         self.check_param()
         self.payment_rule = param_util["payment_rule"]
         self.tie_breaking = param_util["tie_breaking"]
-        self.gamma = param_util["corr"]
+        self.gamma = param_prior["corr"]
 
     def utility(self, obs: np.ndarray, bids: np.ndarray, idx: int):
         """Payoff function for first price sealed bid auctons
@@ -46,9 +46,9 @@ class LLGAuction(Mechanism):
         valuation = self.get_valuation(obs, bids, idx)
 
         allocation = self.get_allocation(bids, idx)
-        payment = self.get_payment(bids, idx)
+        payment = self.get_payment(bids, allocation, idx)
 
-        return allocation * (valuation - payment)
+        return allocation * valuation - payment
 
     def get_allocation(self, bids: np.ndarray, idx: int) -> tuple:
         """compute allocation given action profiles
@@ -73,11 +73,12 @@ class LLGAuction(Mechanism):
         allocation = is_winner + tie
         return allocation
 
-    def get_payment(self, bids: np.ndarray, idx: int):
+    def get_payment(self, bids: np.ndarray, allocation: np.ndarray, idx: int):
         """compute payment (assuming bidder idx wins) for different payment rules
 
         Args:
             bids (np.ndarray): action profiles
+            alloaction (np.ndarray): allocation vector for agent idx
             idx (int): index of agent we consider
 
         Returns:
@@ -118,7 +119,7 @@ class LLGAuction(Mechanism):
             else:
                 raise ValueError("payment rule unknown")
 
-        return payment
+        return payment * np.where(allocation > 0, 1.0, 0.0)
 
     def sample_types_uniform(self, n_types: int) -> np.ndarray:
         """owerwrite method from mechanism class:
@@ -235,7 +236,6 @@ class LLGAuction(Mechanism):
 
         if "corr" not in self.param_prior:
             self.param_prior["corr"] = 0.0
-        else:
             print(
                 "No correlation for LLG Auction defined. We assume no correlation (corr=0)."
             )
