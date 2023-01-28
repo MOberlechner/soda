@@ -412,6 +412,8 @@ class Strategy:
         ).astype(int)
         return np.maximum(0, np.minimum(len(vec_discrete) - 1, idx_obs))
 
+    # -------------------------------------- METHODS USED TO VISUALIZE STRATEGIES --------------------------------------- #
+
     def plot(
         self,
         metrics: bool = False,
@@ -716,6 +718,8 @@ class Strategy:
         ax.set_ylim(top=1)
         ax.grid(axis="y", linestyle="-", linewidth=0.5, color=".25", zorder=-10)
         ax.legend(loc="upper right", fontsize=param["fontsize_legend"])
+
+    # -------------------------------------- METHODS USED TO SAVE AND LOAD --------------------------------------- #
 
     def save(self, name: str, setting: str, path: str, save_init: bool = False):
         """Saves strategy in respective directory
