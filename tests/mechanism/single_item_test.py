@@ -28,6 +28,16 @@ def get_mechanism():
     return _mechanism
 
 
+def test_create_mechamism(get_mechanism):
+    """
+    Test if single-item mechanism can be created
+    """
+    mechanism = get_mechanism(3)
+    assert isinstance(
+        mechanism, SingleItemAuction
+    ), "create single-item auction mechanism"
+
+
 def test_get_allocation(get_mechanism):
     """
     Test allocation method of single-item auction
@@ -60,18 +70,19 @@ def test_get_payment(get_mechanism):
     """
     mechanism = get_mechanism(3)
     bids = np.array([[1, 2, 3, 4, 5], [2, 1, 3, 1, 0], [2, 2, 3, 2, 0]])
+    allocation = mechanism.get_allocation(bids, 0)
 
     mechanism.payment_rule = "first_price"
-    payments = mechanism.get_payment(bids, 0)
-    assert np.array_equal(payments, [1, 2, 3, 4, 5]), "first_price payment rule"
+    payments = mechanism.get_payment(bids, allocation, 0)
+    assert np.array_equal(payments, [0, 2, 3, 4, 5]), "first_price payment rule"
 
     mechanism.payment_rule = "second_price"
-    payments = mechanism.get_payment(bids, 0)
-    assert np.array_equal(payments, [2, 2, 3, 2, 0]), "second_price payment rule"
+    payments = mechanism.get_payment(bids, allocation, 0)
+    assert np.array_equal(payments, [0, 2, 3, 2, 0]), "second_price payment rule"
 
     mechanism.payment_rule = "third_price"
-    payments = mechanism.get_payment(bids, 0)
-    assert np.array_equal(payments, [2, 1, 3, 1, 0]), "third_price payment rule"
+    payments = mechanism.get_payment(bids, allocation, 0)
+    assert np.array_equal(payments, [0, 1, 3, 1, 0]), "third_price payment rule"
 
 
 def test_get_payoff(get_mechanism):
