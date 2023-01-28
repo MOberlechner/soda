@@ -2,7 +2,6 @@
 .csv
 log/
 strategies/
-tests/
 .vscode/
 
 # Byte-compiled / optimized / DLL files
