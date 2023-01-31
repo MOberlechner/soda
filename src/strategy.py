@@ -163,11 +163,23 @@ class Strategy:
 
         elif init_method == "function":
             b = param["init_function"]
-            n, m = self.x.shape
-            sigma = lower_bound * np.ones((n, m))
-            for i in range(n):
-                idx = (np.abs(self.a_discr - b[i])).argmin()
-                sigma[i, idx] = 1
+            if self.dim_o == self.dim_a == 1:
+                sigma = lower_bound * np.ones_like(self.x)
+                for i in range(self.n):
+                    idx = (np.abs(self.a_discr - b[i])).argmin()
+                    sigma[i, idx] = 1
+
+            if (self.dim_o == 1) & (self.dim_a == 2):
+                sigma = lower_bound * np.ones_like(self.x)
+                for i in range(self.n):
+                    idx1 = (np.abs(self.a_discr[0] - b[0][i])).argmin()
+                    idx2 = (np.abs(self.a_discr[1] - b[1][i])).argmin()
+                    sigma[i, idx1, idx2] = 1
+
+            else:
+                raise NotImplementedError(
+                    "init_function only for 1-dim observation and action spaces available"
+                )
 
         elif init_method == "matrix":
             if (
