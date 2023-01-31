@@ -83,65 +83,6 @@ class SingleItemAuction(Mechanism):
 
         return payoff
 
-    def get_allocation(self, bids: np.ndarray, idx: int) -> np.ndarray:
-        """compute allocation given action profiles
-        you cannot win with zero bids
-
-        Args:
-            bids (np.ndarray): action profiles
-            idx (int): index of agent we consider
-
-        Returns:
-            np.ndarray: allocation vector for agent idx
-        """
-        if self.tie_breaking == "random":
-            is_winner = np.where(
-                (bids[idx] >= np.delete(bids, idx, 0).max(axis=0)) & (bids[idx] > 0),
-                1,
-                0,
-            )
-            num_winner = (bids.max(axis=0) == bids).sum(axis=0)
-
-        elif self.tie_breaking == "lose":
-            is_winner = np.where(bids[idx] > np.delete(bids, idx, 0).max(axis=0), 1, 0)
-            num_winner = np.ones(is_winner.shape)
-        else:
-            raise ValueError(
-                'Tie-breaking rule "' + self.param_util["tie_breaking"] + '" unknown'
-            )
-        return is_winner / num_winner
-
-    def get_payment(
-        self, bids: np.ndarray, allocation: np.ndarray, idx: int
-    ) -> np.ndarray:
-        """compute payment (assuming bidder idx wins)
-
-        Args:
-            bids (np.ndarray): action profiles
-            alloaction (np.ndarray): allocation vector for agent idx
-            idx (int): index of agent we consider
-
-        Returns:
-            np.ndarray: payment vector
-        """
-        if self.payment_rule == "first_price":
-            payment = np.clip(bids[idx], self.reserve_price, None)
-
-        elif self.payment_rule == "second_price":
-            payment = np.clip(
-                np.delete(bids, idx, 0).max(axis=0), self.reserve_price, None
-            )
-
-        elif self.payment_rule == "third_price":
-            payment = np.clip(
-                np.sort(np.delete(bids, idx, 0), axis=0)[-2, :],
-                self.reserve_price,
-                None,
-            )
-        else:
-            raise ValueError("payment rule " + self.payment_rule + " not available")
-        return payment * np.where(allocation > 0, 1.0, 0.0)
-
     def get_payoff(
         self, valuation: np.ndarray, allocation: np.ndarray, payment: np.ndarray
     ) -> np.ndarray:
@@ -184,6 +125,65 @@ class SingleItemAuction(Mechanism):
         else:
             raise ValueError("utility type " + self.utility_type + " not available")
         return payoff
+
+    def get_payment(
+        self, bids: np.ndarray, allocation: np.ndarray, idx: int
+    ) -> np.ndarray:
+        """compute payment (assuming bidder idx wins)
+
+        Args:
+            bids (np.ndarray): action profiles
+            alloaction (np.ndarray): allocation vector for agent idx
+            idx (int): index of agent we consider
+
+        Returns:
+            np.ndarray: payment vector
+        """
+        if self.payment_rule == "first_price":
+            payment = np.clip(bids[idx], self.reserve_price, None)
+
+        elif self.payment_rule == "second_price":
+            payment = np.clip(
+                np.delete(bids, idx, 0).max(axis=0), self.reserve_price, None
+            )
+
+        elif self.payment_rule == "third_price":
+            payment = np.clip(
+                np.sort(np.delete(bids, idx, 0), axis=0)[-2, :],
+                self.reserve_price,
+                None,
+            )
+        else:
+            raise ValueError("payment rule " + self.payment_rule + " not available")
+        return payment * np.where(allocation > 0, 1.0, 0.0)
+
+    def get_allocation(self, bids: np.ndarray, idx: int) -> np.ndarray:
+        """compute allocation given action profiles
+        you cannot win with zero bids
+
+        Args:
+            bids (np.ndarray): action profiles
+            idx (int): index of agent we consider
+
+        Returns:
+            np.ndarray: allocation vector for agent idx
+        """
+        if self.tie_breaking == "random":
+            is_winner = np.where(
+                (bids[idx] >= np.delete(bids, idx, 0).max(axis=0)) & (bids[idx] > 0),
+                1,
+                0,
+            )
+            num_winner = (bids.max(axis=0) == bids).sum(axis=0)
+
+        elif self.tie_breaking == "lose":
+            is_winner = np.where(bids[idx] > np.delete(bids, idx, 0).max(axis=0), 1, 0)
+            num_winner = np.ones(is_winner.shape)
+        else:
+            raise ValueError(
+                'Tie-breaking rule "' + self.param_util["tie_breaking"] + '" unknown'
+            )
+        return is_winner / num_winner
 
     def get_valuation(self, obs: np.ndarray, bids: np.ndarray, idx: int) -> np.ndarray:
         """determine valuations (potentially from observations, might be equal for private value model)
