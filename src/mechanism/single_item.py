@@ -229,26 +229,16 @@ class SingleItemAuction(Mechanism):
         np.ndarray : bids to corresponding observation
 
         """
-        setting_fits, bne = self.bne_ql_first_price(agent, obs)
-        if setting_fits:
-            return bne
-
-        setting_fits, bne = self.bne_second_price(agent, obs)
-        if setting_fits:
-            return bne
-
-        setting_fits, bne = self.bne_ql_first_price_affiliated(agent, obs)
-        if setting_fits:
-            return bne
-
-        setting_fits, bne = self.bne_ql_second_price_common(agent, obs)
-        if setting_fits:
-            return bne
-
-        setting_fits, bne = self.bne_roi_first_price(agent, obs)
-        if setting_fits:
-            return bne
-
+        bnes = [
+            self.bne_ql_first_price(agent, obs),
+            self.bne_second_price(agent, obs),
+            self.bne_ql_first_price_affiliated(agent, obs),
+            self.bne_ql_second_price_common(agent, obs),
+            self.bne_roi_first_price(agent, obs),
+        ]
+        for bne in bnes:
+            if bne is not None:
+                return bne
         return None
 
     def bne_ql_first_price(self, agent: str, obs: np.ndarray):
@@ -273,9 +263,9 @@ class SingleItemAuction(Mechanism):
                 ),
                 0,
             )
-            return True, bne
         else:
-            return False, None
+            bne = None
+        return bne
 
     def bne_ql_first_price_affiliated(self, agent: str, obs: np.ndarray):
         """BNE for first-price auction for quasi-linear utilities with affiliated values"""
@@ -287,9 +277,9 @@ class SingleItemAuction(Mechanism):
             & (self.n_bidder == 2)
         ):
             bne = 2 / 3 * obs
-            return True, bne
         else:
-            return False, None
+            bne = None
+        return bne
 
     def bne_second_price(self, agent: str, obs: np.ndarray):
         """BNE for second-price auction for quasi-linear utilities (IPV)"""
@@ -300,9 +290,9 @@ class SingleItemAuction(Mechanism):
             & (self.value_model == "private")
         ):
             bne = np.where(obs >= self.reserve_price, obs, 0)
-            return True, bne
         else:
-            return False, None
+            bne = None
+        return bne
 
     def bne_ql_second_price_common(self, agent: str, obs: np.ndarray):
         """BNE for second-price auction for quasi-linear utilities with common"""
@@ -314,9 +304,9 @@ class SingleItemAuction(Mechanism):
             & (self.n_bidder == 3)
         ):
             bne = 2 * obs / (2 + obs)
-            return True, bne
         else:
-            return False, None
+            bne = None
+        return bne
 
     def bne_roi_first_price(self, agent: str, obs: np.ndarray):
         """BNE for second-price auction for quasi-linear utilities with affiliated values"""
@@ -345,9 +335,9 @@ class SingleItemAuction(Mechanism):
                     ),
                     0,
                 )
-            return True, bne
         else:
-            return False, None
+            bne = None
+        return bne
 
     def compute_gradient(self, game: Game, strategies: Dict[str, Strategy], agent: str):
         """Simplified computation of gradient for i.i.d. bidders and tie-breaking "lose"
