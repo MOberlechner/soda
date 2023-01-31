@@ -23,7 +23,7 @@ class SplitAwardAuction(Mechanism):
 
     Parameter Utility (param_util)
         tiebreaking     str: specifies tiebreaking rule: "random" (default), "lose"
-        payment_rule    str: choose betweem "first_price" and "second_price"
+        payment_rule    str: choose betweem "first_price"
         utility_type    str:    QL (quasi-linear (corresponds to Auction, Default),
                                 ROI (return of investment),
                                 ROS (return of spent)
@@ -60,11 +60,11 @@ class SplitAwardAuction(Mechanism):
         valuation = self.get_valuation(obs, bids, idx)
 
         allocation = self.get_allocation(bids, idx)
-        payment = self.get_payment(bids, idx)
+        payment = self.get_payment(bids, allocation, idx)
 
-        return allocation["single"] * (payment["single"] - valuation) + allocation[
-            "split"
-        ] * (payment["split"] - self.scale * valuation)
+        return allocation[0] * (payment[0] - valuation) + allocation[1] * (
+            payment[1] - self.scale * valuation
+        )
 
     def get_allocation(self, bids: np.ndarray, idx: int) -> np.ndarray:
         """compute allocation given action profiles
@@ -85,42 +85,47 @@ class SplitAwardAuction(Mechanism):
             bids_split.sum(axis=0) <= bids_single.min(axis=0), 1, 0
         )
 
-        if self.param_util["tie_breaking"] == "random":
+        if self.tie_breaking == "random":
             is_winner_single = np.where(
                 bids_single[idx] <= np.delete(bids_single, idx, 0).min(axis=0), 1, 0
             )
             num_winner_single = (bids_single[idx] == bids_single).sum(axis=0)
 
-        elif self.param_util["tie_breaking"] == "lose":
+        elif self.tie_breaking == "lose":
             is_winner_single = np.where(
                 bids_single[idx] < np.delete(bids_single, idx, 0).min(axis=0), 1, 0
             )
             num_winner_single = np.ones_like(is_winner_single)
         else:
-            raise NotImplementedError(
-                'tie-breaking rule "{}" not implemented'.format(
-                    self.param_util["tie_breaking"]
-                )
-            )
-        return {
-            "single": is_winner_single / num_winner_single * (1 - is_winner_split),
-            "split": is_winner_split,
-        }
+            raise ValueError(f"tie_breaking {self.tie_breaking} unknown")
+        return np.array(
+            [
+                (is_winner_single / num_winner_single) * (1 - is_winner_split),
+                is_winner_split,
+            ]
+        )
 
-    def get_payment(self, bids: np.ndarray, idx: int) -> np.ndarray:
+    def get_payment(
+        self, bids: np.ndarray, allocation: np.ndarray, idx: int
+    ) -> np.ndarray:
         """compute payment (assuming bidder idx wins)
 
         Args:
             bids (np.ndarray): action profiles
+            alloaction (np.ndarray): allocation vector for agent idx
             idx (int): index of agent we consider
 
         Returns:
             np.ndarray: payment vector
         """
         if self.payment_rule == "first_price":
-            return {"single": bids[idx][0], "split": bids[idx][1]}
-        elif self.payment_rule == "second_price":
-            return {"single": bids[1 - idx][0], "split": bids[1 - idx][1]}
+            return np.array(
+                [
+                    bids[idx][0] * np.where(allocation[0] > 0, 1, 0),
+                    bids[idx][1] * np.where(allocation[1] > 0, 1, 0),
+                ]
+            )
+
         else:
             raise ValueError("payment rule " + self.payment_rule + " not available")
 
