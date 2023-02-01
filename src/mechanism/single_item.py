@@ -14,6 +14,7 @@ from src.util import mechanism_util
 
 class SingleItemAuction(Mechanism):
     """Single-Item Auction
+    We assume that bidders cannot win with zero bids
 
     Parameter Mechanism
         bidder, o_space, a_space - standard input for all mechanism (see class Mechanism)
@@ -340,8 +341,6 @@ class SingleItemAuction(Mechanism):
 
         """
         prob_win = mechanism_util.compute_probability_winning(game, strategies, agent)
-        # can't win item by bidding zero (modelling choice for single-item auction)
-        prob_win[0] = 0.0
 
         # utility type
         obs_grid = (
