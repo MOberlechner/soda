@@ -1,5 +1,5 @@
 from abc import abstractclassmethod
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 import numpy as np
 from scipy.stats import norm, powerlaw, truncnorm, uniform
@@ -84,6 +84,33 @@ class Mechanism:
         """
         raise NotImplementedError
 
+    def get_allocation(self, bids: np.ndarray, idx: int) -> np.ndarray:
+        """Compute alloction for idx-th bidder
+
+        Args:
+            bids (np.ndarray): action profiles
+            idx (int): idx-th agent
+
+        Returns:
+            np.ndarray: allocation vector
+        """
+        raise NotImplementedError
+
+    def get_payment(
+        self, bids: np.ndarray, allocation: np.ndarray, idx: int
+    ) -> np.ndarray:
+        """Compute payments for idx-th bidder
+
+        Args:
+            bids (np.ndarray): action profiles
+            allocation (np.ndarray): allocation for idx-th agent
+            idx (int): idx-th agent
+
+        Returns:
+            np.ndarray: payment vector
+        """
+        raise NotImplementedError
+
     def test_input_utility(self, obs: np.ndarray, bids: np.ndarray, idx: int):
         if bids.shape[0] != self.n_bidder:
             raise ValueError("wrong format of bids")
@@ -115,6 +142,67 @@ class Mechanism:
                 "get valuation only implemented for the private value model"
             )
         return valuations
+
+    # ---------------------------------- methods to compute metrics --------------------------------------- #
+
+    def get_bne(self, agent: str, obs: np.ndarray) -> np.ndarray:
+        """Returns BNE for the respective setting
+
+        Args:
+            agent (str): agent
+            obs (np.ndarray): observation
+
+        Returns:
+            np.ndarray: bne strategy given observation
+        """
+        return None
+
+    def compute_l2_norm(self, agent: str, obs: np.ndarray, bids: np.ndarray) -> float:
+        """compute approximated l2 norm of given bids compared to bne
+
+        Args:
+            agent (str): agent
+            obs (np.ndarray): observations
+            bids (np.ndarray): bids we want to compare to BNE
+
+        Returns:
+            float: approximated l2 norm
+        """
+        bne = self.get_bne(agent, obs)
+        if bne is None:
+            print("No BNE found in this setting")
+            return np.nan
+        else:
+            return np.sqrt(1 / len(obs) * ((bids - bne) ** 2).sum())
+
+    def compute_utility(
+        self, agent: str, obs: np.ndarray, bids: np.ndarray
+    ) -> Tuple[float, float, float]:
+        """compute metrics regarding utility
+
+        Args:
+            agent (str): agent
+            obs (np.ndarray): observation profile
+            bids (np.ndarray): bids for agent
+
+        Returns:
+            Tuple[float, float, float]: relative utility loss, utility, utility in BNE
+        """
+        idx = self.bidder.index(agent)
+        bid_profile = [self.get_bne(self.bidder[i], obs[i]) for i in range(self.bidder)]
+        if any(bne is None for bne in bid_profile):
+            print("No BNE found in this setting")
+            return np.nan, np.nan, np.nan
+
+        else:
+            util_in_bne = self.utility(obs[idx], bid_profile, idx)
+
+            bid_profile[idx] = bids
+            util_vs_bne = self.utility(obs[idx], bid_profile, idx)
+
+            util_loss = 1 - util_vs_bne / util_in_bne
+
+            return util_loss, util_vs_bne, util_in_bne
 
     # ---------------------------------- methods for sampling of types ---------------------------------------- #
 
@@ -282,8 +370,6 @@ class Mechanism:
                 for i in range(self.n_bidder)
             ]
         )
-
-    # ---------------------------------- methods to compute metrics --------------------------------------- #
 
     # --------------------------------------- helper methods ---------------------------------------------- #
 

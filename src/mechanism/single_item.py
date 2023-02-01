@@ -61,6 +61,8 @@ class SingleItemAuction(Mechanism):
             self.value_model = "common"
             self.v_space = {i: [0, o_space[i][1] / 2] for i in bidder}
 
+    # ------------------------------- methods to compute utilities --------------------------------- #
+
     def utility(self, obs: np.ndarray, bids: np.ndarray, idx: int) -> None:
         """Utility function for Single-Item Auction
 
@@ -202,6 +204,28 @@ class SingleItemAuction(Mechanism):
         else:
             raise NotImplementedError(f"value model {self.value_model} unknown")
         return valuations
+
+    # --------------------------------- methods to compute metrics --------------------------------- #
+
+    def compute_expected_revenue(self, bids: np.ndarray) -> float:
+        """Computed expected revenue of single-item auction
+
+        Args:
+            bids (np.ndarray): bid profile
+
+        Returns:
+            float: approximated expected revenue
+        """
+        allocations = np.array(
+            [self.get_allocation(bids, i) for i in range(self.n_bidder)]
+        )
+        payments = np.array(
+            [self.get_payment(bids, allocations[i], i) for i in range(self.n_bidder)]
+        )
+        revenue = (allocations * payments).sum(axis=0)
+        return revenue.mean()
+
+    # -------------------------- methods to get equilbrium strategies------------------------------- #
 
     def get_bne(self, agent: str, obs: np.ndarray):
         """
