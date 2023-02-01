@@ -69,6 +69,8 @@ class Mechanism:
     def __repr__(self) -> str:
         return f"Mechanism({self.name})"
 
+    # ------------------------------- methods for computation of utilities ------------------------------------- #
+
     def utility(self, obs: np.ndarray, bids: np.ndarray, idx: int):
         """Compute utility according to specified mechanism
 
@@ -113,6 +115,8 @@ class Mechanism:
                 "get valuation only implemented for the private value model"
             )
         return valuations
+
+    # ---------------------------------- methods for sampling of types ---------------------------------------- #
 
     def sample_types(self, n_vals: int) -> np.ndarray:
         """draw types, i.e. observations and/or valuations, for each agent according to the prior
@@ -278,6 +282,10 @@ class Mechanism:
                 for i in range(self.n_bidder)
             ]
         )
+
+    # ---------------------------------- methods to compute metrics --------------------------------------- #
+
+    # --------------------------------------- helper methods ---------------------------------------------- #
 
     def check_bidder_symmetric(self, o_space=None) -> bool:
         """check if bidder have the same observation and action space
