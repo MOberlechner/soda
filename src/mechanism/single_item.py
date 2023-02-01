@@ -207,20 +207,35 @@ class SingleItemAuction(Mechanism):
 
     # --------------------------------- methods to compute metrics --------------------------------- #
 
-    def compute_expected_revenue(self, bids: np.ndarray) -> float:
+    def get_metrics(
+        self, agent: str, obs_profile: np.ndarray, bid_profile: np.ndarray
+    ) -> tuple:
+        """compute all metrics relevant for single-item auction
+        this includes standard metrics (l2, util_loss) + revenue
+        """
+        metrics, values = self.get_standard_metrics(agent, obs_profile, bid_profile)
+        metrics += ["revenue"]
+        values += [self.compute_expected_revenue(bid_profile)]
+
+        return metrics, values
+
+    def compute_expected_revenue(self, bid_profile: np.ndarray) -> float:
         """Computed expected revenue of single-item auction
 
         Args:
-            bids (np.ndarray): bid profile
+            bid_profile (np.ndarray): bid profile
 
         Returns:
             float: approximated expected revenue
         """
         allocations = np.array(
-            [self.get_allocation(bids, i) for i in range(self.n_bidder)]
+            [self.get_allocation(bid_profile, i) for i in range(self.n_bidder)]
         )
         payments = np.array(
-            [self.get_payment(bids, allocations[i], i) for i in range(self.n_bidder)]
+            [
+                self.get_payment(bid_profile, allocations[i], i)
+                for i in range(self.n_bidder)
+            ]
         )
         revenue = (allocations * payments).sum(axis=0)
         return revenue.mean()
