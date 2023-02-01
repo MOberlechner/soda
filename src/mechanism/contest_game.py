@@ -42,7 +42,7 @@ class ContestGame(Mechanism):
         self.check_param()
 
         self.csf = param_util["csf"]
-        self.param_csf = param_util["csf_param"]
+        self.param_csf = param_util["csf_parameter"]
         self.type = param_util["type"]
 
     def utility(self, obs: np.ndarray, bids: np.ndarray, idx: int) -> np.ndarray:
@@ -119,7 +119,7 @@ class ContestGame(Mechanism):
                 "specify contest succes function (csf) in param_util - csv: ratio_form or difference_form"
             )
 
-        if "csf_param" not in self.param_util:
+        if "csf_parameter" not in self.param_util:
             raise ValueError(
                 "specify parameter csf_param for contest succes function (csf) in param_util"
             )
