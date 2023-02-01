@@ -1,5 +1,4 @@
-from abc import abstractclassmethod
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 import numpy as np
 from scipy.stats import norm, powerlaw, truncnorm, uniform
@@ -145,6 +144,28 @@ class Mechanism:
 
     # ---------------------------------- methods to compute metrics --------------------------------------- #
 
+    def get_metrics(
+        self, agent: str, obs_profile: np.ndarray, bid_profile: np.ndarray
+    ) -> tuple:
+        """Method for each mechanism to compute the metrics we are interest in. Has to be implemented in each mechanism"""
+        raise NotImplementedError(
+            f"get_metrics not implemented in {self.name} mechanism"
+        )
+
+    def get_standard_metrics(
+        self, agent: str, obs_profile: np.ndarray, bid_profile: np.ndarray
+    ) -> tuple:
+
+        idx = self.bidder.index(agent)
+        l2_norm = self.compute_l2_norm(agent, obs_profile[idx], bid_profile[idx])
+        util_loss, util_vs_bne, util_in_bne = self.compute_utility(
+            agent, obs_profile, bid_profile[idx]
+        )
+
+        metrics = ["l2_norm", "util_loss", "util_vs_bne", "util_in_bne"]
+        values = [l2_norm, util_loss, util_vs_bne, util_in_bne]
+        return metrics, values
+
     def get_bne(self, agent: str, obs: np.ndarray) -> np.ndarray:
         """Returns BNE for the respective setting
 
@@ -176,29 +197,33 @@ class Mechanism:
             return np.sqrt(1 / len(obs) * ((bids - bne) ** 2).sum())
 
     def compute_utility(
-        self, agent: str, obs: np.ndarray, bids: np.ndarray
-    ) -> Tuple[float, float, float]:
+        self, agent: str, obs_profile: np.ndarray, bids: np.ndarray
+    ) -> tuple:
         """compute metrics regarding utility
 
         Args:
             agent (str): agent
-            obs (np.ndarray): observation profile
+            obs_profile (np.ndarray): observation profile
             bids (np.ndarray): bids for agent
 
         Returns:
             Tuple[float, float, float]: relative utility loss, utility, utility in BNE
         """
         idx = self.bidder.index(agent)
-        bid_profile = [self.get_bne(self.bidder[i], obs[i]) for i in range(self.bidder)]
+
+        bid_profile = [
+            self.get_bne(self.bidder[i], obs_profile[i]) for i in range(self.n_bidder)
+        ]
         if any(bne is None for bne in bid_profile):
             print("No BNE found in this setting")
             return np.nan, np.nan, np.nan
 
         else:
-            util_in_bne = self.utility(obs[idx], bid_profile, idx)
+            bid_profile = np.array(bid_profile)
+            util_in_bne = self.utility(obs_profile[idx], bid_profile, idx).mean()
 
             bid_profile[idx] = bids
-            util_vs_bne = self.utility(obs[idx], bid_profile, idx)
+            util_vs_bne = self.utility(obs_profile[idx], bid_profile, idx).mean()
 
             util_loss = 1 - util_vs_bne / util_in_bne
 
