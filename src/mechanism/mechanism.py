@@ -225,7 +225,10 @@ class Mechanism:
             bid_profile[idx] = bids
             util_vs_bne = self.utility(obs_profile[idx], bid_profile, idx).mean()
 
-            util_loss = 1 - util_vs_bne / util_in_bne
+            if np.isclose(util_in_bne, 0.0):
+                util_loss = np.nan
+            else:
+                util_loss = 1 - util_vs_bne / util_in_bne
 
             return util_loss, util_vs_bne, util_in_bne
 
