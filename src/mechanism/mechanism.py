@@ -147,10 +147,11 @@ class Mechanism:
     def get_metrics(
         self, agent: str, obs_profile: np.ndarray, bid_profile: np.ndarray
     ) -> tuple:
-        """Method for each mechanism to compute the metrics we are interest in. Has to be implemented in each mechanism"""
-        raise NotImplementedError(
-            f"get_metrics not implemented in {self.name} mechanism"
-        )
+        """Method for each mechanism to compute the metrics we are interest in.
+        Some methods use additional metrics (e.g. revenue in single-item auctions). In that case,
+        the specific mechanism should overwrite this method
+        """
+        return self.get_standard_metrics(agent, obs_profile, bid_profile)
 
     def get_standard_metrics(
         self, agent: str, obs_profile: np.ndarray, bid_profile: np.ndarray
