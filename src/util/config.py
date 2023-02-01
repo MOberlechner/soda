@@ -11,7 +11,7 @@ from src.learner.frank_wolfe import FrankWolfe
 from src.learner.learner import Learner
 from src.learner.soda import SODA
 from src.learner.soma import SOMA
-from src.mechanism.all_pay import AllPay
+from src.mechanism.all_pay import AllPayAuction
 from src.mechanism.bertrand_pricing import BertrandPricing
 from src.mechanism.contest_game import ContestGame
 from src.mechanism.crowdsourcing import Crowdsourcing
@@ -178,7 +178,7 @@ class Config:
         elif mechanism_type == "contest_game":
             mechanism = ContestGame(*args)
         elif mechanism_type == "all_pay":
-            mechanism = AllPay(*args)
+            mechanism = AllPayAuction(*args)
         elif mechanism_type == "crowdsourcing":
             mechanism = Crowdsourcing(*args)
         elif mechanism_type == "split_award":
