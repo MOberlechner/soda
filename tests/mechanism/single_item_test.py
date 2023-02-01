@@ -4,7 +4,10 @@ This module tests the single-item mechanism
 import numpy as np
 import pytest
 
+from src.game import Game
+from src.learner.gradient import Gradient
 from src.mechanism.single_item import SingleItemAuction
+from src.strategy import Strategy
 
 
 @pytest.fixture
@@ -22,6 +25,7 @@ def get_mechanism():
             "payment_rule": "first_price",
             "tie_breaking": "random",
             "utility_type": "QL",
+            "budget": 1.01,
         }
         return SingleItemAuction(bidder, o_space, a_space, param_prior, param_util)
 
@@ -49,7 +53,7 @@ def test_get_allocation(get_mechanism):
     mechanism.tie_breaking = "random"
     bids = np.array([[0, 1, 2, 3, 3, 0], [1, 1, 1, 3, 2, 0]])
     allocation = mechanism.get_allocation(bids, 0)
-    assert np.array_equal(
+    assert np.allclose(
         allocation, [0.0, 0.5, 1.0, 0.5, 1.0, 0.0]
     ), "allocation with tie-breaking: random"
 
@@ -57,7 +61,7 @@ def test_get_allocation(get_mechanism):
     mechanism.tie_breaking = "lose"
     bids = np.array([[0, 1, 2, 3, 3], [1, 1, 1, 3, 2]])
     allocation = mechanism.get_allocation(bids, 0)
-    assert np.array_equal(
+    assert np.allclose(
         allocation, [0.0, 0.0, 1.0, 0.0, 1.0]
     ), "allocation with tie-breaking: lose"
 
@@ -74,15 +78,15 @@ def test_get_payment(get_mechanism):
 
     mechanism.payment_rule = "first_price"
     payments = mechanism.get_payment(bids, allocation, 0)
-    assert np.array_equal(payments, [0, 2, 3, 4, 5]), "first_price payment rule"
+    assert np.allclose(payments, [0, 2, 3, 4, 5]), "first_price payment rule"
 
     mechanism.payment_rule = "second_price"
     payments = mechanism.get_payment(bids, allocation, 0)
-    assert np.array_equal(payments, [0, 2, 3, 2, 0]), "second_price payment rule"
+    assert np.allclose(payments, [0, 2, 3, 2, 0]), "second_price payment rule"
 
     mechanism.payment_rule = "third_price"
     payments = mechanism.get_payment(bids, allocation, 0)
-    assert np.array_equal(payments, [0, 1, 3, 1, 0]), "third_price payment rule"
+    assert np.allclose(payments, [0, 1, 3, 1, 0]), "third_price payment rule"
 
 
 def test_get_payoff(get_mechanism):
@@ -97,23 +101,58 @@ def test_get_payoff(get_mechanism):
     payment = np.array([1, 2, 0, 0, 0.5])
 
     mechanism.utility_type = "QL"
-    payoff = mechanism.get_payoff(valuation_sim, allocation, payment)
-    assert np.array_equal(
+    payoff = mechanism.get_payoff(allocation, valuation_sim, payment)
+    assert np.allclose(
         payoff, np.array([0, -1, 0, 0, 1.5])
     ), "quasi-lineare (QL) utility-type, dim val = dim bids"
-    payoff = mechanism.get_payoff(valuation_util, allocation, payment)
-    assert np.array_equal(
+    payoff = mechanism.get_payoff(allocation, valuation_util, payment)
+    assert np.allclose(
         payoff, np.array([[0, -1, 0, 1, 0.5], [-1, -2, 0, 0, -0.5]])
     ), "quasi-lineare utility-type, dim val != dim bids"
 
     mechanism.utility_type = "ROI"
-    payoff = mechanism.get_payoff(valuation_sim, allocation, payment)
-    assert np.array_equal(
+    payoff = mechanism.get_payoff(allocation, valuation_sim, payment)
+    assert np.allclose(
         payoff, np.array([0, -0.5, 0, 0, 3])
     ), "return-of-investment (ROI) utility type"
 
     mechanism.utility_type = "ROS"
-    payoff = mechanism.get_payoff(valuation_sim, allocation, payment)
-    assert np.array_equal(
+    payoff = mechanism.get_payoff(allocation, valuation_sim, payment)
+    assert np.allclose(
         payoff, np.array([1, 0.5, 0, 0, 4])
     ), "return-of-spent (ROS) utility type"
+
+
+def test_own_gradient(get_mechanism):
+    """
+    Function to compare gradient computation of mechanism (fast) and gradient class (slow)
+    """
+    for tie_breaking in ["lose", "random"]:
+        for utility_type in ["QL", "ROI", "ROS", "ROSB"]:
+
+            # setup setting
+            mechanism = get_mechanism(2)
+            mechanism.tie_breaking = tie_breaking
+            mechanism.utility_type = utility_type
+            mechanism.reserve_price = 0.1
+
+            assert mechanism.own_gradient, "check if setting has own_gradient method"
+
+            # setup gradient
+            mechanism.own_gradient = False
+            game = Game(mechanism, 21, 19)
+            game.get_utility()
+            strategies = {"1": Strategy("1", game)}
+            gradient = Gradient()
+            gradient.prepare(game, strategies)
+
+            for t in range(5):
+
+                strategies["1"].initialize("random")
+
+                gradient.compute(game, strategies, "1")
+                own_gradient = mechanism.compute_gradient(game, strategies, "1")
+
+                assert np.allclose(
+                    gradient.x["1"], own_gradient
+                ), f"equality gradient, setting: {tie_breaking}, {utility_type}"
