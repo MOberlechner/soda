@@ -48,7 +48,7 @@ class LLGAuction(Mechanism):
         allocation = self.get_allocation(bids, idx)
         payment = self.get_payment(bids, allocation, idx)
 
-        return allocation * valuation - payment
+        return allocation * (valuation - payment)
 
     def get_allocation(self, bids: np.ndarray, idx: int) -> tuple:
         """compute allocation given action profiles
@@ -74,7 +74,8 @@ class LLGAuction(Mechanism):
         return allocation
 
     def get_payment(self, bids: np.ndarray, allocation: np.ndarray, idx: int):
-        """compute payment (assuming bidder idx wins) for different payment rules
+        """compute payment for different payment rules
+        we do not consider tie-breaking rules, if allocation > 0, full payment is computed
 
         Args:
             bids (np.ndarray): action profiles
