@@ -812,15 +812,18 @@ class Strategy:
                 + "/"
                 + '"'
             )
+            self.x = None
 
-    def load_scale(self, name: str, setting: str, path: str, n_scaled: int, m_scaled):
+    def load_scale(
+        self, name: str, mechanism_type: str, path: str, n_scaled: int, m_scaled
+    ):
         """Load strategy from respective directory, same naming convention as in save method
         Should be used if saved strategy has a lower discretization than the strategy we have
 
         Parameters
         ----------
         name : str, name of strategy
-        setting: str, name of setting (subdirectory in strategies)
+        mechanism_type: str, name of setting (subdirectory in strategies)
         path : str, path to directory (in which strategies/ is contained
         n_scaled: int, discretization (type) in the larger setting
         m_scaled: int, discretization (action) in the larger setting
@@ -833,7 +836,7 @@ class Strategy:
             strat = np.load(
                 path
                 + "strategies/"
-                + setting
+                + mechanism_type
                 + "/"
                 + name
                 + "_agent_"
