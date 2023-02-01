@@ -1,11 +1,11 @@
 from typing import Dict, List
 
 import numpy as np
-from scipy.special import binom
 
 from src.game import Game
 from src.mechanism.mechanism import Mechanism
 from src.strategy import Strategy
+from src.util import mechanism_util
 
 # -------------------------------------------------------------------------------------------------------------------- #
 #                                             SINGLE-ITEM AUCTION                                                      #
@@ -78,58 +78,60 @@ class SingleItemAuction(Mechanism):
         valuation = self.get_valuation(obs, bids, idx)
 
         allocation = self.get_allocation(bids, idx)
-        payment = self.get_payment(bids, idx)
-        payoff = self.get_payoff(valuation, allocation, payment)
+        payment = self.get_payment(bids, allocation, idx)
+        payoff = self.get_payoff(allocation, valuation, payment)
 
         return payoff
 
     def get_payoff(
-        self, valuation: np.ndarray, allocation: np.ndarray, payment: np.ndarray
+        self, allocation: np.ndarray, valuation: np.ndarray, payment: np.ndarray
     ) -> np.ndarray:
         """compute payoff given allocation and payment vector for different utility types:
         QL: quasi-linear, ROI: return of investement, ROS: return on spend, ROSB: return on spend with budget
 
         Args:
-            valuation (np.ndarray) : valuation of bidder (idx), equal to observation in private value model
             allocation (np.ndarray): allocation vector for agent
+            valuation (np.ndarray) : valuation of bidder (idx), equal to observation in private value model
             payment (np.ndarray): payment vector for agent ()
 
         Returns:
             np.ndarray: payoff
         """
         if self.utility_type == "QL":
-            payoff = allocation * valuation - payment
+            payoff = valuation - payment
 
         elif self.utility_type == "ROI":
             # if payment is zero, payoff is set to zero
             payoff = np.divide(
-                allocation * valuation - payment,
+                valuation - payment,
                 payment,
                 out=np.zeros_like((valuation - payment)),
                 where=payment != 0,
             )
         elif self.utility_type == "ROS":
             payoff = np.divide(
-                allocation * valuation,
+                valuation,
                 payment,
                 out=np.zeros_like((valuation - payment)),
                 where=payment != 0,
             )
         elif self.utility_type == "ROSB":
             payoff = np.divide(
-                allocation * valuation,
+                valuation,
                 payment,
                 out=np.zeros_like((valuation - payment)),
                 where=payment != 0,
             ) + np.log(self.param_util["budget"] - payment)
         else:
-            raise ValueError("utility type " + self.utility_type + " not available")
-        return payoff
+            raise ValueError(f"utility type {self.utility_type} not available")
+        return allocation * payoff
 
     def get_payment(
         self, bids: np.ndarray, allocation: np.ndarray, idx: int
     ) -> np.ndarray:
-        """compute payment (assuming bidder idx wins)
+        """compute payment
+        we do not consider tie-breaking rules, if allocation > 0, full payment is computed
+        payment is zero if agent does not win the item and it is half
 
         Args:
             bids (np.ndarray): action profiles
@@ -155,7 +157,7 @@ class SingleItemAuction(Mechanism):
             )
         else:
             raise ValueError("payment rule " + self.payment_rule + " not available")
-        return payment * np.where(allocation > 0, 1.0, 0.0)
+        return payment * np.where(allocation > 0, 1, 0)
 
     def get_allocation(self, bids: np.ndarray, idx: int) -> np.ndarray:
         """compute allocation given action profiles
@@ -168,22 +170,7 @@ class SingleItemAuction(Mechanism):
         Returns:
             np.ndarray: allocation vector for agent idx
         """
-        if self.tie_breaking == "random":
-            is_winner = np.where(
-                (bids[idx] >= np.delete(bids, idx, 0).max(axis=0)) & (bids[idx] > 0),
-                1,
-                0,
-            )
-            num_winner = (bids.max(axis=0) == bids).sum(axis=0)
-
-        elif self.tie_breaking == "lose":
-            is_winner = np.where(bids[idx] > np.delete(bids, idx, 0).max(axis=0), 1, 0)
-            num_winner = np.ones(is_winner.shape)
-        else:
-            raise ValueError(
-                'Tie-breaking rule "' + self.param_util["tie_breaking"] + '" unknown'
-            )
-        return is_winner / num_winner
+        return mechanism_util.get_allocation_single_item(bids, idx, self.tie_breaking)
 
     def get_valuation(self, obs: np.ndarray, bids: np.ndarray, idx: int) -> np.ndarray:
         """determine valuations (potentially from observations, might be equal for private value model)
@@ -340,7 +327,7 @@ class SingleItemAuction(Mechanism):
         return bne
 
     def compute_gradient(self, game: Game, strategies: Dict[str, Strategy], agent: str):
-        """Simplified computation of gradient for i.i.d. bidders and tie-breaking "lose"
+        """Simplified computation of gradient for i.i.d. bidders
 
         Parameters
         ----------
@@ -352,7 +339,9 @@ class SingleItemAuction(Mechanism):
         -------
 
         """
-        prob_win = self.compute_probability_winning(game, strategies, agent)
+        prob_win = mechanism_util.compute_probability_winning(game, strategies, agent)
+        # can't win item by bidding zero (modelling choice for single-item auction)
+        prob_win[0] = 0.0
 
         # utility type
         obs_grid = (
@@ -366,75 +355,8 @@ class SingleItemAuction(Mechanism):
             self.reserve_price,
             None,
         )
-
-        if self.utility_type == "QL":
-            payoff = obs_grid - bid_grid
-
-        elif self.utility_type == "ROI":
-            payoff = np.divide(
-                obs_grid - bid_grid,
-                bid_grid,
-                out=np.zeros_like(obs_grid),
-                where=bid_grid != 0,
-            )
-        elif self.utility_type == "ROS":
-            payoff = np.divide(
-                obs_grid,
-                bid_grid,
-                out=np.zeros_like(obs_grid),
-                where=bid_grid != 0,
-            )
-        elif self.utility_type == "ROSB":
-            payoff = np.divide(
-                obs_grid + np.log(self.param_util["budget"] - bid_grid),
-                bid_grid,
-                out=np.zeros_like(obs_grid),
-                where=bid_grid != 0,
-            )
-        else:
-            raise ValueError(
-                "utility type " + self.utility_type + " not available in own gradient"
-            )
-
+        payoff = self.get_payoff(np.ones_like(bid_grid), obs_grid, bid_grid)
         return prob_win * payoff
-
-    def compute_probability_winning(
-        self, game: Game, strategies: Dict[str, Strategy], agent: str
-    ) -> np.ndarray:
-        """Compute probability of winning for each bid given the symmetric (!) strategies
-
-        Args:
-            game (Game): approximation game
-            strategies (Dict[str, Strategy]): strategy profile
-            agent (str): bidder
-
-        Raises:
-            ValueError: wront tie breaking rule
-
-        Returns:
-            np.ndarray: probability of winning
-        """
-
-        pdf = strategies[agent].x.sum(axis=0)
-        cdf = np.insert(pdf, 0, 0.0).cumsum()[:-1]
-        prob_win = cdf ** (self.n_bidder - 1)
-
-        if self.tie_breaking == "lose":
-            pass
-        elif self.tie_breaking == "random":
-            prob_win += sum(
-                [
-                    binom(self.n_bidder - 1, i)
-                    * cdf ** (self.n_bidder - i - 1)
-                    / (i + 1)
-                    * pdf**i
-                    for i in range(1, self.n_bidder)
-                ]
-            )
-        else:
-            raise ValueError('Tie-breaking rule "{}" unknown'.format(self.tie_breaking))
-
-        return prob_win
 
     def check_param(self):
         """
