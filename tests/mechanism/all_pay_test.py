@@ -27,7 +27,7 @@ def get_mechanism():
         param_util = {
             "payment_rule": "first_price",
             "tie_breaking": "lose",
-            "type": "valuation",
+            "type": "value",
             "utility_type": "RN",
             "risk_parameter": 0.3,
         }
