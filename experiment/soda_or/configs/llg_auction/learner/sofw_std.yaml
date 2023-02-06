@@ -1,9 +1,9 @@
-name: 'frank_wolfe'
+learn_alg: 'frank_wolfe'
 max_iter: 1000
 tol: 1e-4
 stop_criterion: 'util_loss'
-method: 'standard'
-steprule_bool: False
-eta: 1.0
-beta: 1.0
+parameter: {
+  'method': 'standard',
+  'steprule_bool': False,
+}
 init_method: 'random'
