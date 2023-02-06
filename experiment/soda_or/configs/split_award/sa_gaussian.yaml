@@ -9,6 +9,7 @@ param_prior: {
 param_util: {
   'tie_breaking': 'lose', 
   'scale': 0.3,
+  'payment_rule': 'first_price',
   }
 n: 32
 m: 64

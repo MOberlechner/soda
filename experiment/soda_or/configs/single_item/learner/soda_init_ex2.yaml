@@ -1,9 +1,11 @@
-name: 'soda'
+learn_alg: 'soda'
 max_iter: 10000
 tol: 1e-10
 stop_criterion: 'util_loss'
-regularizer: 'euclidean'
-steprule_bool: True
-eta: 1
-beta: 0.5
+parameter: {
+  'regularizer': 'euclidean',
+  'steprule_bool': True,
+  'eta': 1.,
+  'beta': 0.5,
+}
 init_method: 'random'
