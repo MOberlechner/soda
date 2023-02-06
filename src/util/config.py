@@ -74,8 +74,14 @@ class Config:
             raise ValueError("Path to config not specified")
 
         # get config file for game
-        with open(f"{self.path_to_config}{mechanism_type}/{experiment}.yaml") as f:
-            config_game = yaml.load(f, Loader=SafeLoader)
+        try:
+            with open(f"{self.path_to_config}{mechanism_type}/{experiment}.yaml") as f:
+                config_game = yaml.load(f, Loader=SafeLoader)
+        except FileNotFoundError:
+            raise ValueError(
+                f"couldn't open: {self.path_to_config}{mechanism_type}/{experiment}.yaml"
+            )
+
         # test config file
         for key in ["bidder", "o_space", "a_space", "param_prior", "param_util"]:
             if key not in config_game:
