@@ -1,12 +1,11 @@
-name: 'asym_ratio2'
 bidder: ['weak', 'strong']
 o_space: {'weak': [0.0 , 1.0], 'strong': [1.0, 2.0]}
 a_space: {'weak': [0.0,  0.5], 'strong': [0.0, 0.5]}
 param_prior: {'distribution': 'uniform'}
 param_util : {
-  'csf': 'ratio_form_valuation',
-  'param_csf': 1.0,
+  'type': 'value',
+  'csf': 'ratio_form',
+  'csf_parameter': 1.0,
 }
 n: 64
 m: 64
-bne_known: False
