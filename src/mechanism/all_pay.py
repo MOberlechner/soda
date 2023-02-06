@@ -90,7 +90,13 @@ class AllPayAuction(Mechanism):
         Returns:
             np.ndarray: payoff
         """
-        payoff = allocation * valuation - payment
+        if self.type == "value":
+            payoff = allocation * valuation - payment
+        elif self.type == "cost":
+            payoff = allocation * np.ones_like(allocation) - valuation * payment
+        else:
+            raise ValueError(f"chose type between value and cost")
+
         if self.utility_type == "RN":
             return payoff
         elif self.utility_type == "CRRA":
@@ -147,18 +153,15 @@ class AllPayAuction(Mechanism):
             bids, idx, self.tie_breaking, zero_wins=True
         )
 
-    def get_bne(self, agent: str, obs: np.ndarray):
-        """
-        Returns BNE for some predefined settings
+    def get_bne(self, agent: str, obs: np.ndarray) -> np.ndarray:
+        """returns BNE for some specific settings
 
-        Parameters
-        ----------
-        agent : specficies bidder (important in asymmetric settings)
-        obs :  observation/valuation of agent
+        Args:
+            agent (str): agents
+            obs (np.ndarray): observed types
 
-        Returns
-        -------
-        np.ndarray : bids to corresponding observation
+        Returns:
+            np.ndarray: equilibrium bids
         """
         bnes = [
             self.bne_uniform_first_price(agent, obs),
@@ -212,18 +215,18 @@ class AllPayAuction(Mechanism):
         else:
             return None
 
-    def compute_gradient(self, game: Game, strategies: Dict[str, Strategy], agent: str):
-        """Simplified computation of gradient for i.i.d. bidders
+    def compute_gradient(
+        self, game: Game, strategies: Dict[str, Strategy], agent: str
+    ) -> np.ndarray:
+        """simplified computation of gradient for iid first price settings
 
-        Parameters
-        ----------
-        strategies :
-        game :
-        agent :
+        Args:
+            game (Game): approximation game
+            strategies (Dict[str, Strategy]): strategy profile
+            agent (str): gradient computed for agent
 
-        Returns
-        -------
-
+        Returns:
+            np.ndarray: gradient for agent
         """
         prob_win = mechanism_util.compute_probability_winning(game, strategies, agent)
 
@@ -249,7 +252,7 @@ class AllPayAuction(Mechanism):
             raise ValueError("specify tiebreaking in param_util")
 
         if "type" not in self.param_util:
-            raise ValueError("specify param_util - type: cost or valuation")
+            raise ValueError("specify param_util - type: cost or value")
 
         if "utility_type" not in self.param_util:
             self.param_util["utility_type"] = "RN"
@@ -257,7 +260,6 @@ class AllPayAuction(Mechanism):
             if self.param_util["utility_type"] in ["CRRA"]:
                 if "risk_parameter" not in self.param_util:
                     raise ValueError("Specify risk_parameter for CRRA")
-
         if "payment_rule" not in self.param_util:
             raise ValueError(
                 "specify payment_rule in param_util - payment_rule: first_price, generalized, "
@@ -281,10 +283,10 @@ class AllPayAuction(Mechanism):
     def check_own_gradient(self):
         """check if we can use gradient computation of mechanism"""
         if (
-            self.check_bidder_symmetric([0, 1])
+            self.check_bidder_symmetric()
             & ("corr" not in self.param_prior)
             & (self.payment_rule == "first_price")
-            & (self.type == "valuation")
+            & (self.type == "value")
             & (self.tie_breaking == "lose")
         ):
             self.own_gradient = True
