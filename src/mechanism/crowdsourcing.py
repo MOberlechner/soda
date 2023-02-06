@@ -30,7 +30,7 @@ class Crowdsourcing(Mechanism):
         self.name = "crowdsourcing"
 
         self.check_param()
-        self.prices = param_util["prices"]
+        self.prices = np.array(param_util["prices"])
         self.tie_breaking = param_util["tie_breaking"]
         self.payment_rule = param_util["payment_rule"]
         self.type = param_util["type"]
@@ -205,7 +205,7 @@ class Crowdsourcing(Mechanism):
             )
             return exp_win - payment
 
-        elif self.type == "valuation":
+        elif self.type == "value":
             exp_win_val = (
                 strategies[agent]
                 .o_discr.reshape(strategies[agent].n, 1)
