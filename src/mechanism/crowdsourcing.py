@@ -28,54 +28,65 @@ class Crowdsourcing(Mechanism):
     ):
         super().__init__(bidder, o_space, a_space, param_prior, param_util)
         self.name = "crowdsourcing"
-        self.prices = np.array(
-            param_util["prices"]
-            if len(param_util["prices"]) == len(bidder)
-            else param_util["prices"] + [0] * (len(bidder) - len(param_util["prices"]))
-        )
-        self.param_util = param_util
-        self.type = param_util["type"] if "type" in param_util else "cost"
 
-        # use own gradient
-        if (len(self.set_bidder) == 1) and (self.param_util["tiebreaking"] == "lose"):
-            self.own_gradient = True
-            print("own_gradient method: {}".format(self.own_gradient))
+        self.check_param()
+        self.prices = param_util["prices"]
+        self.tie_breaking = param_util["tie_breaking"]
+        self.payment_rule = param_util["payment_rule"]
+        self.type = param_util["type"]
 
-        # check input
-        if self.prices.sum() != 1:
-            raise ValueError("Prices have to add up to one")
+        self.check_own_gradient()
 
     def utility(self, obs: np.ndarray, bids: np.ndarray, idx: int):
-        """Crowdsourcing Contest: Given Prices [p_1, p_2, ..., p_N] (in decrasing order with sum p_i = 1), the bidder
-        wins the price corresponding to his or her rank. Tie-breaking rule is random
+        """utility for crowdsourcing contest with prices (decreasing, sum to 1)
 
+        Args:
+            obs (np.ndarray): _description_
+            bids (np.ndarray): _description_
+            idx (int): _description_
 
-        Parameters
-        ----------
-        obs : obs corresponds to skill paramater
-        bids : effort
-        idx : agent
-
-        Returns
-        -------
-
+        Returns:
+            _type_: _description_
         """
-        # test input
-        if bids.shape[0] != self.n_bidder:
-            raise ValueError("wrong format of bids")
-        elif idx >= self.n_bidder:
-            raise ValueError("bidder with index " + str(idx) + " not avaible")
-        elif "tiebreaking" not in self.param_util:
-            raise ValueError("specify tiebreaking rule")
+        self.test_input_utility(obs, bids, idx)
+        valuation = self.get_valuation(obs, bids, idx)
+        allocation = self.get_allocation(bids, idx)
+        payment = self.get_payment(bids, allocation, idx)
+        payoff = self.get_payoff(allocation, valuation, payment)
+
+        return payoff
+
+    def get_payoff(
+        self, allocation: np.ndarray, valuation: np.ndarray, payment: np.ndarray
+    ) -> np.ndarray:
+        """compute payoff given allocation, payment and valuation vector
+
+        Args:
+            allocation (np.ndarray): allocation matrix for agent
+            valuation (np.ndarray): valuation
+            payment (np.ndarray): _description_
+
+        Returns:
+            np.ndarray: payoff
+        """
+        if self.type == "cost":
+            return self.prices.dot(allocation) - valuation * payment
+        elif self.type == "value":
+            return self.prices.dot(allocation) * valuation - payment
         else:
-            pass
+            raise ValueError(f"chose type between value and cost")
 
-        # if True: we want each outcome for every observation, else: each outcome belongs to one observation
-        if obs.shape != bids[idx].shape:
-            obs = obs.reshape(len(obs), 1)
+    def get_allocation(self, bids: np.ndarray, idx: int) -> np.ndarray:
+        """compute allocation given action profiles for agent i
 
-        # determine allocation (different tie breaking rules)
-        if self.param_util["tiebreaking"] == "random":
+        Args:
+            bids (np.ndarray): action profiles
+            idx (int): index of agent we consider
+
+        Returns:
+            np.ndarray: allocation matrix for agent i
+        """
+        if self.tie_breaking == "random":
             rank_min = (bids[idx] < bids).sum(axis=0)
             rank_max = self.n_bidder - (bids[idx] > bids).sum(axis=0) - 1
             number_bidder_on_same_rank = rank_max - rank_min + 1
@@ -89,57 +100,90 @@ class Crowdsourcing(Mechanism):
                 ] = 1
             probs = probs / number_bidder_on_same_rank.T
 
-        elif self.param_util["tiebreaking"] == "index":
-            # compute probability matrix (i,j): contains probability of winning price i for each bid j (only 0/1)
-            probs = np.argsort(-bids, axis=0) == idx
-
-        elif self.param_util["tiebreaking"] == "lose":
+        elif self.tie_breaking == "lose":
             rank_max = self.n_bidder - (bids[idx] > bids).sum(axis=0) - 1
 
             # compute probability matrix (i,j): contains probability of winning price i for each bid j
             probs = np.zeros(bids.shape)
             probs[rank_max, np.arange(bids.shape[1])] = 1
 
-        elif self.param_util["tiebreaking"] == "win":
+        elif self.tie_breaking == "win":
             rank_min = (bids[idx] < bids).sum(axis=0)
 
             # compute probability matrix (i,j): contains probability of winning price i for each bid j
             probs = np.zeros(bids.shape)
             probs[rank_min, np.arange(bids.shape[1])] = 1
 
-        elif self.param_util["tiebreaking"] == "zero":
-            rank_min = (bids[idx] < bids).sum(axis=0)
-            rank_max = self.n_bidder - (bids[idx] > bids).sum(axis=0) - 1
-            rank = np.where(rank_max == rank_min, rank_min, self.n_bidder - 1)
-
-            # compute probability matrix (i,j): contains probability of winning price i for each bid j
-            probs = np.zeros(bids.shape)
-            for i in range(self.n_bidder):
-                probs[rank, np.arange(bids.shape[1])] = 1
-
         else:
-            raise ValueError("tiebreaking rule unknown (random/index/lose/win)")
+            raise ValueError(f"tie_breaking rule {self.tie_breaking} unknown")
 
-        # utility: type is marginal cost with linear cost function
-        if self.type == "cost":
-            return self.prices.dot(probs) - obs * bids[idx]
-        elif self.type == "valuation":
-            return self.prices.dot(probs) * obs - bids[idx]
+    def get_payment(
+        self, bids: np.ndarray, allocation: np.ndarray, idx: int
+    ) -> np.ndarray:
+        """compute payment for bidder idx
+
+        Args:
+            bids (np.ndarray): action profiles
+            allocation (np.ndarray): allocation vector for agent i
+            idx (int): index of agent we consider
+
+        Returns:
+            np.ndarray: payment vector
+        """
+        if self.payment_rule == "first_price":
+            return bids[idx]
         else:
-            raise ValueError("util_type in param_util unknown")
+            raise ValueError(f"payment_rule unkown")
+
+    def get_bne(self, agent: str, obs: np.ndarray) -> np.ndarray:
+        """returns BNE for some specific settings
+
+        Args:
+            agent (str): agents
+            obs (np.ndarray): observed types
+
+        Returns:
+            np.ndarray: equilibrium bids
+        """
+        bnes = [
+            self.bne_uniform_2_prizes(agent, obs),
+        ]
+        for bne in bnes:
+            if bne is not None:
+                return bne
+        return None
+
+    def bne_uniform_2_prizes(self, agent: str, obs: np.ndarray) -> np.ndarray:
+        """BNE for crowdsourcing contest with 2 prizes and uniform prior (value)"""
+        if (
+            self.check_bidder_symmetric([0, 1])
+            & (self.type == "value")
+            & (self.prior == "uniform")
+            & ((self.prices > 0).sum() <= 2)
+        ):
+            bne = self.prices[0] * (
+                self.n_bidder - 1
+            ) / self.n_bidder * obs**self.n_bidder + self.prices[1] * (
+                (self.n_bidder - 2) * obs ** (self.n_bidder - 1)
+                - (self.n_bidder - 1) ** 2 / self.n_bidder * obs**self.n_bidder
+            )
+            return bne
+        else:
+            return None
 
     def compute_gradient(self, game, strategies, agent: str):
-        """Simplified computation of gradient for i.i.d. bidders and tie-breaking "lose"
+        """_summary_
 
-        Parameters
-        ----------
-        strategies :
-        game :
-        agent :
+        Args:
+            game (_type_): _description_
+            strategies (_type_): _description_
+            agent (str): _description_
 
-        Returns
-        -------
+        Raises:
+            ValueError: _description_
 
+        Returns:
+            _type_: _description_
         """
         pdf = strategies[agent].x.sum(axis=0)
         cdf = np.insert(pdf, 0, 0.0).cumsum()
@@ -175,22 +219,46 @@ class Crowdsourcing(Mechanism):
         else:
             raise ValueError("util_type in param_util unknown")
 
-    def get_bne(self, agent: str, obs: np.ndarray):
+    def check_param(self):
+        """
+        Check if input paremter are sufficient to define mechanism
+        """
+        if "tie_breaking" not in self.param_util:
+            raise ValueError("specify tiebreaking in param_util")
 
-        if (
-            self.o_space[agent] == [0, 1]
-            and self.type == "valuation"
-            and len(self.set_bidder) == 1
-            and (self.prices > 0).sum() <= 2
-        ):
+        if "type" not in self.param_util:
+            raise ValueError("specify param_util - type: cost or value")
 
-            bids_bne = self.prices[0] * (
-                self.n_bidder - 1
-            ) / self.n_bidder * obs**self.n_bidder + self.prices[1] * (
-                (self.n_bidder - 2) * obs ** (self.n_bidder - 1)
-                - (self.n_bidder - 1) ** 2 / self.n_bidder * obs**self.n_bidder
-            )
-            return bids_bne
-
+        if "prices" not in self.param_util:
+            raise ValueError("specify prices in param_util")
         else:
-            raise NotImplementedError("BNE for this setting not implemented")
+            if not np.isclose(sum(self.param_util["prices"]), 1.0):
+                raise ValueError("prices have to add up to one")
+            else:
+                n_prices = len(self.param_util["prices"])
+                if n_prices > self.n_bidder:
+                    raise ValueError("More prices than bidders")
+                elif n_prices < self.n_bidder:
+                    self.param_util["prices"] = self.param_util["prices"] + [0] * (
+                        self.n_bidder - n_prices
+                    )
+                else:
+                    pass
+
+        if "payment_rule" not in self.param_util:
+            self.param_util["payment_rule"] = "first_price"
+        else:
+            if self.param_util["payment_rule"] != "first_price":
+                raise NotImplementedError(
+                    "only first_price payment_rule is implemented"
+                )
+
+    def check_own_gradient(self):
+        """check if we cna use simplified gradient computation of mechanism"""
+        if (
+            self.check_bidder_symmetric()
+            & ("corr" not in self.param_prior)
+            & (self.payment_rule == "first_price")
+            & (self.tie_breaking == "lose")
+        ):
+            self.own_gradient = True
