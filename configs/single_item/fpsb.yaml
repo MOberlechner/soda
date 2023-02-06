@@ -8,4 +8,3 @@ param_util: {
   'utility_type':'QL'}
 n: 64
 m: 64
-bne_known: True

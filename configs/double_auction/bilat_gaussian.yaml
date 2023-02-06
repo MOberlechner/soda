@@ -5,4 +5,3 @@ param_prior: {'distribution':'gaussian', 'mu': 15.0, 'sigma': 5.0}
 param_util: {'payment_rule': 'average', 'risk': 1.0}
 n: 64
 m: 64
-bne_known: False

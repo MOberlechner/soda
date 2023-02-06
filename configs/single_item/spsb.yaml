@@ -7,4 +7,3 @@ param_util: {
   'tie_breaking': 'lose'}
 n: 64
 m: 64
-bne_known: True

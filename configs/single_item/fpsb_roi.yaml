@@ -9,4 +9,3 @@ param_util: {
   'reserve_price': 0.05}
 n: 64
 m: 64
-bne_known: True
