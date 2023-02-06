@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def project_euclidean(self, x: np.ndarray, prior: np.ndarray) -> np.ndarray:
+def project_euclidean(x: np.ndarray, prior: np.ndarray) -> np.ndarray:
     """Projection w.r.t. Euclidean distance
     each row x[i] is projected to the probability simplex scaled by prior[i]
     Algorithm based on https://arxiv.org/pdf/1309.1541.pdf
