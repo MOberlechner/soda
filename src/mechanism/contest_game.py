@@ -126,3 +126,8 @@ class ContestGame(Mechanism):
 
         if "type" not in self.param_util:
             raise ValueError("Specify type in param_util - type: cost or value")
+        else:
+            if self.param_util["type"] not in ["value", "cost"]:
+                raise ValueError(
+                    f"type {self.param_util['type']} in param_util unknown. Choose between value or cost"
+                )
