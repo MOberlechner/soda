@@ -1,8 +1,12 @@
-name: 'soda'
+learn_alg: 'soda'
 max_iter: 2000
 tol: 1e-5
 stop_criterion: 'util_loss'
+parameter: {
+  'regularizer': 'entropic',
+  'steprule_bool': True,
+  'eta': 200.,
+  'beta': 0.05,
+}
 steprule_bool: True
-eta: 200.
-beta: 0.05
-init: 'truthful'
+init_method: 'truthful'
