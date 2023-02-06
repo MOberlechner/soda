@@ -13,7 +13,6 @@ from src.util.config import Config
 # get all config files form soda/configs for games and learners
 path_into_project = os.getcwd().split("soda")[0] + "soda/"
 path_to_config = "configs/"
-
 testdata_experiments, testdata_learner = [], []
 for mechanism_type in os.listdir(f"{path_into_project}{path_to_config}"):
     for experiment in os.listdir(
@@ -39,7 +38,7 @@ def test_config_games(mechanism_type, experiment):
 
 
 @pytest.mark.parametrize("mechanism_type, learn_alg", testdata_learner)
-def test_config_games(mechanism_type, learn_alg):
+def test_config_learner(mechanism_type, learn_alg):
     config = Config()
     config.get_path("configs/")
     config.get_config_learner(mechanism_type, learn_alg)
