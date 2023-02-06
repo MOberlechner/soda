@@ -15,10 +15,7 @@ class FictitiousPlay(Learner):
     """
 
     def __init__(
-        self,
-        max_iter: int,
-        tol: float,
-        stop_criterion: str,
+        self, max_iter: int, tol: float, stop_criterion: str, param: dict = {}
     ):
         super().__init__(max_iter, tol, stop_criterion)
         self.name = "fictitious_play"

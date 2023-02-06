@@ -227,7 +227,9 @@ class Config:
                 raise ValueError(
                     f"config file for learner is not feasible. {key} is missing."
                 )
-        # test config file for initialization parameter
+        # test config file for parameter (learner or init)
+        if "parameter" not in config_learner:
+            config_learner["parameter"] = {}
         if "param_init" not in config_learner:
             config_learner["param_init"] = {}
 
