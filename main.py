@@ -1,89 +1,86 @@
-from src.util.run import *
+from typing import List
+
+from src.util.experiment import Experiment
 
 
 def main(
     path_config: str,
-    path: str,
-    experiments: list,
-    learning: bool,
+    path_exp: str,
+    experiment_list: List[tuple],
+    number_runs: int,
+    computation: bool,
     simulation: bool,
     logging: bool,
-    n_obs: int = int(2**22),
-    n_scaled: int = 1024,
-    m_scaled: int = 1024,
+    number_samples: int,
+    save_strat: bool,
+    save_init_strat: bool = True,
+    round_decimal: int = 3,
 ):
-    """Run Experiments
+    """Run Experiments fom experiment_list, which are specified in respective config files
 
     Args:
-        path_config (str): specify path to config file, which contain files for learn_alg and experiment in a subdirectory setting
-        path (str): log files and strategies are saved in the specified directory
-        experiments (list): list of tuples (setting, experiment, learner)
-        setting (str): specifies the mechanism / subdirectory in config
-        exp_list (list): list of specific version of the setting where we want to compute the equilibria
-        learning (bool): run learning algorithm, otherwise only simulations are performed
-        simulation (bool): run simulations, otherwise only the strategies are computed
-        logging (bool): log results from simulation
-        n_obs (int): number of simulated observations. Defaults to int(2**22).
-        n_scaled (int): number of discretization points for observations to evaluate computed strategy. Defaults to 1024.
-        m_scaled (int) number of discretization points for actions to evaluate computed strategy. Defaults to 1024.
+        path_config (str): path to config file (should contain subdirectories for each mechanism_type)
+        path_exp (str): path to directory where results are stored
+        experiment_list (List[tuple]): list of experiments we want to perform, contains tuples (mechanism_type, experiment, learn_alg)
+        number_runs (int): number of repetitions for each experiment
+        computation (bool): learn strategies
+        simulation (bool): simulate mechanisms with saved strategies to evaluate
+        logging (bool): log results from computation/simulation
+        number_samples (int, optional): number of samples for simulation.
+        save_strat (bool): save strategies from computation
+        save_init_strat (bool, optional): save initial strategies . Defaults to True.
+        round_decimal (int, optional): Number of decimals we use for our metrics. Defaults to 3.
     """
 
-    # compute strategies
-    if learning:
-        for setting, experiment, learn_alg in experiments:
-            print(setting, experiment, learn_alg)
-            run_experiment(
-                learn_alg,
-                setting,
-                experiment,
-                logging,
-                save_strat,
-                num_runs,
-                path,
-                path_config,
-            )
+    for mechanism_type, experiment, learn_alg in experiment_list:
+        exp_handler = Experiment(
+            mechanism_type,
+            experiment,
+            learn_alg,
+            number_runs,
+            computation,
+            simulation,
+            logging,
+            save_strat,
+            path_config,
+            number_samples,
+            save_init_strat,
+            path_exp,
+            round_decimal,
+        )
 
-    # evaluate strategies
-    if simulation:
-        for setting, experiment, learn_alg in experiments:
-            run_sim(
-                learn_alg,
-                setting,
-                experiment,
-                path,
-                path_config,
-                num_runs,
-                n_obs,
-                logging,
-                n_scaled,
-                m_scaled,
-            )
-
-    print("Done!")
+        exp_handler.run()
 
 
 if __name__ == "__main__":
 
-    path_config = "experiment/soda_or/configs/"
-    path = "experiment/soda_or/"
-    experiments = [
-        # ("single_item", "affiliated_values", "soda_entro"),
-        # ("single_item", "affiliated_values", "soda_eucl"),
-        # ("single_item", "affiliated_values", "soma_eucl"),
-        # ("single_item", "affiliated_values", "sofw_std"),
-        ("single_item", "common_value", "soda_entro"),
-        # ("single_item", "common_value", "soda_eucl"),
-        # ("single_item", "common_value", "soma_eucl"),
-        # ("single_item", "common_value", "sofw_std"),
+    path_config = "configs/"
+    path_exp = "experiment/test/"
+
+    experiment_list = [
+        ("single_item", "fpsb", "frank_wolfe"),
     ]
 
-    # computation
+    number_runs = 10
     learning = True
-    num_runs = 10
-    save_strat = True
-
-    # simulation
     simulation = True
     logging = True
 
-    main(path_config, path, experiments, learning, simulation, logging)
+    number_samples = int(2**22)
+    save_strat = True
+    save_init_strat = False
+    round_decimal = 3
+
+    main(
+        path_config,
+        path_exp,
+        experiment_list,
+        number_runs,
+        learning,
+        simulation,
+        logging,
+        number_samples,
+        save_strat,
+        save_init_strat,
+        round_decimal,
+    )
