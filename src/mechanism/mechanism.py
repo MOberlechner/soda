@@ -192,7 +192,6 @@ class Mechanism:
         """
         bne = self.get_bne(agent, obs)
         if bne is None:
-            print("No BNE found in this setting")
             return np.nan
         else:
             return np.sqrt(1 / len(obs) * ((bids - bne) ** 2).sum())
@@ -216,7 +215,6 @@ class Mechanism:
             self.get_bne(self.bidder[i], obs_profile[i]) for i in range(self.n_bidder)
         ]
         if any(bne is None for bne in bid_profile):
-            print("No BNE found in this setting")
             return np.nan, np.nan, np.nan
 
         else:
