@@ -116,3 +116,14 @@ def test_own_gradient(get_mechanism):
             assert np.allclose(
                 gradient.x["1"], own_gradient
             ), f"equality gradient for {utility_type}"
+
+
+def test_compute_expected_revenue(get_mechanism):
+    """
+    Test computation of expected revenue in all-pay auction
+    """
+    mechanism = get_mechanism(3)
+    bids = np.array([[0, 1, 2, 3, 1, 0], [1, 1, 1, 3, 2, 2], [1, 1, 1, 1, 1, 1]])
+    revenue = mechanism.compute_expected_revenue(bids)
+
+    assert np.isclose(revenue, 1 / 6 * (2 + 3 + 4 + 7 + 4 + 3))
