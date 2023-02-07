@@ -14,6 +14,7 @@ from src.learner.soma import SOMA
 from src.mechanism.all_pay import AllPayAuction
 from src.mechanism.bertrand_pricing import BertrandPricing
 from src.mechanism.contest_game import ContestGame
+from src.mechanism.cournot_pricing import CournotPricing
 from src.mechanism.crowdsourcing import Crowdsourcing
 from src.mechanism.double_auction import DoubleAuction
 from src.mechanism.llg_auction import LLGAuction
@@ -177,24 +178,26 @@ class Config:
         except:
             raise ValueError("config_game doesn't contain all arguments for mechanism")
 
-        if mechanism_type == "single_item":
-            mechanism = SingleItemAuction(*args)
-        elif mechanism_type == "llg_auction":
-            mechanism = LLGAuction(*args)
-        elif mechanism_type == "contest_game":
-            mechanism = ContestGame(*args)
-        elif mechanism_type == "all_pay":
+        if mechanism_type == "all_pay":
             mechanism = AllPayAuction(*args)
-        elif mechanism_type == "crowdsourcing":
-            mechanism = Crowdsourcing(*args)
-        elif mechanism_type == "split_award":
-            mechanism = SplitAwardAuction(*args)
-        elif mechanism_type == "double_auction":
-            mechanism = DoubleAuction(*args)
         elif mechanism_type == "bertrand_pricing":
             mechanism = BertrandPricing(*args)
+        elif mechanism_type == "contest_game":
+            mechanism = ContestGame(*args)
+        elif mechanism_type == "cournot_pricing":
+            mechanism = CournotPricing(*args)
+        elif mechanism_type == "crowdsourcing":
+            mechanism = Crowdsourcing(*args)
+        elif mechanism_type == "double_auction":
+            mechanism = DoubleAuction(*args)
+        elif mechanism_type == "llg_auction":
+            mechanism = LLGAuction(*args)
         elif mechanism_type == "multi_unit":
             mechanism = MultiUnitAuction(*args)
+        elif mechanism_type == "single_item":
+            mechanism = SingleItemAuction(*args)
+        elif mechanism_type == "split_award":
+            mechanism = SplitAwardAuction(*args)
         else:
             raise ValueError(f"Mechanism {mechanism_type} not available")
 
