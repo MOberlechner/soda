@@ -125,6 +125,9 @@ class SingleItemAuction(Mechanism):
                 out=np.zeros_like((valuation - payment)),
                 where=payment != 0,
             ) + np.log(self.param_util["budget"] - payment)
+        elif self.utility_type == "CRRA":
+            rho = self.param_util["risk_parameter"]
+            payoff = np.sign(valuation - payment) * np.abs(valuation - payment) ** rho
         else:
             raise ValueError(f"utility type {self.utility_type} not available")
         return allocation * payoff
@@ -262,6 +265,7 @@ class SingleItemAuction(Mechanism):
             self.bne_ql_first_price_affiliated(agent, obs),
             self.bne_ql_second_price_common(agent, obs),
             self.bne_roi_first_price(agent, obs),
+            self.bne_crra_first_price(agent, obs),
         ]
         for bne in bnes:
             if bne is not None:
@@ -336,12 +340,13 @@ class SingleItemAuction(Mechanism):
         return bne
 
     def bne_roi_first_price(self, agent: str, obs: np.ndarray):
-        """BNE for second-price auction for quasi-linear utilities with affiliated values"""
+        """BNE for first-price auction for resturn of invest maximizing agents"""
         if (
             (self.utility_type == "ROI")
             & (self.payment_rule == "first_price")
             & self.check_bidder_symmetric([0, 1])
             & (self.value_model == "private")
+            & (self.prior == "uniform")
             & (self.reserve_price > 0)
         ):
             obs_clipped = np.clip(obs, self.reserve_price, None)
@@ -366,18 +371,35 @@ class SingleItemAuction(Mechanism):
             bne = None
         return bne
 
-    def compute_gradient(self, game: Game, strategies: Dict[str, Strategy], agent: str):
-        """Simplified computation of gradient for i.i.d. bidders
+    def bne_crra_first_price(self, agent: str, obs: np.ndarray):
+        """BNE for first-price auction with constant relative risk averse bidders (CRRA)"""
+        if (
+            (self.utility_type == "CRRA")
+            & (self.payment_rule == "first_price")
+            & self.check_bidder_symmetric([0, 1])
+            & (self.value_model == "private")
+            & (self.prior == "uniform")
+        ):
+            rho = self.param_util["risk_parameter"]
+            bne = obs * (self.n_bidder - 1) / (self.n_bidder - 1 + rho)
+        else:
+            bne = None
+        return bne
 
-        Parameters
-        ----------
-        strategies :
-        game :
-        agent :
+    # -------------------------- methods for faster gradient computation ------------------------------- #
 
-        Returns
-        -------
+    def compute_gradient(
+        self, game: Game, strategies: Dict[str, Strategy], agent: str
+    ) -> np.ndarray:
+        """faster computation of gradient for symmetric iid bidders
 
+        Args:
+            game (Game): approximation game
+            strategies (Dict[str, Strategy]): strategy profile
+            agent (str): agent
+
+        Returns:
+            np.ndarray: gradient for agent
         """
         prob_win = mechanism_util.compute_probability_winning(game, strategies, agent)
 
@@ -396,6 +418,16 @@ class SingleItemAuction(Mechanism):
         payoff = self.get_payoff(np.ones_like(bid_grid), obs_grid, bid_grid)
         return prob_win * payoff
 
+    def check_own_gradient(self):
+        """check if we can use gradient computation of mechanism"""
+        if (len(self.set_bidder) == 1) and (self.payment_rule == "first_price") & (
+            self.prior not in ["affiliated_values", "common_value"]
+        ) & ("corr" not in self.param_prior):
+            self.own_gradient = True
+            # print("- gradient computation via mechanism -")
+
+    # -------------------------------------- helper methods --------------------------------------------- #
+
     def check_param(self):
         """
         Check if input paremter are sufficient to define mechanism
@@ -412,13 +444,11 @@ class SingleItemAuction(Mechanism):
         if "utility_type" not in self.param_util:
             self.param_util["utility_type"] = "QL"
             print("utility_type not specified, quasi-linear (QL) chosen by default.")
+        else:
+            if self.param_util["utility_type"] == "CRRA":
+                if "risk_parameter" not in self.param_util:
+                    raise ValueError(
+                        "Specify risk_parameter if using utility_type: CRRA"
+                    )
         if "reserve_price" not in self.param_util:
             self.param_util["reserve_price"] = 0.0
-
-    def check_own_gradient(self):
-        """check if we can use gradient computation of mechanism"""
-        if (len(self.set_bidder) == 1) and (self.payment_rule == "first_price") & (
-            self.prior not in ["affiliated_values", "common_value"]
-        ) & ("corr" not in self.param_prior):
-            self.own_gradient = True
-            # print("- gradient computation via mechanism -")
