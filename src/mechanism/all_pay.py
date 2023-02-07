@@ -153,6 +153,43 @@ class AllPayAuction(Mechanism):
             bids, idx, self.tie_breaking, zero_wins=True
         )
 
+    # --------------------------------- methods to compute metrics --------------------------------- #
+
+    def get_metrics(
+        self, agent: str, obs_profile: np.ndarray, bid_profile: np.ndarray
+    ) -> tuple:
+        """compute all metrics relevant for all-pay auction
+        this includes standard metrics (l2, util_loss) + revenue
+        """
+        metrics, values = self.get_standard_metrics(agent, obs_profile, bid_profile)
+        metrics += ["revenue"]
+        values += [self.compute_expected_revenue(bid_profile)]
+
+        return metrics, values
+
+    def compute_expected_revenue(self, bid_profile: np.ndarray) -> float:
+        """Computed expected revenue of all-pay auction
+
+        Args:
+            bid_profile (np.ndarray): bid profile
+
+        Returns:
+            float: approximated expected revenue
+        """
+        allocations = np.array(
+            [self.get_allocation(bid_profile, i) for i in range(self.n_bidder)]
+        )
+        payments = np.array(
+            [
+                self.get_payment(bid_profile, allocations[i], i)
+                for i in range(self.n_bidder)
+            ]
+        )
+        revenue = payments.sum(axis=0)
+        return revenue.mean()
+
+    # -------------------------- methods to get equilbrium strategies------------------------------- #
+
     def get_bne(self, agent: str, obs: np.ndarray) -> np.ndarray:
         """returns BNE for some specific settings
 
