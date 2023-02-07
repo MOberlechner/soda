@@ -3,7 +3,7 @@ o_space: {'1': [0.0 ,1.0]}
 a_space: {'1': [0.0, 0.5]}
 param_prior: {'distribution':'uniform'}
 param_util : {
-  'type': 'valuation',
+  'type': 'value',
   'csf': 'ratio_form',
   'csf_parameter': 2,
 }
