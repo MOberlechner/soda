@@ -1,7 +1,11 @@
 # My changes
 .csv
+.pdf
 log/
+tryouts/
 strategies/
+results
+hyperparameter/
 .vscode/
 
 # Byte-compiled / optimized / DLL files
