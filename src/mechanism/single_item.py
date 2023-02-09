@@ -82,7 +82,9 @@ class SingleItemAuction(Mechanism):
 
         allocation = self.get_allocation(bids, idx)
         payment = self.get_payment(bids, allocation, idx)
-        payoff = self.get_payoff(allocation, valuation, payment)
+        payoff = self.get_payoff(
+            allocation=allocation, valuation=valuation, payment=payment
+        )
 
         return payoff
 
@@ -382,6 +384,20 @@ class SingleItemAuction(Mechanism):
         ):
             rho = self.param_util["risk_parameter"]
             bne = obs * (self.n_bidder - 1) / (self.n_bidder - 1 + rho)
+        else:
+            bne = None
+        return bne
+
+    def bne_ql_third_price_uniform(self, agent: str, obs: np.ndarray):
+        """BNE for first-price auction with constant relative risk averse bidders (CRRA)"""
+        if (
+            (self.utility_type == "QL")
+            & (self.payment_rule == "third_price")
+            & self.check_bidder_symmetric([0, 1])
+            & (self.value_model == "private")
+            & (self.prior == "uniform")
+        ):
+            bne = obs + 1 / (self.n_bidder - 2) * obs
         else:
             bne = None
         return bne
