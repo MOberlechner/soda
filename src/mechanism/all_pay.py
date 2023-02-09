@@ -72,7 +72,9 @@ class AllPayAuction(Mechanism):
         valuation = self.get_valuation(obs, bids, idx)
         allocation = self.get_allocation(bids, idx)
         payment = self.get_payment(bids, allocation, idx)
-        payoff = self.get_payoff(valuation, allocation, payment)
+        payoff = self.get_payoff(
+            allocation=allocation, valuation=valuation, payment=payment
+        )
 
         return payoff
 
@@ -91,19 +93,27 @@ class AllPayAuction(Mechanism):
             np.ndarray: payoff
         """
         if self.type == "value":
-            payoff = allocation * valuation - payment
+            payoff_win = valuation - payment
+            payoff_los = 0.0 * valuation - payment
         elif self.type == "cost":
-            payoff = allocation * np.ones_like(allocation) - valuation * payment
+            payoff_win = np.ones_like(allocation) - valuation * payment
+            payoff_los = -valuation * payment
         else:
             raise ValueError(f"chose type between value and cost")
 
         if self.utility_type == "RN":
-            return payoff
+            return allocation * payoff_win + (1 - allocation) * payoff_los
         elif self.utility_type == "CRRA":
+            print(payoff_win, payoff_los, allocation)
             rho = self.param_util["risk_parameter"]
-            return np.sign(payoff) * np.abs(payoff) ** rho
+            crra = lambda x: np.sign(x) * np.abs(x) ** rho
+            return allocation * crra(payoff_win) + (1 - allocation) * crra(payoff_los)
+        elif self.utility_type == "CARA":
+            rho = self.param_util["risk_parameter"]
+            cara = lambda x: 1 / rho * (1 - np.exp(-rho * x))
+            return allocation * cara(payoff_win) + (1 - allocation) * cara(payoff_los)
         else:
-            raise ValueError("utility_type {self.utility_typ} unknown")
+            raise ValueError(f"utility_type {self.utility_typ} unknown")
 
     def get_payment(
         self, bids: np.ndarray, allocation: np.ndarray, idx: int
@@ -265,8 +275,9 @@ class AllPayAuction(Mechanism):
         Returns:
             np.ndarray: gradient for agent
         """
-        prob_win = mechanism_util.compute_probability_winning(game, strategies, agent)
-
+        prob_win = mechanism_util.compute_probability_winning(
+            game, strategies, agent, zero_wins=True
+        )
         obs_grid = (
             np.ones((strategies[agent].m, strategies[agent].n))
             * strategies[agent].o_discr
@@ -281,6 +292,8 @@ class AllPayAuction(Mechanism):
             np.zeros_like(obs_grid), obs_grid, bid_grid
         )
 
+    # -------------------------- methods to test input ------------------------------- #
+
     def check_param(self):
         """
         Check if input paremter are sufficient to define mechanism
@@ -294,7 +307,7 @@ class AllPayAuction(Mechanism):
         if "utility_type" not in self.param_util:
             self.param_util["utility_type"] = "RN"
         else:
-            if self.param_util["utility_type"] in ["CRRA"]:
+            if self.param_util["utility_type"] in ["CRRA", "CARA"]:
                 if "risk_parameter" not in self.param_util:
                     raise ValueError("Specify risk_parameter for CRRA")
         if "payment_rule" not in self.param_util:
@@ -320,11 +333,10 @@ class AllPayAuction(Mechanism):
     def check_own_gradient(self):
         """check if we can use gradient computation of mechanism"""
         if (
-            self.check_bidder_symmetric()
+            (len(self.set_bidder) == 1)
             & ("corr" not in self.param_prior)
             & (self.payment_rule == "first_price")
             & (self.type == "value")
-            & (self.tie_breaking == "lose")
         ):
             self.own_gradient = True
             # print("- gradient computation via mechanism -")
