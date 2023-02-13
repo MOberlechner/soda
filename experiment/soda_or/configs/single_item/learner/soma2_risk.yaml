@@ -5,7 +5,7 @@ stop_criterion: 'util_loss'
 parameter: {
   "mirror_map": 'euclidean',
   "steprule_bool": True,
-  "eta": 0.01,
+  "eta": 0.5,
   "beta": 0.5,
 }
 init_method: 'random'
