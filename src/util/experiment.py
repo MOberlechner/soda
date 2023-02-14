@@ -68,7 +68,7 @@ class Experiment:
             self.game, self.learner = self.config.create_setting(
                 mechanism_type, experiment, learn_alg
             )
-            print(f"Experiment - {mechanism_type} - {experiment} - {learn_alg} created")
+            print(f"Experiment - {mechanism_type}-{experiment}-{learn_alg} - created")
         except:
             print(f" - error: config files not found.")
             self.learning, self.simulation = False, False
@@ -99,7 +99,7 @@ class Experiment:
             self.run_simulation()
 
         print(
-            f"Experiment: {self.mechanism_type} - {self.experiment} - {self.learn_alg} - finished\n"
+            f"Experiment - {self.mechanism_type}-{self.experiment}-{self.learn_alg} - finished\n"
         )
 
     def run_learning(self):
