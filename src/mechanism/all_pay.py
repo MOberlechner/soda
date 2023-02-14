@@ -30,11 +30,12 @@ class AllPayAuction(Mechanism):
         type            str: agent's type can be interpreted as "valuation" or "cost"
 
         payment_rule    str:  choose between first_price, second_price and generalized (convex combination of both)
-                        for the latter we need additional payment_param in param_util
+                        for the latter we need additional payment_parameter in param_util
 
         utility_type    str: choose between different risk-aversion models. If utility_type is not given it defaults to RN.
                         RN (risk neutral): U(x) = x, where x is the payoff
                         CRRA (constant relative risk aversion): U(x) = x^{1-eps}
+                        CARA
     """
 
     def __init__(
@@ -104,7 +105,6 @@ class AllPayAuction(Mechanism):
         if self.utility_type == "RN":
             return allocation * payoff_win + (1 - allocation) * payoff_los
         elif self.utility_type == "CRRA":
-            print(payoff_win, payoff_los, allocation)
             rho = self.param_util["risk_parameter"]
             crra = lambda x: np.sign(x) * np.abs(x) ** rho
             return allocation * crra(payoff_win) + (1 - allocation) * crra(payoff_los)
