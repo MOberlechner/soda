@@ -263,6 +263,7 @@ class SingleItemAuction(Mechanism):
         """
         bnes = [
             self.bne_ql_first_price(agent, obs),
+            self.bne_ql_third_price(agent, obs),
             self.bne_second_price(agent, obs),
             self.bne_ql_first_price_affiliated(agent, obs),
             self.bne_ql_second_price_common(agent, obs),
@@ -310,6 +311,21 @@ class SingleItemAuction(Mechanism):
             & (self.n_bidder == 2)
         ):
             bne = 2 / 3 * obs
+        else:
+            bne = None
+        return bne
+
+    def bne_ql_third_price(self, agent: str, obs: np.ndarray):
+        """BNE for third-price auction with quasi-linear utilities (IPV)"""
+        if (
+            (self.utility_type == "QL")
+            & (self.payment_rule == "third_price")
+            & self.check_bidder_symmetric([0, 1])
+            & (self.prior == "uniform")
+            & (self.value_model == "private")
+            & (self.n_bidder >= 3)
+        ):
+            bne = obs + 1 / (self.n_bidder - 2) * obs
         else:
             bne = None
         return bne
