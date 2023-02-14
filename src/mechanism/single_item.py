@@ -277,7 +277,6 @@ class SingleItemAuction(Mechanism):
 
     def bne_ql_first_price(self, agent: str, obs: np.ndarray):
         """BNE for first-price auction for quasi-linear utilities"""
-        # check if setting applies
         if (
             (self.utility_type == "QL")
             & (self.payment_rule == "first_price")
