@@ -25,6 +25,7 @@ def get_mechanism():
             "payment_rule": "first_price",
             "tie_breaking": "random",
             "utility_type": "QL",
+            "risk_parameter": 0.5,
             "budget": 1.01,
         }
         return SingleItemAuction(bidder, o_space, a_space, param_prior, param_util)
@@ -123,36 +124,48 @@ def test_get_payoff(get_mechanism):
     ), "return-of-spent (ROS) utility type"
 
 
-def test_own_gradient(get_mechanism):
+testdata = [
+    ("QL", "lose"),
+    ("QL", "random"),
+    ("ROI", "lose"),
+    ("ROI", "random"),
+    ("ROS", "lose"),
+    ("ROS", "random"),
+    ("ROSB", "lose"),
+    ("ROSB", "random"),
+    ("CRRA", "lose"),
+    ("CRRA", "random"),
+]
+
+
+@pytest.mark.parametrize("utility_type, tie_breaking", testdata)
+def test_own_gradient(get_mechanism, utility_type, tie_breaking):
     """
     Function to compare gradient computation of mechanism (fast) and gradient class (slow)
     """
-    for tie_breaking in ["lose", "random"]:
-        for utility_type in ["QL", "ROI", "ROS", "ROSB"]:
+    # setup setting
+    mechanism = get_mechanism(2)
+    mechanism.tie_breaking = tie_breaking
+    mechanism.utility_type = utility_type
+    mechanism.reserve_price = 0.1
 
-            # setup setting
-            mechanism = get_mechanism(2)
-            mechanism.tie_breaking = tie_breaking
-            mechanism.utility_type = utility_type
-            mechanism.reserve_price = 0.1
+    assert mechanism.own_gradient, "check if setting has own_gradient method"
 
-            assert mechanism.own_gradient, "check if setting has own_gradient method"
+    # setup gradient
+    mechanism.own_gradient = False
+    game = Game(mechanism, 21, 19)
+    game.get_utility()
+    strategies = {"1": Strategy("1", game)}
+    gradient = Gradient()
+    gradient.prepare(game, strategies)
 
-            # setup gradient
-            mechanism.own_gradient = False
-            game = Game(mechanism, 21, 19)
-            game.get_utility()
-            strategies = {"1": Strategy("1", game)}
-            gradient = Gradient()
-            gradient.prepare(game, strategies)
+    for t in range(5):
 
-            for t in range(5):
+        strategies["1"].initialize("random")
 
-                strategies["1"].initialize("random")
+        gradient.compute(game, strategies, "1")
+        own_gradient = mechanism.compute_gradient(game, strategies, "1")
 
-                gradient.compute(game, strategies, "1")
-                own_gradient = mechanism.compute_gradient(game, strategies, "1")
-
-                assert np.allclose(
-                    gradient.x["1"], own_gradient
-                ), f"equality gradient, setting: {tie_breaking}, {utility_type}"
+        assert np.allclose(
+            gradient.x["1"], own_gradient
+        ), f"equality gradient, setting: {tie_breaking}, {utility_type}"
