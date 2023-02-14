@@ -6,7 +6,7 @@ param_prior: {
   'corr': 0.9,
   }
 param_util: {
-  'payment_rule': 'NZ', 
+  'payment_rule': 'nearest_zero', 
   'tie_breaking': 'local',
   }
 n: 64

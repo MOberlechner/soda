@@ -2,6 +2,6 @@ bidder: ['L', 'L', 'G']
 o_space: {'L': [0.0 ,1.0], 'G':[0.0, 2.0]}
 a_space: {'L': [0.0 ,1.0], 'G':[0.0, 2.0]}
 param_prior: {'distribution':'uniform', 'corr': 0.5}
-param_util: {'payment_rule': 'NZ', 'tie_breaking': 'local'}
+param_util: {'payment_rule': 'nearest_zero', 'tie_breaking': 'local'}
 n: 64
 m: 64
