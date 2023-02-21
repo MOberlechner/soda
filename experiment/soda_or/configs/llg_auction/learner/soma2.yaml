@@ -3,7 +3,7 @@ max_iter: 1000
 tol: 1e-4
 stop_criterion: 'util_loss'
 parameter: {
-  'mirror_map': 'entropic',
+  'mirror_map': 'euclidean',
   'steprule_bool': True,
   'eta': 50,
   'beta': 0.05,
