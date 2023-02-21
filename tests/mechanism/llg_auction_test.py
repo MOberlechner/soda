@@ -21,7 +21,7 @@ def get_mechanism():
         "corr": 0.5,
     }
     param_util = {
-        "payment_rule": "NZ",
+        "payment_rule": "nearest_zero",
         "tie_breaking": "local",
     }
     return LLGAuction(bidder, o_space, a_space, param_prior, param_util)
@@ -99,7 +99,7 @@ def test_get_payment(get_mechanism: LLGAuction):
         mechanism.get_payment(bids, allocation_G, 2), [0, 0, 9]
     ), "global bidder,payment rule"
 
-    mechanism.payment_rule = "NZ"
+    mechanism.payment_rule = "nearest_zero"
     assert np.array_equal(
         mechanism.get_payment(bids, allocation_L1, 0), [5, 5, 0]
     ), "local bidder 1, nearest-zero payment rule"
@@ -107,7 +107,7 @@ def test_get_payment(get_mechanism: LLGAuction):
         mechanism.get_payment(bids, allocation_L2, 1), [5, 5, 0]
     ), "local bidder 2, nearest-zero payment rule"
 
-    mechanism.payment_rule = "NB"
+    mechanism.payment_rule = "nearest_bid"
     assert np.array_equal(
         mechanism.get_payment(bids, allocation_L1, 0), [6, 8, 0]
     ), "local bidder 1, nearest-bid payment rule"
@@ -115,13 +115,24 @@ def test_get_payment(get_mechanism: LLGAuction):
         mechanism.get_payment(bids, allocation_L2, 1), [4, 2, 0]
     ), "local bidder 2, nearest-bid payment rule"
 
-    mechanism.payment_rule = "NVCG"
+    mechanism.payment_rule = "nearest_vcg"
     assert np.array_equal(
         mechanism.get_payment(bids, allocation_L1, 0), [6, 7, 0]
     ), "local bidder 1, nearest-vcg payment rule"
     assert np.array_equal(
         mechanism.get_payment(bids, allocation_L2, 1), [4, 3, 0]
     ), "local bidder 2, nearest-vcg payment rule"
+
+    mechanism.payment_rule = "first_price"
+    assert np.array_equal(
+        mechanism.get_payment(bids, allocation_L1, 0), [8, 12, 0]
+    ), "local bidder 1, first-price payment rule"
+    assert np.array_equal(
+        mechanism.get_payment(bids, allocation_L2, 1), [6, 6, 0]
+    ), "local bidder 2, first-price payment rule"
+    assert np.array_equal(
+        mechanism.get_payment(bids, allocation_G, 2), [0, 0, 10]
+    ), "global bidder, first-price payment rule"
 
 
 def test_sample_types_uniform(get_mechanism: LLGAuction):
