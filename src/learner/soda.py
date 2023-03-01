@@ -72,6 +72,8 @@ class SODA(Learner):
                 strategy.dim_o,
                 strategy.dim_a,
             )
+        else:
+            raise ValueError(f"regularizer {self.regularizer} unknown for soda")
 
     def update_step_euclidean(
         self,
@@ -162,3 +164,5 @@ class SODA(Learner):
         for key in ["regularizer", "steprule_bool", "eta", "beta"]:
             if key not in param:
                 raise ValueError(f"Define {key} in param")
+        if param["regularizer"] not in ["entropic", "euclidean"]:
+            raise ValueError("regularizer unkown")
