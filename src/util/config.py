@@ -18,7 +18,6 @@ from src.mechanism.cournot_pricing import CournotPricing
 from src.mechanism.crowdsourcing import Crowdsourcing
 from src.mechanism.double_auction import DoubleAuction
 from src.mechanism.llg_auction import LLGAuction
-from src.mechanism.multi_unit import MultiUnitAuction
 from src.mechanism.single_item import SingleItemAuction
 from src.mechanism.split_award import SplitAwardAuction
 from src.strategy import Strategy
@@ -192,8 +191,6 @@ class Config:
             mechanism = DoubleAuction(*args)
         elif mechanism_type == "llg_auction":
             mechanism = LLGAuction(*args)
-        elif mechanism_type == "multi_unit":
-            mechanism = MultiUnitAuction(*args)
         elif mechanism_type == "single_item":
             mechanism = SingleItemAuction(*args)
         elif mechanism_type == "split_award":
