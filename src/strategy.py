@@ -169,7 +169,7 @@ class Strategy:
                     idx = (np.abs(self.a_discr - b[i])).argmin()
                     sigma[i, idx] = 1
 
-            if (self.dim_o == 1) & (self.dim_a == 2):
+            elif (self.dim_o == 1) & (self.dim_a == 2):
                 sigma = lower_bound * np.ones_like(self.x)
                 for i in range(self.n):
                     idx1 = (np.abs(self.a_discr[0] - b[0][i])).argmin()
