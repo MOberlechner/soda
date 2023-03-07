@@ -77,10 +77,11 @@ class Config:
         try:
             with open(f"{self.path_to_config}{mechanism_type}/{experiment}.yaml") as f:
                 config_game = yaml.load(f, Loader=SafeLoader)
-        except FileNotFoundError:
-            raise ValueError(
+        except FileNotFoundError as e:
+            print(
                 f"couldn't open: {self.path_to_config}{mechanism_type}/{experiment}.yaml"
             )
+            raise e
 
         # test config file
         for key in ["bidder", "o_space", "a_space", "param_prior", "param_util"]:

@@ -62,15 +62,17 @@ class Experiment:
         self.path_exp = path_exp
 
         # setup game and learner using config
+        print(f"Experiment - {mechanism_type}-{experiment}-{learn_alg} - started")
         try:
             self.config = Config()
             self.config.get_path(path_config)
             self.game, self.learner = self.config.create_setting(
                 mechanism_type, experiment, learn_alg
             )
-            print(f"Experiment - {mechanism_type}-{experiment}-{learn_alg} - created")
-        except:
-            print(f" - error: config files not found.")
+            print(f" - Setting created ")
+        except Exception as e:
+            print(e)
+            print(f" - Error: setting not created")
             self.learning, self.simulation = False, False
 
         # create logger
@@ -92,11 +94,19 @@ class Experiment:
         """
         # run learning
         if self.learning:
-            self.run_learning()
+            try:
+                self.run_learning()
+            except Exception as e:
+                print(e)
+                print(" - Error in Learning ")
 
         # run simulation
         if self.simulation:
-            self.run_simulation()
+            try:
+                self.run_simulation()
+            except Exception as e:
+                print(e)
+                print("- Error in Simulation")
 
         print(
             f"Experiment - {self.mechanism_type}-{self.experiment}-{self.learn_alg} - finished\n"
@@ -104,7 +114,7 @@ class Experiment:
 
     def run_learning(self):
         """run learning of strategies"""
-        print(" - run_learning started")
+        print(" - Learning:")
         t0 = time()
         if not self.game.mechanism.own_gradient:
             self.game.get_utility()
@@ -138,11 +148,10 @@ class Experiment:
             self.save_strategies(run)
 
         self.logger.log_learning()
-        print(" - run_learning finished")
 
     def run_simulation(self):
         """run simulation for computed strategies"""
-        print(" - run_simulation started")
+        print(" - Simulation:")
 
         # repeat experiment
         for run in tqdm(
