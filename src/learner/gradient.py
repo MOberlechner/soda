@@ -128,7 +128,7 @@ class Gradient:
                         )
                         + end
                     )
-                    self.path[i] = np.einsum(
+                    self.path[i] = np.einsum_path(
                         self.indices[i],
                         *[game.utility[i]]
                         + [
