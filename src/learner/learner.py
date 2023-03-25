@@ -91,21 +91,23 @@ class Learner:
 
             # compute gradients
             for i in game.set_bidder:
-                self.gradient.compute(game, strategies, i)
+                strategies[i].gradient = self.gradient.compute(game, strategies, i)
 
             # update history (utility, utility loss, dist_prev_iter, optional: strategy, gradient)
             for i in game.set_bidder:
-                strategies[i].update_history(t, self.gradient.x[i], save_history_bool)
+                strategies[i].update_history(t, save_history_bool)
 
             # check convergence
-            min_max_value, max_value = self.check_convergence(strategies, min_max_value)
+            min_max_value, max_value = self.check_convergence(
+                t, strategies, min_max_value
+            )
             if self.convergence:
                 t_max = t
                 break
 
             # update strategy
             for i in game.set_bidder:
-                self.update_strategy(strategies[i], self.gradient.x[i], t)
+                self.update_strategy(strategies[i], strategies[i].gradient, t)
 
         # print result
         if print_result_bool:
@@ -125,7 +127,9 @@ class Learner:
         """
         raise NotImplementedError
 
-    def check_convergence(self, strategies: dict, min_max_value: float) -> tuple:
+    def check_convergence(
+        self, t: int, strategies: dict, min_max_value: float
+    ) -> tuple:
         """Check stopping criterion
         We check if the maximal (over all agents) "metric" is less than the tolerance
             - utility_loss: relative utility loss w.r.t. best response
@@ -133,6 +137,7 @@ class Learner:
             - dist_wasserstein: Wasserstein distance (mean over all mixed strategies) to previous iterate
 
         Args:
+            t (int): current iteration
             strategies (dict): contains all strategies
             min_max_value (float): minimal value over all iterations of maximal value of stopping criterion over all agents
 
@@ -142,11 +147,11 @@ class Learner:
 
         if self.stop_criterion == "util_loss":
             # update minimal max_util_loss (over all iterations)
-            max_value = np.max([strategies[i].utility_loss[-1] for i in strategies])
+            max_value = np.max([strategies[i].utility_loss[t] for i in strategies])
 
         elif self.stop_criterion == "dist_euclidean":
             # update minimal distance to last iterate (over all iterations)
-            max_value = np.max([strategies[i].dist_prev_iter[-1] for i in strategies])
+            max_value = np.max([strategies[i].dist_prev_iter[t] for i in strategies])
 
         elif self.stop_criterion == "dist_wasserstein":
             raise NotImplementedError
