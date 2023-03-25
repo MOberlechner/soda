@@ -107,7 +107,7 @@ def compute_util_loss_scaled(
     util_loss = {}
     for i in mechanism.set_bidder:
         gradient.compute(mechanism, game, strategies, i)
-        strategies[i].update_utility_loss(gradient.x[i])
+        strategies[i].update_utility_loss()
         util_loss[i] = strategies[i].utility_loss[-1]
 
     return util_loss
