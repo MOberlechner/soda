@@ -56,14 +56,8 @@ class Strategy:
         # strategy - dual iterate
         self.y = np.zeros_like(self.x)
 
-        # utility, history, gradients
-        (
-            self.utility,
-            self.utility_loss,
-            self.dist_prev_iter,
-            self.history,
-            self.history_gradient,
-        ) = ([], [], [], [], [])
+        # current gradient
+        self.gradient = np.nan * np.ones_like(self.x)
 
     def __repr__(self) -> str:
         return f"Strategy({self.agent})"
@@ -99,7 +93,7 @@ class Strategy:
 
         """
         # overwrite old history
-        self.prepare_history(max_iter=1, update_history_bool=True)
+        self.prepare_history(max_iter=2, save_history_bool=True)
 
         if init_method == "random":
             sigma = np.random.uniform(0, 1, size=self.x.shape)
@@ -243,116 +237,112 @@ class Strategy:
             return self.x
         # return mean over all iterates
         elif iter == -1:
-            return np.mean(self.history, axis=0)
+            return np.nanmean(self.history, axis=0)
         elif iter > 1:
-            return np.mean(self.history[-iter:], axis=0)
+            return np.nanmean(self.history[-iter:], axis=0)
         else:
             raise ValueError
 
     # --------------------------------------- METHODS USED TO DURING ITERATIONS ---------------------------------------- #
-    def update_utility(self, t: int, gradient: np.ndarray):
+    def update_utility(self, t: int):
         """Compute and save current utility
 
         Args:
             t (int): iteration
             gradient (np.ndarray): current gradient
         """
-        self.utility[t] = (self.x * gradient).sum()
+        self.utility[t] = (self.x * self.gradient).sum()
 
-    def update_utility_loss(self, t: int, gradient: np.ndarray):
+    def update_utility_loss(self, t: int):
         """Compute and save relative utility loss for current strategy
         Add 1e-20 so that we don't divide by zero
 
         Args:
-            t (int): _description_
-            gradient (np.ndarray): _description_
+            t (int): current iteration
         """
-        util_br = (self.best_response(gradient) * gradient).sum()
+        util_br = (self.best_response(self.gradient) * self.gradient).sum()
+        util = (self.x * self.gradient).sum()
         self.utility_loss[t] = np.abs(
-            1
-            - (self.x * gradient).sum()
-            / (util_br if not np.isclose(util_br, 0, atol=1e-20) else 1e-20)
+            1 - util / (util_br if not np.isclose(util_br, 0, atol=1e-20) else 1e-20)
         )
 
-    def update_dist_prev_iter(self, t: iter, update_history_bool: bool):
+    def update_dist_prev_iter(self, t: iter, save_history_bool: bool):
         """Compute and save Euclidean distance to previous iteration
-        If history of strategies is not save (i.d., update_history_bool is False),
+        If history of strategies is not save (i.d., save_history_bool is False),
         then we story the the initial and the last strategy in self.history
 
         Args:
             t (iter): current iteration
-            update_history_bool (bool): save history of strategies, gradients, ...
+            save_history_bool (bool): save history of strategies, gradients, ...
         """
         if t > 0:
-            if update_history_bool:
+            if save_history_bool:
                 self.dist_prev_iter[t] = np.linalg.norm(self.x - self.history[t - 1])
             else:
                 self.dist_prev_iter[1] = np.linalg.norm(self.x - self.history[1])
 
-    def update_history_strategy(self, t: int, update_history_bool: bool):
+    def update_history_strategy(self, t: int, save_history_bool: bool):
         """Save current stratety
-        If update_history_bool if False, we only story the initial and the last strategy
+        If save_history_bool if False, we only story the initial and the last strategy
         in a list of length 2
 
         Args:
             t (int): current iteration
-            update_history_bool (bool): save history of strategies, gradients, ...
+            save_history_bool (bool): save history of strategies, gradients, ...
         """
-        t = t if update_history_bool else min(t, 1)
+        t = t if save_history_bool else min(t, 1)
         self.history[t] = self.x
 
-    def update_history_dual(self, update_history_bool: bool):
+    def update_history_dual(self, t: int, save_history_bool: bool):
         """
         Add current dual iterate to history of dual iterates
 
         Args:
             t (int): currnet iteration
-            pdate_history_bool (bool): save history of strategies, gradients, ...
+            save_history_bool (bool): save history of strategies, gradients, ...
         """
-        t = t if update_history_bool else min(t, 1)
+        t = t if save_history_bool else min(t, 1)
         self.history_dual[t] = self.y
 
-    def update_history_gradient(
-        self, t: int, gradient: np.ndarray, update_history_bool: bool
-    ):
+    def update_history_gradient(self, t: int, save_history_bool: bool):
         """Save current gradient
 
         Args:
             t (int): currnet iteration
             gradient (np.ndarray): current gradient
-            update_history_bool (bool): save history of strategies, gradients, ...
+            save_history_bool (bool): save history of strategies, gradients, ...
         """
-        t = t if update_history_bool else min(t, 1)
-        self.history_gradient[t] = gradient
+        t = t if save_history_bool else min(t, 1)
+        self.history_gradient[t] = self.gradient
 
-    def update_history(self, t: int, gradient: np.ndarray, update_history_bool: bool):
+    def update_history(self, t: int, save_history_bool: bool):
         """Update all histories
 
         Args:
             t (int): iteration
             gradient (np.ndarray): current gradient
-            update_history_bool (bool): save history of strategies, gradients, ...
+            save_history_bool (bool): save history of strategies, gradients, ...
         """
-        self.update_utility(t, gradient)
-        self.update_utility_loss(t, gradient)
-        self.update_dist_prev_iter(t)
-        self.update_history_strategy(t, update_history_bool)
-        self.update_history_dual(t, update_history_bool)
-        self.update_history_gradient(t, gradient, update_history_bool)
+        self.update_utility(t)
+        self.update_utility_loss(t)
+        self.update_dist_prev_iter(t, save_history_bool)
+        self.update_history_strategy(t, save_history_bool)
+        self.update_history_dual(t, save_history_bool)
+        self.update_history_gradient(t, save_history_bool)
 
-    def prepare_history(self, max_iter: int, update_history_bool: bool) -> None:
+    def prepare_history(self, max_iter: int, save_history_bool: bool) -> None:
         """Create arrays to store history.
         Allocation the memory at the beginning should make this faster
 
         Args:
-            update_history_bool (bool): save history of gradients/strategies as well
+            save_history_bool (bool): save history of gradients/strategies as well
         """
         (self.utility, self.utility_loss, self.dist_prev_iter,) = (
-            np.empty(max_iter),
-            np.empty(max_iter),
-            np.empty(max_iter),
+            np.nan * np.ones(max_iter),
+            np.nan * np.ones(max_iter),
+            np.nan * np.ones(max_iter),
         )
-        iterations = max_iter if update_history_bool else 2
+        iterations = max_iter if save_history_bool else 2
 
         (
             self.history,
@@ -360,16 +350,20 @@ class Strategy:
             self.history_gradient,
             self.history_best_response,
         ) = (
-            np.empty(
+            np.nan
+            * np.ones(
                 tuple([iterations] + [self.n] * self.dim_o + [self.m] * self.dim_a)
             ),
-            np.empty(
+            np.nan
+            * np.ones(
                 tuple([iterations] + [self.n] * self.dim_o + [self.m] * self.dim_a)
             ),
-            np.empty(
+            np.nan
+            * np.ones(
                 tuple([iterations] + [self.n] * self.dim_o + [self.m] * self.dim_a)
             ),
-            np.empty(
+            np.nan
+            * np.ones(
                 tuple([iterations] + [self.n] * self.dim_o + [self.m] * self.dim_a)
             ),
         )
@@ -482,28 +476,7 @@ class Strategy:
         }
 
         # choose correct strategy and gradient from history or take current one
-        if iter is None:
-            strategy = self.x
-            if grad:
-                gradient = self.history_gradient[-1]
-        elif iter == 0:
-            strategy = self.history[0]
-            if grad:
-                gradient = self.history_gradient[0]
-        else:
-            if len(self.history) != len(self.utility):
-                raise ValueError(
-                    "History not saved. Intermediate strategies are not available"
-                )
-            else:
-                if iter == -1:
-                    strategy = self.empirical_mean()
-                    if grad:
-                        gradient = np.array(self.history_gradient).mean(axis=0)
-                else:
-                    strategy = self.history[iter]
-                if grad:
-                    gradient = self.history_gradient[iter]
+        strategy, gradient = self._get_elements_from_history(iter, grad)
 
         # create figure
         num_plots = self.dim_a + metrics + grad * self.dim_a
@@ -556,6 +529,38 @@ class Strategy:
                 transparent=False,
                 dpi=150,
             )
+
+    def _get_elements_from_history(self, iter: int, grad: bool) -> tuple:
+        """Get Strategy and Gradient (opt.) from history to plot
+
+        Args:
+            iter (int): _description_
+            bool (grad): _description_
+
+        Returns:
+            Tuple: _description_
+        """
+        if (len(self.utility) > len(self.history)) & (iter not in [0, None]):
+            raise ValueError(
+                f"Cannot plot strategy/gradient for iteration {iter} since history was not saved"
+            )
+
+        elif iter is None:
+            strategy = self.x
+            gradient = self.gradient
+
+        elif iter == -1:
+            strategy = self.empirical_mean(iter=-1)
+            gradient = gradient = np.nanmean(self.history_gradient, axis=0)
+
+        elif iter >= 0:
+            strategy = self.history[iter]
+            gradient = self.history_gradient[iter]
+
+        else:
+            raise ValueError(f"Iteration {iter} not feasible to plot")
+
+        return strategy, gradient
 
     def _plot_strategy(
         self,
@@ -626,10 +631,15 @@ class Strategy:
             ax.set_ylim(param_extent[2], param_extent[3])
 
         # labels
+
         title_label = (
             f"Strategy - Agent {self.agent}"
             + (f", Bid {axis_a+1}" if self.dim_a > 0 else f"")
-            + (f" (Iteration {iter})" if iter is not None else f"")
+            + (
+                ""
+                if iter is None
+                else (f" (Emp. Mean)" if iter == -1 else f" (Iteration {iter})")
+            )
         )
         ax.set_title(
             title_label, fontsize=param["fontsize_title"], verticalalignment="bottom"
@@ -708,7 +718,11 @@ class Strategy:
         title_label = (
             f"Gradient - Agent {self.agent} "
             + (f", Bid {axis_a+1}" if self.dim_a > 0 else f"")
-            + (f" (Iteration {iter})" if iter is not None else f"")
+            + (
+                ""
+                if iter is None
+                else (f" (Emp. Mean)" if iter == -1 else f" (Iteration {iter})")
+            )
         )
         ax.set_title(
             title_label, fontsize=param["fontsize_title"], verticalalignment="bottom"
