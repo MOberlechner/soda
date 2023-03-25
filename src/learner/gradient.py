@@ -11,9 +11,6 @@ class Gradient:
     """Class that handles the computation of the gradient for the discretized game
 
     Attributes
-        General
-            x (dict): current gradient for all agents
-
         Computation of Gradient (opt_einsum)
             indices (dict): indices used as input for einsum
             path (dict): used in opt_einsum to increase speed of computation
@@ -21,7 +18,6 @@ class Gradient:
     """
 
     def __init__(self) -> None:
-        self.x = {}
         self.path = {}
         self.indices = {}
 
@@ -34,7 +30,7 @@ class Gradient:
             agent (str): _description_
         """
         if game.mechanism.own_gradient:
-            self.x[agent] = game.mechanism.compute_gradient(game, strategies, agent)
+            return game.mechanism.compute_gradient(game, strategies, agent)
 
         else:
             opp = game.bidder.copy()
@@ -42,7 +38,7 @@ class Gradient:
 
             # bidders observations/valuations are independent
             if game.weights is None:
-                self.x[agent] = contract(
+                return contract(
                     self.indices[agent],
                     *[game.utility[agent]]
                     + [
@@ -53,7 +49,7 @@ class Gradient:
                 )
             # bidders observations/valuations are correlated
             else:
-                self.x[agent] = contract(
+                return contract(
                     self.indices[agent],
                     *[game.utility[agent]]
                     + [strategies[i].x for i in opp]
