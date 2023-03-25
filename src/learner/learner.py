@@ -74,6 +74,10 @@ class Learner:
         self.gradient = Gradient()
         self.gradient.prepare(game, strategies)
 
+        # prepare strategies
+        for i in strategies:
+            strategies[i].prepare_history(self.max_iter, save_history_bool)
+
         # init parameters
         min_max_value = 999
         t_max = 0
@@ -91,7 +95,7 @@ class Learner:
 
             # update history (utility, utility loss, dist_prev_iter, optional: strategy, gradient)
             for i in game.set_bidder:
-                strategies[i].update_history(self.gradient.x[i], save_history_bool)
+                strategies[i].update_history(t, self.gradient.x[i], update_history_bool)
 
             # check convergence
             min_max_value, max_value = self.check_convergence(strategies, min_max_value)

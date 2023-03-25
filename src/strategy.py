@@ -98,24 +98,8 @@ class Strategy:
         -------
 
         """
-        # new initializations deletes histories of strategies, utilities, etc
-        (
-            self.utility,
-            self.utility_loss,
-            self.dist_prev_iter,
-            self.history,
-            self.history_dual,
-            self.history_gradient,
-            self.history_best_response,
-        ) = (
-            [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            [],
-        )
+        # overwrite old history
+        self.prepare_history(max_iter=1, update_history_bool=True)
 
         if init_method == "random":
             sigma = np.random.uniform(0, 1, size=self.x.shape)
@@ -266,86 +250,129 @@ class Strategy:
             raise ValueError
 
     # --------------------------------------- METHODS USED TO DURING ITERATIONS ---------------------------------------- #
-    def update_utility(self, gradient: np.ndarray):
-        """
-        Compute utility for current strategy and add to list self.utility
-        """
-        self.utility += [(self.x * gradient).sum()]
-
-    def update_utility_loss(self, gradient: np.ndarray):
-        """
-        Compute relative utility loss for current strategy and add to list self.utility
-        Add 1e-50 so that we don't divide by zero
-        """
-        util_br = (self.best_response(gradient) * gradient).sum()
-        self.utility_loss += [
-            np.abs(
-                1
-                - (self.x * gradient).sum()
-                / (util_br if not np.isclose(util_br, 0, atol=1e-20) else 1e-20)
-            )
-        ]
-
-    def update_dist_prev_iter(self):
-        """
-        Compute Euclidean distance to previous iterate
-        We assume that update_history is performed after this computation
-        """
-        self.dist_prev_iter += [
-            np.linalg.norm(self.x - self.history[-1])
-            if len(self.history) > 0
-            else np.nan
-        ]
-
-    def update_history_strategy(self, update_history_bool: bool):
-        """
-        Add current strategy to history of primal iterates
+    def update_utility(self, t: int, gradient: np.ndarray):
+        """Compute and save current utility
 
         Args:
-            update_history_bool: If true we save all history,
-                else we save only initial strategy and last iterate
+            t (int): iteration
+            gradient (np.ndarray): current gradient
         """
-        if update_history_bool or (len(self.history) < 2):
-            self.history += [self.x]
-        else:
-            self.history[1] = self.x
+        self.utility[t] = (self.x * gradient).sum()
+
+    def update_utility_loss(self, t: int, gradient: np.ndarray):
+        """Compute and save relative utility loss for current strategy
+        Add 1e-20 so that we don't divide by zero
+
+        Args:
+            t (int): _description_
+            gradient (np.ndarray): _description_
+        """
+        util_br = (self.best_response(gradient) * gradient).sum()
+        self.utility_loss[t] = np.abs(
+            1
+            - (self.x * gradient).sum()
+            / (util_br if not np.isclose(util_br, 0, atol=1e-20) else 1e-20)
+        )
+
+    def update_dist_prev_iter(self, t: iter, update_history_bool: bool):
+        """Compute and save Euclidean distance to previous iteration
+        If history of strategies is not save (i.d., update_history_bool is False),
+        then we story the the initial and the last strategy in self.history
+
+        Args:
+            t (iter): current iteration
+            update_history_bool (bool): save history of strategies, gradients, ...
+        """
+        if t > 0:
+            if update_history_bool:
+                self.dist_prev_iter[t] = np.linalg.norm(self.x - self.history[t - 1])
+            else:
+                self.dist_prev_iter[1] = np.linalg.norm(self.x - self.history[1])
+
+    def update_history_strategy(self, t: int, update_history_bool: bool):
+        """Save current stratety
+        If update_history_bool if False, we only story the initial and the last strategy
+        in a list of length 2
+
+        Args:
+            t (int): current iteration
+            update_history_bool (bool): save history of strategies, gradients, ...
+        """
+        t = t if update_history_bool else min(t, 1)
+        self.history[t] = self.x
 
     def update_history_dual(self, update_history_bool: bool):
         """
         Add current dual iterate to history of dual iterates
 
         Args:
-            update_history_bool: If true we save all history,
-                else we save only initial strategy and last iterate
+            t (int): currnet iteration
+            pdate_history_bool (bool): save history of strategies, gradients, ...
         """
-        if update_history_bool or (len(self.history_dual) < 2):
-            self.history_dual += [self.y]
-        else:
-            self.history_dual[1] = self.y
+        t = t if update_history_bool else min(t, 1)
+        self.history_dual[t] = self.y
 
-    def update_history_gradient(self, gradient: np.ndarray, update_history_bool: bool):
-        """
-        Add current gradient to history of gradients
-        """
-        if update_history_bool or (len(self.history_gradient) < 2):
-            self.history_gradient += [gradient]
-        else:
-            self.history_gradient[1] = gradient
-
-    def update_history(self, gradient: np.ndarray, update_history_bool: bool):
-        """
-        Call all update methods
+    def update_history_gradient(
+        self, t: int, gradient: np.ndarray, update_history_bool: bool
+    ):
+        """Save current gradient
 
         Args:
-            gradient: gradient to compute util, ...
-            update_history_bool: if True all history are saved, else only util (loss)
+            t (int): currnet iteration
+            gradient (np.ndarray): current gradient
+            update_history_bool (bool): save history of strategies, gradients, ...
         """
-        self.update_utility(gradient)
-        self.update_utility_loss(gradient)
-        self.update_dist_prev_iter()
-        self.update_history_strategy(update_history_bool)
-        self.update_history_dual(update_history_bool)
-        self.update_history_gradient(gradient, update_history_bool)
+        t = t if update_history_bool else min(t, 1)
+        self.history_gradient[t] = gradient
+
+    def update_history(self, t: int, gradient: np.ndarray, update_history_bool: bool):
+        """Update all histories
+
+        Args:
+            t (int): iteration
+            gradient (np.ndarray): current gradient
+            update_history_bool (bool): save history of strategies, gradients, ...
+        """
+        self.update_utility(t, gradient)
+        self.update_utility_loss(t, gradient)
+        self.update_dist_prev_iter(t)
+        self.update_history_strategy(t, update_history_bool)
+        self.update_history_dual(t, update_history_bool)
+        self.update_history_gradient(t, gradient, update_history_bool)
+
+    def prepare_history(self, max_iter: int, update_history_bool: bool) -> None:
+        """Create arrays to store history.
+        Allocation the memory at the beginning should make this faster
+
+        Args:
+            update_history_bool (bool): save history of gradients/strategies as well
+        """
+        (self.utility, self.utility_loss, self.dist_prev_iter,) = (
+            np.empty(max_iter),
+            np.empty(max_iter),
+            np.empty(max_iter),
+        )
+        iterations = max_iter if update_history_bool else 2
+
+        (
+            self.history,
+            self.history_dual,
+            self.history_gradient,
+            self.history_best_response,
+        ) = (
+            np.empty(
+                tuple([iterations] + [self.n] * self.dim_o + [self.m] * self.dim_a)
+            ),
+            np.empty(
+                tuple([iterations] + [self.n] * self.dim_o + [self.m] * self.dim_a)
+            ),
+            np.empty(
+                tuple([iterations] + [self.n] * self.dim_o + [self.m] * self.dim_a)
+            ),
+            np.empty(
+                tuple([iterations] + [self.n] * self.dim_o + [self.m] * self.dim_a)
+            ),
+        )
 
     # --------------------------------------- METHODS USED TO ANALYZE RESULTS ---------------------------------------- #
 
