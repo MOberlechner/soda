@@ -10,3 +10,4 @@ black
 isort
 pathlib
 pytest
+ipykernel
