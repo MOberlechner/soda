@@ -163,9 +163,9 @@ def test_own_gradient(get_mechanism, utility_type, tie_breaking):
 
         strategies["1"].initialize("random")
 
-        gradient.compute(game, strategies, "1")
+        util_gradient = gradient.compute(game, strategies, "1")
         own_gradient = mechanism.compute_gradient(game, strategies, "1")
 
         assert np.allclose(
-            gradient.x["1"], own_gradient
+            util_gradient, own_gradient
         ), f"equality gradient, setting: {tie_breaking}, {utility_type}"
