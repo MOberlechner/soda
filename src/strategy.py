@@ -232,6 +232,7 @@ class Strategy:
         Returns:
             np.ndarray: empirical mean of strategy
         """
+        # TODO: if save_history is False, this function will not work (maybe check this before)
         # return last iterate
         if iter == 1 or (len(self.history) == 0):
             return self.x
@@ -243,7 +244,7 @@ class Strategy:
         else:
             raise ValueError
 
-    # --------------------------------------- METHODS USED TO DURING ITERATIONS ---------------------------------------- #
+    # --------------------------------------- METHODS USED TO UPDATE METRICS ---------------------------------------- #
     def update_utility(self, t: int):
         """Compute and save current utility
 
@@ -269,7 +270,7 @@ class Strategy:
     def update_dist_prev_iter(self, t: iter, save_history_bool: bool):
         """Compute and save Euclidean distance to previous iteration
         If history of strategies is not save (i.d., save_history_bool is False),
-        then we story the the initial and the last strategy in self.history
+        then we only store the the initial and the last strategy in self.history
 
         Args:
             t (iter): current iteration
@@ -279,7 +280,7 @@ class Strategy:
             if save_history_bool:
                 self.dist_prev_iter[t] = np.linalg.norm(self.x - self.history[t - 1])
             else:
-                self.dist_prev_iter[1] = np.linalg.norm(self.x - self.history[1])
+                self.dist_prev_iter[t] = np.linalg.norm(self.x - self.history[1])
 
     def update_history_strategy(self, t: int, save_history_bool: bool):
         """Save current stratety
@@ -368,7 +369,7 @@ class Strategy:
             ),
         )
 
-    # --------------------------------------- METHODS USED TO ANALYZE RESULTS ---------------------------------------- #
+    # --------------------------------------- METHODS USED FOR SIMULATIONS ---------------------------------------- #
 
     def sample_bids(self, observation: np.ndarray):
         """

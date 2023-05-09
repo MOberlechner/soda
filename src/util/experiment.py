@@ -143,7 +143,12 @@ class Experiment:
 
             # log and save
             self.logger.log_learning_run(
-                self.strategies, run, self.learner.convergence, time_init, time_run
+                self.strategies,
+                run,
+                self.learner.convergence,
+                self.learner.iter,
+                time_init,
+                time_run,
             )
             self.save_strategies(run)
 

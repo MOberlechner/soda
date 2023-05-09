@@ -80,7 +80,7 @@ class Learner:
 
         # init parameters
         min_max_value = 999
-        t_max = 0
+        t_max = self.max_iter - 1
 
         for t in tqdm(
             range(self.max_iter),
@@ -102,7 +102,7 @@ class Learner:
                 t, strategies, min_max_value
             )
             if self.convergence:
-                t_max = t
+                self.t_max = t
                 break
 
             # update strategy
@@ -162,6 +162,7 @@ class Learner:
             )
         min_max_value = min(min_max_value, max_value)
         self.convergence = max_value < self.tol
+        self.iter = t
         return min_max_value, max_value
 
     def print_result(

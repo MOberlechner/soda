@@ -106,6 +106,7 @@ class Logger:
         strategies: Dict[str, Strategy],
         run: int,
         convergence: bool,
+        iteration: int,
         time_init: float,
         time_run: float,
     ):
@@ -115,6 +116,7 @@ class Logger:
             strategies: computed strategy
             run (int): run, i.e., repetition of experiment
             convergence (bool): did method converge
+            iteration (int):  number of iterations
             time_init (float): time to setup game (includes utility computation)
             time_run (float): time to run learning algorithm
         """
@@ -126,10 +128,10 @@ class Logger:
                 "learner": self.learn_alg,
                 "run": run,
                 "agent": agent,
-                "utility": strategies[agent].utility[-1],
-                "utility_loss": strategies[agent].utility_loss[-1],
-                "dist_prev_iter": strategies[agent].dist_prev_iter[-1],
-                "iterations": len(strategies[agent].utility),
+                "utility": strategies[agent].utility[iteration],
+                "utility_loss": strategies[agent].utility_loss[iteration],
+                "dist_prev_iter": strategies[agent].dist_prev_iter[iteration],
+                "iterations": iteration,
                 "convergence": float(convergence),
                 "iter/sec": round(len(strategies[agent].utility) / time_run, 2),
                 "time_init": round(time_init, 2),
