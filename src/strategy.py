@@ -695,7 +695,7 @@ class Strategy:
                 x=beta,
                 linestyle="--",
                 color="tab:orange",
-                linewidth=2,
+                linewidth=4,
                 label="analyt. BNE",
             )
 
@@ -714,6 +714,7 @@ class Strategy:
         )
         ax.set_xlabel("Bid b", fontsize=param["fontsize_label"])
         ax.set_ylabel("Probability", fontsize=param["fontsize_label"])
+        ax.legend(loc="upper left", fontsize=param["fontsize_legend"])
 
     def _plot_gradient(
         self,
@@ -797,8 +798,6 @@ class Strategy:
         )
         ax.set_xlabel("Observation o", fontsize=param["fontsize_label"])
         ax.set_ylabel("Bid b", fontsize=param["fontsize_label"])
-
-        # grid, legend, ticks
         ax.legend(loc="upper left", fontsize=param["fontsize_legend"])
 
     def _plot_gradient_complete_info(
@@ -830,14 +829,13 @@ class Strategy:
         )
 
         # plot best response
-        index_br = gradient.argmax(axis=1)
-        print(index_br)
+        index_br = gradient.argmax(axis=1).item()
         ax.axvline(
             x=self.a_discr[index_br],
             linestyle="--",
             color="tab:orange",
-            linewidth=2,
-            label="analyt. BNE",
+            linewidth=4,
+            label="best\nresponse",
         )
 
         # labels
@@ -854,7 +852,8 @@ class Strategy:
             title_label, fontsize=param["fontsize_title"], verticalalignment="bottom"
         )
         ax.set_xlabel("Bid b", fontsize=param["fontsize_label"])
-        ax.set_ylabel("Probability", fontsize=param["fontsize_label"])
+        ax.set_ylabel("Exp. Utility", fontsize=param["fontsize_label"])
+        ax.legend(loc="upper left", fontsize=param["fontsize_legend"])
 
     def _plot_metrics(self, ax, param: dict, iter: int = None) -> None:
         """Plot Metrics
