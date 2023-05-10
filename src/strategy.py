@@ -267,56 +267,52 @@ class Strategy:
             1 - util / (util_br if not np.isclose(util_br, 0, atol=1e-20) else 1e-20)
         )
 
-    def update_dist_prev_iter(self, t: iter, save_history_bool: bool):
+    def update_dist_prev_iter(self, t: iter):
         """Compute and save Euclidean distance to previous iteration
         If history of strategies is not save (i.d., save_history_bool is False),
         then we only store the the initial and the last strategy in self.history
 
         Args:
             t (iter): current iteration
-            save_history_bool (bool): save history of strategies, gradients, ...
         """
         if t > 0:
-            if save_history_bool:
+            if self.save_history_bool:
                 self.dist_prev_iter[t] = np.linalg.norm(self.x - self.history[t - 1])
             else:
                 self.dist_prev_iter[t] = np.linalg.norm(self.x - self.history[1])
 
-    def update_history_strategy(self, t: int, save_history_bool: bool):
+    def update_history_strategy(self, t: int):
         """Save current stratety
         If save_history_bool if False, we only story the initial and the last strategy
         in a list of length 2
 
         Args:
             t (int): current iteration
-            save_history_bool (bool): save history of strategies, gradients, ...
         """
-        t = t if save_history_bool else min(t, 1)
+        t = t if self.save_history_bool else min(t, 1)
         self.history[t] = self.x
 
-    def update_history_dual(self, t: int, save_history_bool: bool):
+    def update_history_dual(self, t: int):
         """
         Add current dual iterate to history of dual iterates
 
         Args:
             t (int): currnet iteration
-            save_history_bool (bool): save history of strategies, gradients, ...
         """
-        t = t if save_history_bool else min(t, 1)
+        t = t if self.save_history_bool else min(t, 1)
         self.history_dual[t] = self.y
 
-    def update_history_gradient(self, t: int, save_history_bool: bool):
+    def update_history_gradient(self, t: int):
         """Save current gradient
 
         Args:
             t (int): currnet iteration
             gradient (np.ndarray): current gradient
-            save_history_bool (bool): save history of strategies, gradients, ...
         """
-        t = t if save_history_bool else min(t, 1)
+        t = t if self.save_history_bool else min(t, 1)
         self.history_gradient[t] = self.gradient
 
-    def update_history(self, t: int, save_history_bool: bool):
+    def update_history(self, t: int):
         """Update all histories
 
         Args:
@@ -326,10 +322,14 @@ class Strategy:
         """
         self.update_utility(t)
         self.update_utility_loss(t)
-        self.update_dist_prev_iter(t, save_history_bool)
-        self.update_history_strategy(t, save_history_bool)
-        self.update_history_dual(t, save_history_bool)
-        self.update_history_gradient(t, save_history_bool)
+        self.update_dist_prev_iter(
+            t,
+        )
+        self.update_history_strategy(
+            t,
+        )
+        self.update_history_dual(t)
+        self.update_history_gradient(t)
 
     def prepare_history(self, max_iter: int, save_history_bool: bool) -> None:
         """Create arrays to store history.
@@ -338,6 +338,7 @@ class Strategy:
         Args:
             save_history_bool (bool): save history of gradients/strategies as well
         """
+        self.save_history_bool = save_history_bool
         (self.utility, self.utility_loss, self.dist_prev_iter,) = (
             np.nan * np.ones(max_iter),
             np.nan * np.ones(max_iter),
