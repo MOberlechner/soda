@@ -492,7 +492,10 @@ class Strategy:
         # plot strategy with 1-dim action space
         if self.dim_a == 1:
             ax_strat = fig.add_subplot(1, num_plots, counter)
-            self._plot_strategy(ax_strat, strategy, param, iter, beta)
+            if self.n > 1:
+                self._plot_strategy(ax_strat, strategy, param, iter, beta)
+            else:
+                self._plot_strategy_complete_info(ax_strat, strategy, param, iter, beta)
             counter += 1
         # plot strategy with 2-dim action space
         elif self.dim_a == 2:
@@ -512,7 +515,10 @@ class Strategy:
         # plot gradient with 1-dim action space
         if grad & (self.dim_a == 1):
             ax_grad = fig.add_subplot(1, num_plots, counter)
-            self._plot_gradient(ax_grad, gradient, param, iter)
+            if self.n > 1:
+                self._plot_gradient(ax_grad, gradient, param, iter)
+            else:
+                self._plot_gradient_complete_info(ax_grad, gradient, param, iter)
             counter += 1
         elif grad & (self.dim_a == 2):
             ax_grad = fig.add_subplot(1, num_plots, counter)
@@ -637,10 +643,9 @@ class Strategy:
             ax.set_ylim(param_extent[2], param_extent[3])
 
         # labels
-
         title_label = (
             f"Strategy - Agent {self.agent}"
-            + (f", Bid {axis_a+1}" if self.dim_a > 0 else f"")
+            + (f", Bid {axis_a+1}" if self.dim_a > 1 else f"")
             + (
                 ""
                 if iter is None
@@ -652,6 +657,63 @@ class Strategy:
         )
         ax.set_xlabel("Observation o", fontsize=param["fontsize_label"])
         ax.set_ylabel("Bid b", fontsize=param["fontsize_label"])
+
+    def _plot_strategy_complete_info(
+        self,
+        ax,
+        strategy: np.ndarray,
+        param: dict,
+        iter: int = None,
+        beta=None,
+    ) -> None:
+        """Plot Gradient (for standard incomplete information setting)
+
+        Args:
+            ax: axis from pyplot
+            strategy (np.ndarray): Strategy to visualize
+            param (dict): specifies parameter (fontsize, ...) for plots
+            iter (int, optional): show intermediate strategy. Defaults to None.
+            beta (function, optional): Defaults to None.
+            axis_a (int, optional): Which axis to visualize, if multidimensional action space Defaults to 0.
+        """
+        # plot strategy
+        if self.dim_a > 1:
+            raise NotImplementedError(
+                "Visualization for complete information (n=1) case only implemented for dim_a = 1"
+            )
+
+        ax.bar(
+            self.a_discr,
+            strategy[0],
+            color="gray",
+            width=(self.a_discr[-1] - self.a_discr[0]) / self.m,
+        )
+
+        # plot function
+        if beta is not None:
+            ax.axvline(
+                x=beta,
+                linestyle="--",
+                color="tab:orange",
+                linewidth=2,
+                label="analyt. BNE",
+            )
+
+        # labels
+        title_label = (
+            f"Strategy - Agent {self.agent}"
+            + f" (o={self.o_discr[0]:.2f})"
+            + (
+                ""
+                if iter is None
+                else (f" (Emp. Mean)" if iter == -1 else f" (Iteration {iter})")
+            )
+        )
+        ax.set_title(
+            title_label, fontsize=param["fontsize_title"], verticalalignment="bottom"
+        )
+        ax.set_xlabel("Bid b", fontsize=param["fontsize_label"])
+        ax.set_ylabel("Probability", fontsize=param["fontsize_label"])
 
     def _plot_gradient(
         self,
@@ -723,7 +785,7 @@ class Strategy:
         # labels
         title_label = (
             f"Gradient - Agent {self.agent} "
-            + (f", Bid {axis_a+1}" if self.dim_a > 0 else f"")
+            + (f", Bid {axis_a+1}" if self.dim_a > 1 else f"")
             + (
                 ""
                 if iter is None
@@ -738,6 +800,61 @@ class Strategy:
 
         # grid, legend, ticks
         ax.legend(loc="upper left", fontsize=param["fontsize_legend"])
+
+    def _plot_gradient_complete_info(
+        self,
+        ax,
+        gradient: np.ndarray,
+        param: dict,
+        iter: int = None,
+    ) -> None:
+        """Plot Gradient (for standard incomplete information setting)
+
+        Args:
+            ax: axis from pyplot
+            gradient (np.ndarray): gradient to visualize
+            param (dict): specifies parameter (fontsize, ...) for plots
+            iter (int, optional): show intermediate gradient. Defaults to None.
+        """
+        # plot strategy
+        if self.dim_a > 1:
+            raise NotImplementedError(
+                "Visualization for complete information (n=1) case only implemented for dim_a = 1"
+            )
+
+        ax.bar(
+            self.a_discr,
+            gradient[0],
+            color="gray",
+            width=(self.a_discr[-1] - self.a_discr[0]) / self.m,
+        )
+
+        # plot best response
+        index_br = gradient.argmax(axis=1)
+        print(index_br)
+        ax.axvline(
+            x=self.a_discr[index_br],
+            linestyle="--",
+            color="tab:orange",
+            linewidth=2,
+            label="analyt. BNE",
+        )
+
+        # labels
+        title_label = (
+            f"Gradient - Agent {self.agent}"
+            + f" (o={self.o_discr[0]:.2f})"
+            + (
+                ""
+                if iter is None
+                else (f" (Emp. Mean)" if iter == -1 else f" (Iteration {iter})")
+            )
+        )
+        ax.set_title(
+            title_label, fontsize=param["fontsize_title"], verticalalignment="bottom"
+        )
+        ax.set_xlabel("Bid b", fontsize=param["fontsize_label"])
+        ax.set_ylabel("Probability", fontsize=param["fontsize_label"])
 
     def _plot_metrics(self, ax, param: dict, iter: int = None) -> None:
         """Plot Metrics
@@ -781,6 +898,7 @@ class Strategy:
     # -------------------------------------- METHODS USED TO SAVE AND LOAD --------------------------------------- #
 
     def save(self, name: str, setting: str, path: str, save_init: bool = False):
+        # TODO Naming convention should be an attribute of the Class
         """Saves strategy in respective directory
 
         Parameters
@@ -864,6 +982,7 @@ class Strategy:
     def load_scale(
         self, name: str, mechanism_type: str, path: str, n_scaled: int, m_scaled
     ):
+        # TODO: Use load() method to get strategy and rewrite this function to only scale it
         """Load strategy from respective directory, same naming convention as in save method
         Should be used if saved strategy has a lower discretization than the strategy we have
 
