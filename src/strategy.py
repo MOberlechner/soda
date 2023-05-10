@@ -232,17 +232,21 @@ class Strategy:
         Returns:
             np.ndarray: empirical mean of strategy
         """
-        # TODO: if save_history is False, this function will not work (maybe check this before)
         # return last iterate
         if iter == 1 or (len(self.history) == 0):
             return self.x
         # return mean over all iterates
-        elif iter == -1:
-            return np.nanmean(self.history, axis=0)
-        elif iter > 1:
-            return np.nanmean(self.history[-iter:], axis=0)
+        elif self.save_history_bool:
+            if iter == -1:
+                return np.nanmean(self.history, axis=0)
+            elif iter > 1:
+                return np.nanmean(self.history[-iter:], axis=0)
+            else:
+                raise ValueError
         else:
-            raise ValueError
+            raise ValueError(
+                "Empirical mean only available if save_history_bool is True"
+            )
 
     # --------------------------------------- METHODS USED TO UPDATE METRICS ---------------------------------------- #
     def update_utility(self, t: int):
