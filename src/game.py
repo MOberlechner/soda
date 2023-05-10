@@ -218,6 +218,10 @@ class Game:
         Returns:
             np.ndarray: discretized interval
         """
+        if np.isclose(lower_bound, upper_bound) ^ (n_discrete == 1):
+            raise ValueError(
+                "if you choose same lower and upper bound, n_discrete must be 1 (and vice versa)"
+            )
         if midpoint:
             return (
                 lower_bound
@@ -226,17 +230,6 @@ class Game:
                 / n_discrete
             )
         else:
-            if (lower_bound == upper_bound) & (n_discrete > 1):
-                raise ValueError(
-                    "Discretized interval with n_discrete > 1 cannot have same lower and upper bound"
-                )
-            elif (lower_bound != upper_bound) & (n_discrete == 1):
-                raise ValueError(
-                    "Discretized interval with n_discrete == 1 and midpoint=False cannot have different lower and upper bounds "
-                )
-            elif (lower_bound == upper_bound) & (n_discrete == 1):
-                return np.array([lower_bound])
-            else:
-                return lower_bound + (np.arange(n_discrete)) * (
-                    upper_bound - lower_bound
-                ) / (n_discrete - 1)
+            return lower_bound + (np.arange(n_discrete)) * (
+                upper_bound - lower_bound
+            ) / (n_discrete - 1)
