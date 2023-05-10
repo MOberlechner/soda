@@ -95,7 +95,7 @@ class Learner:
 
             # update history (utility, utility loss, dist_prev_iter, optional: strategy, gradient)
             for i in game.set_bidder:
-                strategies[i].update_history(t, save_history_bool)
+                strategies[i].update_history(t)
 
             # check convergence
             min_max_value, max_value = self.check_convergence(
