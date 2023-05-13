@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from time import time
 
@@ -59,7 +60,7 @@ class Experiment:
         self.save_strat = save_strat
         self.save_init_strat = save_init_strat
         self.logging = logging
-        self.path_exp = path_exp
+        self.path_exp = self._get_path(path_exp)
 
         # setup game and learner using config
         print(f"Experiment - {mechanism_type}-{experiment}-{learn_alg} - started")
@@ -218,3 +219,12 @@ class Experiment:
         name = f"{self.learn_alg}_{self.experiment}_run_{run}"
         for i in self.strategies:
             self.strategies[i].load(name, self.mechanism_type, self.path_exp)
+
+    def _get_path(self, path_dir: str = "experiments/test/"):
+        """Get path to project (soda) and directory for experiment
+
+        Args:
+            path_dir (str): path from project directory to experiment directory
+        """
+        self.path_into_project = os.getcwd().split("soda")[0] + "soda/"
+        self.path_exp = self.path_into_project + path_dir

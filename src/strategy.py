@@ -896,133 +896,76 @@ class Strategy:
 
     # -------------------------------------- METHODS USED TO SAVE AND LOAD --------------------------------------- #
 
+    def _get_path_file(
+        self, path: str, setting: str, name: str, appendix: str = ""
+    ) -> str:
+        """Get file name to save or load strategy
+
+        Args:
+            path (str): path to experiment directory
+            setting (str): mechanism
+            name (str): name of file
+            appendix (str): add appendix to file name
+
+        Returns:
+            str: file name
+        """
+        return f"{path}strategies/{setting}/{name}_agent_{self.agent}{appendix}.npy"
+
     def save(self, name: str, setting: str, path: str, save_init: bool = False):
-        # TODO Naming convention should be an attribute of the Class
-        """Saves strategy in respective directory
+        """Save strategy
 
-        Parameters
-        ----------
-        name : str, name of strategy
-        path : str ,path to directory (where directory strategies is contained)
-        setting : str, subdirectory in strategies
-        save_init: bool, save initial strategy as well
+        Args:
+            name (str): name of strategy
+            setting (str): mechanism
+            path (str): path to experiment directory
+            save_init (bool, optional): Save initial strategy. Defaults to False.
         """
-        np.save(
-            path
-            + "strategies/"
-            + setting
-            + "/"
-            + name
-            + "_agent_"
-            + self.agent
-            + ".npy",
-            self.x,
-        )
+        filename = self._get_path_file(path, setting, name)
+        np.save(filename, self.x)
         if save_init:
-            np.save(
-                path
-                + "strategies/"
-                + setting
-                + "/"
-                + name
-                + "_agent_"
-                + self.agent
-                + "_init.npy",
-                self.history[0],
-            )
+            filename_init = self._get_path_file(path, setting, name, appendix="_init")
+            np.save(filename_init, self.history[0])
 
-    def load(self, name: str, setting: str, path: str):
-        """Load strategy from respective directory, same naming convention as in save method
+    def load(self, name: str, setting: str, path: str) -> None:
+        """Load saved strategy
 
-        Parameters
-        ----------
-        name : str, name of strategy
-        setting : str, subdirectory of strategies, mechanism
-        path : str, path to directory (in which strategies/ is contained
-
-        Returns
-        -------
-
+        Args:
+            name (str): name of strategy
+            setting (str): mechanism
+            path (str): path to experiment directory
         """
-        # current directory:
-        current_dir = os.getcwd()
-        # path to project
-        dir_project = current_dir.split("soda")[0] + "soda/"
-
+        filename = self._get_path_file(path, setting, name)
         try:
-            self.x = np.load(
-                dir_project
-                + path
-                + "strategies/"
-                + setting
-                + "/"
-                + name
-                + "_agent_"
-                + self.agent
-                + ".npy"
-            )
+            self.x = np.load(filename)
         except:
-            print(
-                'File: "'
-                + name
-                + "_agent_"
-                + self.agent
-                + ".npy"
-                + '" is not available in directory "'
-                + dir_project
-                + path
-                + "strategies/"
-                + setting
-                + "/"
-                + '"'
-            )
+            print(f"File {filename} not found.")
             self.x = None
 
     def load_scale(
-        self, name: str, mechanism_type: str, path: str, n_scaled: int, m_scaled
-    ):
-        # TODO: Use load() method to get strategy and rewrite this function to only scale it
-        """Load strategy from respective directory, same naming convention as in save method
-        Should be used if saved strategy has a lower discretization than the strategy we have
+        self, name: str, setting: str, path: str, n_scaled: int, m_scaled
+    ) -> None:
+        """Get a upscaled version of a strategy
 
-        Parameters
-        ----------
-        name : str, name of strategy
-        mechanism_type: str, name of setting (subdirectory in strategies)
-        path : str, path to directory (in which strategies/ is contained
-        n_scaled: int, discretization (type) in the larger setting
-        m_scaled: int, discretization (action) in the larger setting
+        Args:
+            name (str): name of saved strategy
+            setting (str): mechanism
+            path (str): path to experiment directory
+            n_scaled (int): discretization (type) in the larger setting
+            m_scaled (_type_): discretization (action) in the larger setting
 
-        Returns
-        -------
-
+        Raises:
+            ValueError: _description_
+            NotImplementedError: _description_
         """
         try:
-            strat = np.load(
-                path
-                + "strategies/"
-                + mechanism_type
-                + "/"
-                + name
-                + "_agent_"
-                + self.agent
-                + ".npy"
-            )
+            filename = self._get_path_file(path, setting, name)
+            strat = np.load(filename)
             bool_strat_loaded = True
 
         except:
             bool_strat_loaded = False
-            print(
-                'File: "'
-                + name
-                + "_agent_"
-                + self.agent
-                + ".npy"
-                + '" is not available in directory "'
-                + path
-                + "strategies/"
-                + '"'
-            )
+            print(f"File {filename} not found.")
 
         # only for two dimensional strategies
         if bool_strat_loaded:
