@@ -1,7 +1,6 @@
 from typing import Dict, List
 
 import numpy as np
-from opt_einsum import contract, contract_path
 
 from src.game import Game
 from src.strategy import Strategy
@@ -38,7 +37,7 @@ class Gradient:
 
             # bidders observations/valuations are independent
             if game.weights is None:
-                return contract(
+                return np.einsum(
                     self.indices[agent],
                     *[game.utility[agent]]
                     + [
@@ -49,7 +48,7 @@ class Gradient:
                 )
             # bidders observations/valuations are correlated
             else:
-                return contract(
+                return np.einsum(
                     self.indices[agent],
                     *[game.utility[agent]]
                     + [strategies[i].x for i in opp]
@@ -125,7 +124,7 @@ class Gradient:
                         )
                         + end
                     )
-                    self.path[i] = contract_path(
+                    self.path[i] = np.einsum_path(
                         self.indices[i],
                         *[game.utility[i]]
                         + [
@@ -156,7 +155,7 @@ class Gradient:
                         + indices_weight
                         + end
                     )
-                    self.path[i] = contract_path(
+                    self.path[i] = np.einsum_path(
                         self.indices[i],
                         *[game.utility[i]]
                         + [strategies[game.bidder[j]].x for j in idx_opp]
