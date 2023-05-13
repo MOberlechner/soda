@@ -698,6 +698,7 @@ class Strategy:
                 linewidth=4,
                 label="analyt. BNE",
             )
+            ax.legend(loc="upper left", fontsize=param["fontsize_legend"])
 
         # labels
         title_label = (
@@ -714,7 +715,6 @@ class Strategy:
         )
         ax.set_xlabel("Bid b", fontsize=param["fontsize_label"])
         ax.set_ylabel("Probability", fontsize=param["fontsize_label"])
-        ax.legend(loc="upper left", fontsize=param["fontsize_legend"])
 
     def _plot_gradient(
         self,
