@@ -205,7 +205,10 @@ class Experiment:
             name = f"{self.learn_alg}_{self.experiment}_run_{run}"
             for i in self.strategies:
                 self.strategies[i].save(
-                    name, self.mechanism_type, self.path_exp, self.save_init_strat
+                    name=name,
+                    setting=self.mechanism_type,
+                    path=self.path_exp,
+                    save_init=self.save_init_strat,
                 )
 
     def load_strategies(self, run: int):
@@ -218,13 +221,20 @@ class Experiment:
         self.strategies = self.config.create_strategies(self.game)
         name = f"{self.learn_alg}_{self.experiment}_run_{run}"
         for i in self.strategies:
-            self.strategies[i].load(name, self.mechanism_type, self.path_exp)
+            self.strategies[i].load(
+                name=name,
+                setting=self.mechanism_type,
+                path=self.path_exp,
+            )
 
-    def _get_path(self, path_dir: str = "experiments/test/"):
+    def _get_path(self, path_dir: str = "experiments/test/") -> str:
         """Get path to project (soda) and directory for experiment
 
         Args:
             path_dir (str): path from project directory to experiment directory
+
+        Returns:
+            path (str): path to experiment directory
         """
-        self.path_into_project = os.getcwd().split("soda")[0] + "soda/"
-        self.path_exp = self.path_into_project + path_dir
+        path_into_project = os.getcwd().split("soda")[0] + "soda/"
+        return path_into_project + path_dir
