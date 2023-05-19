@@ -63,84 +63,129 @@ class Mechanism:
         # further specifications
         self.name = None
         self.own_gradient = False
-        self.value_model = "private"  # valuation depends only on own observation
+        self.value_model = "private"  # valuation depends only on private observation
 
     def __repr__(self) -> str:
         return f"Mechanism({self.name})"
 
     # ------------------------------- methods for computation of utilities ------------------------------------- #
 
-    def utility(self, obs: np.ndarray, bids: np.ndarray, idx: int):
-        """Compute utility according to specified mechanism
+    def utility(
+        self, obs_profile: np.ndarray, bids_profile: np.ndarray, index_agent: int
+    ):
+        """Compute utility for agent
 
         Args:
-            obs (np.ndarray): observation of agent (idx)
-            bids (np.ndarray): bids of all agents
-            idx (int): index of agent
+            obs_profile (np.ndarray): observations of all agents
+            bids_profile (np.ndarray): bids of all agents
+            index_agent (int): index of agent
 
         Returns:
-            np.ndarry: utilities of agend (idx)
+            np.ndarry: utilities of agent (with index index_agent)
         """
         raise NotImplementedError
 
-    def get_allocation(self, bids: np.ndarray, idx: int) -> np.ndarray:
-        """Compute alloction for idx-th bidder
+    def get_allocation(self, bids_profile: np.ndarray, index_agent: int) -> np.ndarray:
+        """Compute alloction vector for agent
 
         Args:
-            bids (np.ndarray): action profiles
-            idx (int): idx-th agent
+            bids_profile (np.ndarray): bids of all agents
+            index_agent (int): index of agent
 
         Returns:
-            np.ndarray: allocation vector
+            np.ndarray: allocation vector of agent (with index index_agent)
         """
         raise NotImplementedError
 
     def get_payment(
-        self, bids: np.ndarray, allocation: np.ndarray, idx: int
+        self, bids_profile: np.ndarray, allocation_agent: np.ndarray, index_agent: int
     ) -> np.ndarray:
         """Compute payments for idx-th bidder
 
         Args:
-            bids (np.ndarray): action profiles
-            allocation (np.ndarray): allocation for idx-th agent
-            idx (int): idx-th agent
+            bids_profile (np.ndarray): bids of all agents
+            allocation_agent (np.ndarray): allocation of agent
+            index_agent (int): index of agent
 
         Returns:
-            np.ndarray: payment vector
+            np.ndarray: payment vector of agent (with index index_agent)
         """
         raise NotImplementedError
 
-    def test_input_utility(self, obs: np.ndarray, bids: np.ndarray, idx: int):
-        if bids.shape[0] != self.n_bidder:
-            raise ValueError("wrong format of bids")
-        elif idx >= self.n_bidder:
-            raise ValueError("bidder with index " + str(idx) + " not avaible")
-        pass
-
-    def get_valuation(self, obs: np.ndarray, bids: np.ndarray, idx: int) -> np.ndarray:
-        """determine valuations (potentially from observations, might be equal for private value model)
-        and reformat vector depending on the use case:
-            - one valuation for each action profile (no reformatting), needed for simulation
-            - all valuations for each action profule (reformatting), needed for gradient computation (game.py)
+    def test_input_utility(
+        self, obs_profile: np.ndarray, bids_profile: np.ndarray, index_agent: int
+    ):
+        """Test input for utility function
 
         Args:
-            obs (np.ndarray): observation of agent (idx)
-            bids (np.ndarray): bids of all agents
-            idx (int): index of agent
+            obs_profile (np.ndarray): observations of all agents
+            bids_profile (np.ndarray): bids of all agents
+            index_agent (int): index of agent
+        """
+        if bids_profile.shape[0] != self.n_bidder:
+            raise ValueError("wrong format of bids")
+        elif index_agent >= self.n_bidder:
+            raise ValueError("bidder with index " + str(index_agent) + " not avaible")
+        pass
+
+    def get_valuation(self, obs_profile: np.ndarray, index_agent: int) -> np.ndarray:
+        """Determine valuations from observation profil.
+        Depending on the types of interdependencies, we have different
+        methods to get valuations.
+
+        Args:
+            obs_profile (np.ndarray): observation of all agents
+            index_agent (int): index of agent
 
         Returns:
             np.ndarray: observations, possibly reformated
         """
+        # Private values (valuations = observations)
         if self.value_model == "private":
-            if obs.shape != bids[idx].shape:
-                valuations = obs.reshape(len(obs), 1)
-            else:
-                valuations = obs
+            if len(obs_profile) != self.n_bidder:
+                raise ValueError(
+                    "obs_profile should contain only observations for all bidders"
+                )
+            return obs_profile[index_agent]
+
+        # Common values, independent observations
+        elif self.value_model == "common_independent":
+            if len(obs_profile) != self.n_bidder + 1:
+                raise ValueError(
+                    "valuations should be included in obs_profile (last entry)"
+                )
+            valuations = obs_profile[-1]
+
+        # Common values, correlated observations (valuations can be computed from observation_profiles)
+        elif self.value_model == "common_affiliated":
+            if len(obs_profile) != self.n_bidder:
+                raise ValueError(
+                    "obs_profile should contain only observations for all bidders"
+                )
+            valuations = self._compute_valuations_from_observations(
+                obs_profile, index_agent
+            )
+
         else:
             raise NotImplementedError(
                 "get valuation only implemented for the private value model"
             )
         return valuations
+
+    def _compute_valuations_from_observations(
+        self, obs_profile: np.ndarray, index_agent: int
+    ) -> np.ndarray:
+        """For the common values with correlated observation case (see get_valuation()) we need a
+        method to compute the valuations from the observation profile.
+
+        Args:
+            obs_profile (np.ndarray): _description_
+            index_agent (int): _description_
+
+        Returns:
+            np.ndarray: valuation of agent (with index index_agent)
+        """
+        raise NotImplementedError
 
     # ---------------------------------- methods to compute metrics --------------------------------------- #
 
@@ -159,7 +204,7 @@ class Mechanism:
 
         idx = self.bidder.index(agent)
         l2_norm = self.compute_l2_norm(agent, obs_profile[idx], bid_profile[idx])
-        util_loss, util_vs_bne, util_in_bne = self.compute_utility(
+        util_loss, util_vs_bne, util_in_bne = self.compute_utility_vs_bne(
             agent, obs_profile, bid_profile[idx]
         )
 
@@ -196,7 +241,7 @@ class Mechanism:
         else:
             return np.sqrt(1 / len(obs) * ((bids - bne) ** 2).sum())
 
-    def compute_utility(
+    def compute_utility_vs_bne(
         self, agent: str, obs_profile: np.ndarray, bids: np.ndarray
     ) -> tuple:
         """compute metrics regarding utility
@@ -204,7 +249,7 @@ class Mechanism:
         Args:
             agent (str): agent
             obs_profile (np.ndarray): observation profile
-            bids (np.ndarray): bids for agent
+            bids (np.ndarray): bids for agent (other agents play according to BNE)
 
         Returns:
             Tuple[float, float, float]: relative utility loss, utility, utility in BNE
@@ -219,10 +264,10 @@ class Mechanism:
 
         else:
             bid_profile = np.array(bid_profile)
-            util_in_bne = self.utility(obs_profile[idx], bid_profile, idx).mean()
+            util_in_bne = self.utility(obs_profile, bid_profile, idx).mean()
 
             bid_profile[idx] = bids
-            util_vs_bne = self.utility(obs_profile[idx], bid_profile, idx).mean()
+            util_vs_bne = self.utility(obs_profile, bid_profile, idx).mean()
 
             if np.isclose(util_in_bne, 0.0):
                 util_loss = np.nan
