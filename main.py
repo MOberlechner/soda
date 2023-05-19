@@ -31,6 +31,7 @@ def main(
         save_init_strat (bool, optional): save initial strategies . Defaults to True.
         round_decimal (int, optional): Number of decimals we use for our metrics. Defaults to 3.
     """
+    print(f"Running {len(experiment_list)} Experiments...\n")
 
     for mechanism_type, experiment, learn_alg in experiment_list:
         exp_handler = Experiment(
@@ -55,14 +56,14 @@ def main(
 if __name__ == "__main__":
 
     path_config = "configs/"
-    path_exp = "experiment/test/"
+    path_exp = "experiments/test/"
 
     experiment_list = [
-        ("single_item", "fpsb", "frank_wolfe"),
+        ("single_item", "affiliated_values", "frank_wolfe"),
     ]
 
-    number_runs = 10
-    learning = True
+    number_runs = 1
+    learning = False
     simulation = True
     logging = True
 
