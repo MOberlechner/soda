@@ -78,14 +78,14 @@ class Experiment:
 
         # create logger
         self.logger = Logger(
-            path_exp, mechanism_type, experiment, learn_alg, logging, round_decimal
+            self.path_exp, mechanism_type, experiment, learn_alg, logging, round_decimal
         )
 
         # create directory to save results (strategies or log-files)
         if self.logging or self.save_strat:
             if self.path_exp == "":
                 raise ValueError("path to store strategies/log-files not given")
-            Path(path_exp + "strategies/" + mechanism_type).mkdir(
+            Path(self.path_exp + "strategies/" + mechanism_type).mkdir(
                 parents=True, exist_ok=True
             )
 
