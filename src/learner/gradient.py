@@ -89,17 +89,15 @@ class Gradient:
                 idx_opp = [i for i in range(n_bidder) if i != idx]
 
                 # indices of utility array
-                if (
-                    game.value_model == "private"
-                    or game.value_model == "private_common"
-                ):
+                if game.value_model == "private":
                     # utility depends only on own oversvation
                     start = indices_act + indices_obs[idx * dim_o : (idx + 1) * dim_o]
 
-                elif game.value_model == "affiliated":
+                elif game.value_model == "common_affiliated":
                     # utility depends on all observations (affiliated values model)
                     start = indices_act + indices_obs
-                elif game.value_model == "common":
+
+                elif game.value_model == "common_independent":
                     # utility depends on common value, observations are independent (common value model)
                     start = indices_act + "V"
                 else:
@@ -135,7 +133,7 @@ class Gradient:
                     )[0]
                 else:
                     # indices for weights
-                    if game.value_model == "common":
+                    if game.value_model == "common_independent":
                         indices_weight = "V" + indices_obs
                     else:
                         indices_weight = indices_obs

@@ -158,13 +158,7 @@ class Mechanism:
 
         # Common values, correlated observations (valuations can be computed from observation_profiles)
         elif self.value_model == "common_affiliated":
-            if len(obs_profile) != self.n_bidder:
-                raise ValueError(
-                    "obs_profile should contain only observations for all bidders"
-                )
-            valuations = self._compute_valuations_from_observations(
-                obs_profile, index_agent
-            )
+            valuations = self.compute_valuations_from_observations(obs_profile)
 
         else:
             raise NotImplementedError(
@@ -172,18 +166,17 @@ class Mechanism:
             )
         return valuations
 
-    def _compute_valuations_from_observations(
-        self, obs_profile: np.ndarray, index_agent: int
+    def compute_valuations_from_observations(
+        self, obs_profile: np.ndarray
     ) -> np.ndarray:
         """For the common values with correlated observation case (see get_valuation()) we need a
         method to compute the valuations from the observation profile.
 
         Args:
             obs_profile (np.ndarray): _description_
-            index_agent (int): _description_
 
         Returns:
-            np.ndarray: valuation of agent (with index index_agent)
+            np.ndarray: common valuation
         """
         raise NotImplementedError
 

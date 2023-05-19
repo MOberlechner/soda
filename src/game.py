@@ -12,17 +12,29 @@ from src.prior import compute_weights, marginal_prior_pdf
 
 
 class Game:
+    """Game represents an approximatiion of the mechanism by discretization of the spaces
+
+    Attributes:
+        General
+            bidder          List: contains all agents (str)
+            set_bidder      List: contains all unique agents (model sharing)
+            o_discr         Dict: discretized observation space for each agent
+            a_discr         Dict: discretized action space for each agent
+            n               int, number of discretization points in type space
+            m               int, number of discretization points in action space
+            dim_o           int, dimension of observation space
+            dim_a           int, dimension of action space
+
+    """
+
     def __init__(self, mechanism: Mechanism, n: int, m: int):
-        """Given a mechanism and number of discretization points, we can create approximation game by
-        discretizating the respective spaces.
+        """Create approximation game
 
-        Parameters
-        ----------
-        mechanism : class, mechanism defines auction game
-        n : int, number of discretization points in type space
-        m : int, number of discretization points in action space
+        Args:
+            mechanism (Mechanism): underlying mechanism
+            n (int): number of discretization points for type space intervals
+            m (int): number of discretization points for action space intervals
         """
-
         self.mechanism = mechanism
         self.n = n
         self.m = m
@@ -51,13 +63,10 @@ class Game:
             for i in self.set_bidder
         }
         if hasattr(mechanism, "v_space"):
-            self.v_discr = {
-                i: Game.discr_spaces(mechanism.v_space[i], m, midpoint=True)
-                for i in self.set_bidder
-            }
+            self.v_discr = Game.discr_spaces(mechanism.v_space, n, midpoint=True)
 
         # marginal prior for bidder
-        self.prior = {i: self.get_prior(mechanism, i) for i in self.set_bidder}
+        self.prior = {i: self.get_prior(i) for i in self.set_bidder}
 
         self.weights = self.get_weights(mechanism)
         self.utility = {}
@@ -78,48 +87,18 @@ class Game:
         """
 
         for i in self.set_bidder:
-            idx = self.bidder.index(i)
-            bids = self.create_bid_profiles()
+            index_agent = self.bidder.index(i)
+            bids = self.create_all_bid_profiles()
+            valuations = self.get_obs_profile_reshaped()
+            shape_utilities = self.get_shape_utilities()
 
-            if self.value_model == "private":
-                # valuation only depends on own observation
-                valuations = self.o_discr[i]
-                self.utility[i] = (
-                    self.mechanism.utility(valuations, bids, idx)
-                    .transpose()
-                    .reshape(
-                        tuple(
-                            [self.m] * (self.dim_a * self.n_bidder)
-                            + [self.n] * self.dim_o
-                        )
-                    )
-                )
+            self.utility[i] = (
+                self.mechanism.utility(valuations, bids, index_agent)
+                .transpose()
+                .reshape(shape_utilities)
+            )
 
-            elif self.value_model == "affiliated":
-                # affiliated values model with correlated observations and common value
-                valuations = self.o_discr[i]
-                self.utility[i] = (
-                    self.mechanism.utility(valuations, bids, idx)
-                    .transpose()
-                    .reshape(tuple([self.m] * self.n_bidder + [self.n] * self.n_bidder))
-                )
-
-            elif self.value_model == "common":
-                valuations = self.v_discr[i]
-                self.utility[i] = (
-                    self.mechanism.utility(valuations, bids, idx)
-                    .transpose()
-                    .reshape(
-                        tuple(
-                            [self.m] * (self.dim_a * self.n_bidder)
-                            + [self.n] * self.dim_o
-                        )
-                    )
-                )
-            else:
-                raise ValueError
-
-    def create_bid_profiles(self) -> np.ndarray:
+    def create_all_bid_profiles(self) -> np.ndarray:
         """
         Create all possible action profiles (bids) for utility computation
 
@@ -161,12 +140,75 @@ class Game:
                 ]
             )
 
-    def get_prior(self, mechanism, agent: str) -> np.ndarray:
+    def get_obs_profile_reshaped(self) -> np.ndarray:
+        """Due to the quasi-linear structure of the utility function, we compute the utility for one bid profile and several valuations in one step.
+        This is useful for the computation of the utility array in the discretized game (to compute gradient). But to do so, we need to reformat the observations in this specific setting.
+
+        Args:
+            agent (str): agent
+
+        Returns:
+            np.ndarray: reshaped valuation of agent
+        """
+        # Private values (valuation = obs_agent)
+        if self.value_model == "private":
+            if self.dim_o == 1:
+                return np.array(
+                    [self.o_discr[agent].reshape(self.n, 1) for agent in self.bidder]
+                )
+            else:
+                raise NotImplementedError
+
+        # Common values, independent observations
+        elif self.value_model == "common_independent":
+            if self.dim_o == 1:
+                return np.array(
+                    [self.o_discr[agent].reshape(self.n, 1) for agent in self.bidder]
+                    + [self.v_discr.reshape(self.n, 1)]
+                )
+            else:
+                raise NotImplementedError
+
+        # Common values, correlated observations (valuation = f(obs_profile))
+        elif self.value_model == "common_affiliated":
+            if self.dim_o == 1:
+                obs = np.array(
+                    np.meshgrid(*[self.o_discr[agent] for agent in self.bidder])
+                )
+                return obs.reshape(tuple([2] + [self.n] * self.n_bidder + [1]))
+            else:
+                raise NotImplementedError
+
+    def get_shape_utilities(self) -> tuple:
+        """Determine shape of utility array (depending on value model)
+
+        Returns:
+            tuple:
+        """
+        # Private values (valuation = obs_agent)
+        if self.value_model == "private":
+            return tuple(
+                [self.m] * (self.dim_a * self.n_bidder) + [self.n] * self.dim_o
+            )
+
+        # Common values, independent observations
+        elif self.value_model == "common_independent":
+            return tuple(
+                [self.m] * (self.dim_a * self.n_bidder) + [self.n] * self.dim_o
+            )
+
+        # Common values, correlated observations (valuation = f(obs_profile))
+        elif self.value_model == "common_affiliated":
+            return tuple(
+                [self.m] * (self.dim_a * self.n_bidder)
+                + [self.n] * self.dim_o * self.n_bidder
+            )
+
+    def get_prior(self, agent: str) -> np.ndarray:
         """Given prior distribution specified in mechanism, returns discretized prior
         If discretized observation space has only one entry, it corresponds to the complete information setting and the probability is equal to 1
 
         Args:
-            mechanism: auction mechanism
             agent (str): agent
 
         Returns:
@@ -175,7 +217,7 @@ class Game:
         if self.o_discr[agent].size == 1:
             p = np.array([1])
         else:
-            p = marginal_prior_pdf(mechanism, self.o_discr[agent], agent)
+            p = marginal_prior_pdf(self.mechanism, self.o_discr[agent], agent)
         return p / p.sum()
 
     def get_weights(self, mechanism):
