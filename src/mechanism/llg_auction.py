@@ -43,23 +43,25 @@ class LLGAuction(Mechanism):
         self.tie_breaking = param_util["tie_breaking"]
         self.gamma = param_prior["corr"]
 
-    def utility(self, obs: np.ndarray, bids: np.ndarray, idx: int) -> np.ndarray:
+    def utility(
+        self, obs_profile: np.ndarray, bids_profile: np.ndarray, index_agent: int
+    ) -> np.ndarray:
         """_summary_
 
         Args:
-            obs (np.ndarray): observation/valuation of agent
-            bids (np.ndarray): bid profile
-            idx (int): index/position of agent
+            obs_profile (np.ndarray): observations of all agents
+            bids_profile (np.ndarray): bids of all agents
+            index_agent (int): index of agent
 
         Returns:
-            np.ndarray: payoff vector for agent (idx)
+            np.ndarry: utilities of agent (with index index_agent)
         """
 
-        self.test_input_utility(obs, bids, idx)
-        valuation = self.get_valuation(obs, bids, idx)
+        self.test_input_utility(obs_profile, bids_profile, index_agent)
+        valuation = self.get_valuation(obs_profile, index_agent)
 
-        allocation = self.get_allocation(bids, idx)
-        payment = self.get_payment(bids, allocation, idx)
+        allocation = self.get_allocation(bids_profile, index_agent)
+        payment = self.get_payment(bids_profile, allocation, index_agent)
 
         return allocation * (valuation - payment)
 

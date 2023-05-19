@@ -56,32 +56,31 @@ class SingleItemAuction(Mechanism):
 
         # prior
         if self.prior == "affiliated_values":
-            self.value_model = "affiliated"
+            self.value_model = "common_affiliated"
         elif self.prior == "common_value":
-            self.value_model = "common"
-            self.v_space = {i: [0, o_space[i][1] / 2] for i in bidder}
+            self.value_model = "common_independent"
+            self.v_space = [0, o_space[bidder[0]][1] / 2]
 
     # ------------------------------- methods to compute utilities --------------------------------- #
 
-    def utility(self, obs: np.ndarray, bids: np.ndarray, idx: int) -> None:
-        """Utility function for Single-Item Auction
+    def utility(
+        self, obs_profile: np.ndarray, bids_profile: np.ndarray, index_agent: int
+    ) -> None:
+        """Compute utility for agent in single_item auction
 
-        Parameters
-        ----------
-        obs : observation/valuation of bidder (idx)
-        bids : array with bid profiles
-        idx : index of bidder to consider
+        Args:
+            obs_profile (np.ndarray): observations of all agents
+            bids_profile (np.ndarray): bids of all agents
+            index_agent (int): index of agent
 
-        Returns
-        -------
-        np.ndarray : payoff vector for agent idx
-
+        Returns:
+            np.ndarry: utilities of agent (with index index_agent)
         """
-        self.test_input_utility(obs, bids, idx)
-        valuation = self.get_valuation(obs, bids, idx)
+        self.test_input_utility(obs_profile, bids_profile, index_agent)
+        valuation = self.get_valuation(obs_profile, index_agent)
 
-        allocation = self.get_allocation(bids, idx)
-        payment = self.get_payment(bids, allocation, idx)
+        allocation = self.get_allocation(bids_profile, index_agent)
+        payment = self.get_payment(bids_profile, allocation, index_agent)
         payoff = self.get_payoff(
             allocation=allocation, valuation=valuation, payment=payment
         )
@@ -127,9 +126,11 @@ class SingleItemAuction(Mechanism):
                 out=np.zeros_like((valuation - payment)),
                 where=payment != 0,
             ) + np.log(self.param_util["budget"] - payment)
+
         elif self.utility_type == "CRRA":
             rho = self.param_util["risk_parameter"]
             payoff = np.sign(valuation - payment) * np.abs(valuation - payment) ** rho
+
         else:
             raise ValueError(f"utility type {self.utility_type} not available")
         return allocation * payoff
@@ -180,35 +181,23 @@ class SingleItemAuction(Mechanism):
         """
         return mechanism_util.get_allocation_single_item(bids, idx, self.tie_breaking)
 
-    def get_valuation(self, obs: np.ndarray, bids: np.ndarray, idx: int) -> np.ndarray:
-        """determine valuations (potentially from observations, might be equal for private value model)
-        and reformat vector depending on the use case:
-            - one valuation for each action profile (no reformatting), needed for simulation
-            - all valuations for each action profule (reformatting), needed for gradient computation (game.py)
+    def compute_valuations_from_observations(
+        self, obs_profile: np.ndarray
+    ) -> np.ndarray:
+        """For the common values with correlated observation case (see mechanism.get_valuation()) we need a
+        method to compute the valuations from the observation profile.
 
         Args:
-            obs (np.ndarray): observation of agent (idx)
-            bids (np.ndarray): bids of all agents
-            idx (int): index of agent
+            obs_profile (np.ndarray): _description_
 
         Returns:
-            np.ndarray: observations, possibly reformated
+            np.ndarray: common valuation
         """
-        if (self.value_model == "private") or (self.value_model == "common"):
-            if obs.shape != bids[idx].shape:
-                valuations = obs.reshape(len(obs), 1)
-            else:
-                valuations = obs
-        elif self.value_model == "affiliated":
-            if obs[idx].shape != bids[idx].shape:
-                valuations = 0.5 * (
-                    obs.reshape(len(obs), 1) + obs.reshape(1, len(obs))
-                ).reshape(len(obs), len(obs), 1)
-            else:
-                valuations = obs.mean(axis=0)
+        if (self.prior == "affiliated_values") and (self.n_bidder == 2):
+            # affiliated values model example from Krishna
+            return obs_profile.mean(axis=0)
         else:
-            raise NotImplementedError(f"value model {self.value_model} unknown")
-        return valuations
+            raise NotImplementedError
 
     # --------------------------------- methods to compute metrics --------------------------------- #
 
@@ -306,7 +295,7 @@ class SingleItemAuction(Mechanism):
             (self.utility_type == "QL")
             & (self.payment_rule == "first_price")
             & self.check_bidder_symmetric([0, 2])
-            & (self.value_model == "affiliated")
+            & (self.value_model == "common_affiliated")
             & (self.n_bidder == 2)
         ):
             bne = 2 / 3 * obs
@@ -348,7 +337,7 @@ class SingleItemAuction(Mechanism):
             (self.utility_type == "QL")
             & (self.payment_rule == "second_price")
             & self.check_bidder_symmetric([0, 2])
-            & (self.value_model == "common")
+            & (self.value_model == "common_independent")
             & (self.n_bidder == 3)
         ):
             bne = 2 * obs / (2 + obs)

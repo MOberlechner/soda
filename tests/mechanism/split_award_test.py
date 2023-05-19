@@ -97,17 +97,19 @@ def test_utility(get_mechanism):
     Function to test utility method in split-award auction
     """
     mechanism = get_mechanism
-    bids = np.array(
+    bids_profile = np.array(
         [
             [[2, 3, 4, 2], [1, 2, 2, 2]],
-            [
-                [3, 5, 4, 2],
-                [2, 2, 2, 2],
-            ],
+            [[3, 5, 4, 2], [2, 2, 2, 2]],
         ]
     )
-    obs = np.array([1, 1, 1, 1])
-    utility = mechanism.utility(obs, bids, 0)
+    obs_profile = np.array(
+        [
+            [1, 1, 1, 1],
+            [0, 0, 0, 0],
+        ]
+    )
+    utility = mechanism.utility(obs_profile, bids_profile, 0)
     assert np.array_equal(
         utility, [1.0, 2.0, 1.7, 0.5]
     ), "utility for first_price payment rule and tie_breaking"

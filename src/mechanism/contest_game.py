@@ -45,23 +45,26 @@ class ContestGame(Mechanism):
         self.param_csf = param_util["csf_parameter"]
         self.type = param_util["type"]
 
-    def utility(self, obs: np.ndarray, bids: np.ndarray, idx: int) -> np.ndarray:
+    def utility(
+        self, obs_profile: np.ndarray, bids_profile: np.ndarray, index_agent: int
+    ) -> np.ndarray:
         """Utility function for contest game
 
         Args:
-            obs (np.ndarray): valuation/cost parameter (type)
-            bids (np.ndarray): bid profiles
-            idx (int): agent
+            obs_profile (np.ndarray): observations of all agents
+            bids_profile (np.ndarray): bids of all agents
+            index_agent (int): index of agent
 
         Returns:
-            np.ndarray: payoff vector for agent
+            np.ndarry: utilities of agent (with index index_agent)
+
         """
 
-        self.test_input_utility(obs, bids, idx)
-        valuation = self.get_valuation(obs, bids, idx)
+        self.test_input_utility(obs_profile, bids_profile, index_agent)
+        valuation = self.get_valuation(obs_profile, index_agent)
 
-        allocation = self.get_allocation(bids, idx)
-        payoff = self.get_payoff(valuation, allocation, bids[idx])
+        allocation = self.get_allocation(bids_profile, index_agent)
+        payoff = self.get_payoff(valuation, allocation, bids_profile[index_agent])
         return payoff
 
     def get_payoff(

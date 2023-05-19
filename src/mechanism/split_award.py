@@ -47,20 +47,24 @@ class SplitAwardAuction(Mechanism):
         self.tie_breaking = param_util["tie_breaking"]
         self.scale = param_util["scale"]
 
-    def utility(self, obs: np.ndarray, bids: np.ndarray, idx: int):
+    def utility(
+        self, obs_profile: np.ndarray, bids_profile: np.ndarray, index_agent: int
+    ):
         """Compute Utility for Split Award Auction
 
         Args:
-            obs (np.ndarray): observations/valuations from each agent
-            bids (np.ndarray): bids (2 dim: single, split) from each agent
-            idx (int): index of agent
+            obs_profile (np.ndarray): observations of all agents
+            bids_profile (np.ndarray): bids of all agents
+            index_agent (int): index of agent
 
+        Returns:
+            np.ndarry: utilities of agent (with index index_agent)
         """
-        self.test_input_utility(obs, bids, idx)
-        valuation = self.get_valuation(obs, bids, idx)
+        self.test_input_utility(obs_profile, bids_profile, index_agent)
+        valuation = self.get_valuation(obs_profile, index_agent)
 
-        allocation = self.get_allocation(bids, idx)
-        payment = self.get_payment(bids, allocation, idx)
+        allocation = self.get_allocation(bids_profile, index_agent)
+        payment = self.get_payment(bids_profile, allocation, index_agent)
 
         return allocation[0] * (payment[0] - valuation) + allocation[1] * (
             payment[1] - self.scale * valuation
@@ -128,31 +132,6 @@ class SplitAwardAuction(Mechanism):
 
         else:
             raise ValueError("payment rule " + self.payment_rule + " not available")
-
-    def get_valuation(self, obs: np.ndarray, bids: np.ndarray, idx: int) -> np.ndarray:
-        """determine valuations (potentially from observations, might be equal for private value model)
-        and reformat vector depending on the use case (specific for split-award)
-            - one valuation for each action profile (no reformatting), needed for simulation
-            - all valuations for each action profule (reformatting), needed for gradient computation (game.py)
-
-        Args:
-            obs (np.ndarray): observation of agent (idx)
-            bids (np.ndarray): bids of all agents
-            idx (int): index of agent
-
-        Returns:
-            np.ndarray: observations, possibly reformated
-        """
-        if self.value_model == "private":
-            if obs.shape != bids[idx][0].shape:
-                valuations = obs.reshape(len(obs), 1)
-            else:
-                valuations = obs
-        else:
-            raise NotImplementedError(
-                "get valuation only implemented for the private value model"
-            )
-        return valuations
 
     def get_bne(self, agent: str, obs: np.ndarray):
         return self.equilibrium_pooling(agent, obs, bound="upper")
