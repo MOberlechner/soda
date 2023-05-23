@@ -105,7 +105,7 @@ class LLGAuction(Mechanism):
 
         if self.payment_rule == "nearest_zero":
             if idx == 2:  # global bidder
-                payment = bids[:2].sum(axis=0)
+                potential_payment = bids[:2].sum(axis=0)
             else:  # local bidder
                 case_a = bids[2] <= 2 * bids[:2].min(axis=0)
                 potential_payment = case_a * 0.5 * bids[2] + (1 - case_a) * np.where(
