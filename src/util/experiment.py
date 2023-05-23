@@ -31,7 +31,7 @@ class Experiment:
         path_exp: str,
         round_decimal: int,
     ) -> None:
-        """_summary_
+        """Initialize Experiment
 
         Args:
             mechanism_type (str): mechanism type
@@ -90,9 +90,7 @@ class Experiment:
             )
 
     def run(self) -> None:
-        """
-        run experiment
-        """
+        """run experiment, i.e., learning and simulation"""
         # run learning
         if self.learning:
             try:
@@ -113,7 +111,7 @@ class Experiment:
             f"Experiment - {self.mechanism_type}-{self.experiment}-{self.learn_alg} - finished\n"
         )
 
-    def run_learning(self):
+    def run_learning(self) -> None:
         """run learning of strategies"""
         print(" - Learning:")
         t0 = time()
@@ -155,7 +153,7 @@ class Experiment:
 
         self.logger.log_learning()
 
-    def run_simulation(self):
+    def run_simulation(self) -> None:
         """run simulation for computed strategies"""
         print(" - Simulation:")
 
@@ -195,7 +193,7 @@ class Experiment:
         self.logger.log_simulation()
         print(" - run_simulation finished")
 
-    def save_strategies(self, run: int):
+    def save_strategies(self, run: int) -> None:
         """Save strategies for current experiment
 
         Args:
@@ -211,7 +209,7 @@ class Experiment:
                     save_init=self.save_init_strat,
                 )
 
-    def load_strategies(self, run: int):
+    def load_strategies(self, run: int) -> None:
         """Load strategies for current experiment
 
         Args:

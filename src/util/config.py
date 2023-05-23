@@ -1,5 +1,5 @@
 import os
-from typing import Dict
+from typing import Dict, Tuple
 
 import yaml
 from yaml.loader import SafeLoader
@@ -47,7 +47,9 @@ class Config:
     ):
         """Initialize Config Class"""
 
-    def create_setting(self, mechanism_type: str, experiment: str, learn_alg: str):
+    def create_setting(
+        self, mechanism_type: str, experiment: str, learn_alg: str
+    ) -> Tuple[Game, Learner]:
         """create game and learner according to config file.
 
         Args:
@@ -63,7 +65,7 @@ class Config:
 
         return game, learner
 
-    def get_config_game(self, mechanism_type: str, experiment: str):
+    def get_config_game(self, mechanism_type: str, experiment: str) -> None:
         """get configuration to create mechanism and game
 
         Args:
@@ -145,7 +147,7 @@ class Config:
             strategies[i].initialize(init_method, param_init)
         return strategies
 
-    def create_game(self):
+    def create_game(self) -> Game:
         """Create Mechanism and approximation game for configuration
 
         Args:
@@ -161,7 +163,7 @@ class Config:
             ValueError: Mechanism unknown
 
         Returns:
-            Game, Mechanism
+            Game
         """
         if not hasattr(self, "config_game"):
             raise ValueError("configuration for mechanism/game not created")
@@ -209,7 +211,7 @@ class Config:
 
         return game
 
-    def get_config_learner(self, setting: str, learn_alg: str):
+    def get_config_learner(self, setting: str, learn_alg: str) -> None:
         """get configuration to create mechanism and game
 
         Args:
@@ -243,7 +245,7 @@ class Config:
         tol: float,
         stop_criterion: str,
         param: Dict = {},
-    ):
+    ) -> None:
         """create config file to create learn algorithm
 
         Args:
@@ -303,7 +305,7 @@ class Config:
         else:
             raise ValueError(f"Learner {learn_alg} unknown.")
 
-    def get_path(self, path):
+    def get_path(self, path) -> None:
         """get path into config directory
 
         Args:

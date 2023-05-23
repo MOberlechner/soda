@@ -82,7 +82,7 @@ class Logger:
 
     # -------------------- methods to log results from computation --------------------
 
-    def log_learning(self):
+    def log_learning(self) -> None:
         """Main function to save logs from learning experiment.
         Should be called for each experiment after all runs.
         """
@@ -92,7 +92,7 @@ class Logger:
         else:
             print("Results not logged.")
 
-    def save_learning_run(self):
+    def save_learning_run(self) -> None:
         """Save csv from learning experiment"""
         if exists(self.path + self.filename_log_learning):
             log = pd.read_csv(self.path + self.filename_log_learning)
@@ -109,7 +109,7 @@ class Logger:
         iteration: int,
         time_init: float,
         time_run: float,
-    ):
+    ) -> None:
         """Log metrics created by learning process
 
         Args:
@@ -144,7 +144,7 @@ class Logger:
         # add entry to DataFrame
         self.file_log_learning = pd.concat([self.file_log_learning, df_rows])
 
-    def save_learning_aggr(self):
+    def save_learning_aggr(self) -> None:
         """Save aggregated csv from learning experiment"""
         df = self.log_learning_aggr()
         if df is not None:
@@ -194,7 +194,7 @@ class Logger:
 
     # -------------------- methods to log results from simulation --------------------
 
-    def log_simulation(self):
+    def log_simulation(self) -> None:
         """Main function to save logs from simulation experiment.
         Should be called for each experiment after all runs.
         """
@@ -204,7 +204,7 @@ class Logger:
         else:
             print("Results not logged.")
 
-    def save_simulation_run(self):
+    def save_simulation_run(self) -> None:
         """Save csv from learning experiment"""
         if exists(self.path + self.filename_log_simulation):
             log = pd.read_csv(self.path + self.filename_log_simulation)
@@ -239,7 +239,7 @@ class Logger:
             [self.file_log_simulation, pd.DataFrame(row)]
         )
 
-    def save_simulatioa_aggr(self):
+    def save_simulatioa_aggr(self) -> None:
         """Save aggregated csv from simulation experiment"""
         df = self.log_simulation_aggr()
         if df is not None:
@@ -250,7 +250,7 @@ class Logger:
                 log = df
             log.to_csv(self.path + self.filename_log_simulation_agg, index=False)
 
-    def log_simulation_aggr(self):
+    def log_simulation_aggr(self) -> pd.DataFrame:
         if self.file_log_simulation["run"].max() > 0:
             indices = ["experiment", "mechanism", "learner", "agent", "tag"]
             # mean
