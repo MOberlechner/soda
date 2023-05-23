@@ -16,9 +16,11 @@ class LLGAuction(Mechanism):
     Parameter Mechanism
         bidder, o_space, a_space - standard input for all mechanism (see class Mechanism)
 
+
     Parameter Prior (param_prior)
         distribution
         corr            float, correlation of observations/valuation of local bidders
+
 
     Parameter Utility (param_util)
         tiebreaking     str: specifies tiebreaking rule: random, lose or local
@@ -46,7 +48,7 @@ class LLGAuction(Mechanism):
     def utility(
         self, obs_profile: np.ndarray, bids_profile: np.ndarray, index_agent: int
     ) -> np.ndarray:
-        """_summary_
+        """Compute utility for LLG Auction
 
         Args:
             obs_profile (np.ndarray): observations of all agents
@@ -106,7 +108,7 @@ class LLGAuction(Mechanism):
                 payment = bids[:2].sum(axis=0)
             else:  # local bidder
                 case_a = bids[2] <= 2 * bids[:2].min(axis=0)
-                payment = case_a * 0.5 * bids[2] + (1 - case_a) * np.where(
+                potential_payment = case_a * 0.5 * bids[2] + (1 - case_a) * np.where(
                     bids[idx] == bids[:2].min(axis=0),
                     bids[idx],
                     bids[2] - bids[:2].min(axis=0),
@@ -114,32 +116,32 @@ class LLGAuction(Mechanism):
 
         elif self.payment_rule == "nearest_vcg":
             if idx == 2:  # global bidder
-                payment = bids[:2].sum(axis=0)
+                potential_payment = bids[:2].sum(axis=0)
             else:  # local bidders
                 vcg_payments = {
                     0: -bids[1] + np.maximum(bids[1], bids[2]),
                     1: -bids[0] + np.maximum(bids[0], bids[2]),
                 }
                 delta = 0.5 * (bids[2] - vcg_payments[0] - vcg_payments[1])
-                payment = vcg_payments[idx] + delta
+                potential_payment = vcg_payments[idx] + delta
 
         elif self.payment_rule == "nearest_bid":
             if idx == 2:  # global bidder
-                payment = bids[:2].sum(axis=0)
+                potential_payment = bids[:2].sum(axis=0)
             else:  # local bidders
                 case_a = bids[2] <= bids[:2].max(axis=0) - bids[:2].min(axis=0)
                 delta = 0.5 * (bids[:2].sum(axis=0) - bids[2])
-                payment = case_a * np.where(
+                potential_payment = case_a * np.where(
                     bids[idx] == bids[:2].max(axis=0), bids[2], 0
                 ) + (1 - case_a) * (bids[idx] - delta)
 
         elif self.payment_rule == "first_price":
-            payment = bids[idx]
+            potential_payment = bids[idx]
 
         else:
             raise ValueError("payment rule unknown")
 
-        return payment * np.where(allocation > 0, 1.0, 0.0)
+        return potential_payment * np.where(allocation > 0, 1.0, 0.0)
 
     def sample_types_uniform(self, n_types: int) -> np.ndarray:
         """owerwrite method from mechanism class:
