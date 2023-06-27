@@ -1,0 +1,15 @@
+bidder: ['1', '1']
+o_space: {'1': [1.0 ,1.4]}
+a_space: {'1': [[1.0 ,2.5], [0.3 ,1.2]]}
+param_prior: {
+  'distribution':'gaussian_trunc', 
+  'mu': 1.2, 
+  'sigma': 0.1,
+  }
+param_util: {
+  'tie_breaking': 'lose', 
+  'scale': 0.3,
+  'payment_rule': 'first_price',
+  }
+n: 32
+m: 64

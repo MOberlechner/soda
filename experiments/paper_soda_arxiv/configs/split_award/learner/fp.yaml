@@ -1,0 +1,5 @@
+learn_alg: 'fictitious_play'
+max_iter: 1000
+tol: 1e-4
+stop_criterion: 'util_loss'
+init_method: 'random'

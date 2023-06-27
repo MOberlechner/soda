@@ -1,0 +1,11 @@
+learn_alg: 'soma'
+max_iter: 1000
+tol: 1e-4
+stop_criterion: 'util_loss'
+parameter: {
+  "mirror_map": 'euclidean',
+  "steprule_bool": True,
+  "eta": 0.5,
+  "beta": 0.05,
+}
+init_method: 'random'
