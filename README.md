@@ -12,6 +12,16 @@ The code was created for the following paper [[arxiv]](https://arxiv.org/abs/220
 }
 ```
 
+## Experiments from Publications
+You can use the config files to reproduce the experiments from the publications
+
+- **Computing Bayes Nash Equilibrium Strategies in Auction Games via Simultaneous Online Dual Averaging** 
+<br> Martin Bichler, Maximilian Fichtl, Matthias Oberlechner [[arXiv:2208.02036](https://arxiv.org/abs/2208.02036)]
+<br> >> run experiments in [experiments/paper_soda_arxiv](https://github.com/MOberlechner/soda/tree/main/experiments/paper_soda_arxiv)
+- **Learning equilibrium in bilateral bargaining games**
+<br> Martin Bichler, Nils Kohring, Matthias Oberlechner, Fabian R Pieroth [[EJOR](https://www.sciencedirect.com/science/article/abs/pii/S0377221722009705)]
+<br> ... to be included ..
+
 ## What is implemented?
 
 We focus on incomplete-information (Bayesian) games with continuous type and action space. 
