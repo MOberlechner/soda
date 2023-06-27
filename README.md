@@ -12,36 +12,22 @@ The code was created for the following paper [[arxiv]](https://arxiv.org/abs/220
 }
 ```
 
-## Setup
+## What is implemented?
 
-Note: These setup instructions assume a Linux-based OS and uses python 3.8.10 (or higher).
+We focus on incomplete-information (Bayesian) games with continuous type and action space. 
+By discretizing the type and action space, and using distributional strategies apply standard (gradient-based) learning algorithms to approximate Bayes-Nash equilibria (BNE) of given mechanisms.
 
-Install virtualenv (or whatever you prefer for virtual envs)
+#### Mechanisms
 
-`sudo apt-get install virtualenv`
+- Single-Item Auctions (first- and second-price auctions with risk-aversion, ...)
+- All-Pay Auctions (first- and second-price, i.e. War of attrition)
+- LLG-Auction (small combinatorial auction with 2 items, 2 local bidders and 1 global bidder)
+- Split-Award Auction (procurement auction with 2 agent)
+- Tullock Contests
 
-Create a virtual environment with virtual env (you can also choose your own name)
+#### Learning Algorithms
 
-`virtualenv venv`
-
-You can specify the python version for the virtual environment via the -p flag. 
-Note that this version already needs to be installed on the system (e.g. `virtualenv - p python3 venv` uses the 
-standard python3 version from the system).
-
-activate the environment with
-
-`source ./venv/bin/activate`
-
-Install all requirements
-
-`pip install -r requirements.txt`
-
-**For development**: Install pre-commit hooks
-
-`pre-commit install`
-
-Verify by running on all files:
-
-`pre-commit run --all-files`
-
-For more information see https://pre-commit.com/.
+- Dual Averaging (Gradient ascent with lazy projection, exponentiated gradient ascent)
+- Mirror Ascent (projected gradientascent, exponentiated gradient ascent)
+- Frank-Wolfe Algorithm
+- Fictitious PLay
