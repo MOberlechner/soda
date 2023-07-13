@@ -20,24 +20,24 @@ You can use the config files to reproduce the experiments from the publications
 <br> >> run experiments in [experiments/paper_soda_arxiv](https://github.com/MOberlechner/soda/tree/main/experiments/paper_soda_arxiv)
 - **Learning equilibrium in bilateral bargaining games**
 <br> Martin Bichler, Nils Kohring, Matthias Oberlechner, Fabian R Pieroth [[EJOR](https://www.sciencedirect.com/science/article/abs/pii/S0377221722009705)]
-<br> ... to be included ..
+<br> ... to be included ...
 
 ## What is implemented?
 
 We focus on incomplete-information (Bayesian) games with continuous type and action space. 
-By discretizing the type and action space, and using distributional strategies apply standard (gradient-based) learning algorithms to approximate Bayes-Nash equilibria (BNE) of given mechanisms.
+By discretizing the type and action space, and using distributional strategies, we can apply standard (gradient-based) learning algorithms to approximate Bayes-Nash equilibria (BNE) of given mechanisms.
 
 #### Mechanisms
 
 - Single-Item Auctions (first- and second-price auctions with risk-aversion, ...)
 - All-Pay Auctions (first- and second-price, i.e. War of attrition)
-- LLG-Auction (small combinatorial auction with 2 items, 2 local bidders and 1 global bidder)
-- Split-Award Auction (procurement auction with 2 agent)
+- LLG-Auction (small combinatorial auction with 2 items, 2 local bidders, and 1 global bidder)
+- Split-Award Auction (procurement auction with 2 agents)
 - Tullock Contests
 
 #### Learning Algorithms
 
 - Dual Averaging (Gradient ascent with lazy projection, exponentiated gradient ascent)
-- Mirror Ascent (projected gradientascent, exponentiated gradient ascent)
+- Mirror Ascent (projected gradient ascent, exponentiated gradient ascent)
 - Frank-Wolfe Algorithm
-- Fictitious PLay
+- Fictitious Play
