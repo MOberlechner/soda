@@ -17,15 +17,13 @@ class Experiment:
 
     def __init__(
         self,
-        mechanism_type: str,
-        experiment: str,
-        learn_alg: str,
+        config_game: str,
+        config_learner: str,
         number_runs: int,
         learning: bool,
         simulation: bool,
         logging: bool,
         save_strat: bool,
-        path_config: str,
         number_samples: int,
         save_init_strat: bool,
         path_exp: str,
@@ -34,23 +32,20 @@ class Experiment:
         """Initialize Experiment
 
         Args:
-            mechanism_type (str): mechanism type
-            experiment (str): experiment, i.e., config file in mechanism directory
-            learn_alg (str): learning algorithm, i.e., config file in mechanism/learner directory
+            config_game (str): config file for game/mechanism
+            config_learner (str): config file for learner
             number_runs (int): number of repetitions of experiment
             learning (bool): run learning to learn strategies
             simulation (bool): run simulation to get metrics
             logging (bool): log results
             save_strat (bool): save strategies
-            path_config (str): _description_
             save_init_strat (bool, optional): path to directory containing the config files. Defaults to True.
             path_exp (str, optional): path to directory to save results. Defaults to "".
             round_decimal (int, optional): accuracy of metric in logger. Defaults to 3.
         """
 
-        self.mechanism_type = mechanism_type
-        self.experiment = experiment
-        self.learn_alg = learn_alg
+        self.config_game = config_game
+        self.config_learner = config_learner
 
         self.number_runs = number_runs
         self.learning = learning
@@ -62,32 +57,40 @@ class Experiment:
         self.logging = logging
         self.path_exp = self._get_path(path_exp)
 
-        # setup game and learner using config
-        print(f"Experiment - {mechanism_type}-{experiment}-{learn_alg} - started")
+        print(f"Experiment started".ljust(100, "."))
+        print(f" - game:    {self.config_game}\n - learner: {self.config_learner}")
+
         try:
-            self.config = Config()
-            self.config.get_path(path_config)
-            self.game, self.learner = self.config.create_setting(
-                mechanism_type, experiment, learn_alg
+            # setup game and learner using config
+            self.config = Config(self.config_game, self.config_learner)
+            self.game, self.learner = self.config.create_setting()
+
+            # initialize logger
+            self.label_mechanism = self.game.name
+            self.label_experiment = Path(self.config_game).stem
+            self.label_learner = Path(self.config_learner).stem
+            self.logger = Logger(
+                self.path_exp,
+                self.label_mechanism,
+                self.label_experiment,
+                self.label_learner,
+                logging,
+                round_decimal,
             )
+
+            # create directories (if necessary)
+            if self.logging or self.save_strat:
+                if self.path_exp == "":
+                    raise ValueError("path to store strategies/log-files not given")
+                Path(self.path_exp + "strategies/" + self.label_mechanism).mkdir(
+                    parents=True, exist_ok=True
+                )
             print(f" - Setting created ")
+
         except Exception as e:
             print(e)
             print(f" - Error: setting not created")
             self.learning, self.simulation = False, False
-
-        # create logger
-        self.logger = Logger(
-            self.path_exp, mechanism_type, experiment, learn_alg, logging, round_decimal
-        )
-
-        # create directory to save results (strategies or log-files)
-        if self.logging or self.save_strat:
-            if self.path_exp == "":
-                raise ValueError("path to store strategies/log-files not given")
-            Path(self.path_exp + "strategies/" + mechanism_type).mkdir(
-                parents=True, exist_ok=True
-            )
 
     def run(self) -> None:
         """run experiment, i.e., learning and simulation"""
@@ -106,10 +109,7 @@ class Experiment:
             except Exception as e:
                 print(e)
                 print("- Error in Simulation")
-
-        print(
-            f"Experiment - {self.mechanism_type}-{self.experiment}-{self.learn_alg} - finished\n"
-        )
+        print(f"Done ".ljust(100, ".") + "\n")
 
     def run_learning(self) -> None:
         """run learning of strategies"""
@@ -126,14 +126,11 @@ class Experiment:
             unit_scale=True,
             bar_format="{l_bar}{bar:20}{r_bar}{bar:-10b}",
             colour="green",
+            desc="   Progress",
         ):
 
             # init strategies
-            init_method = self.config.config_learner["init_method"]
-            param_init = self.config.config_learner["param_init"]
-            self.strategies = self.config.create_strategies(
-                self.game, init_method, param_init
-            )
+            self.strategies = self.config.create_strategies(self.game)
 
             # run learning algorithm
             t0 = time()
@@ -163,6 +160,7 @@ class Experiment:
             unit_scale=True,
             bar_format="{l_bar}{bar:20}{r_bar}{bar:-10b}",
             colour="blue",
+            desc="   Progress",
         ):
 
             # load computed strategies
@@ -186,7 +184,6 @@ class Experiment:
                     )
                     for tag, val in zip(metrics, values):
                         self.logger.log_simulation_run(run, i, tag, val)
-
             else:
                 break
 
@@ -200,11 +197,11 @@ class Experiment:
             run (int): current repetition of experiment
         """
         if self.save_strat:
-            name = f"{self.learn_alg}_{self.experiment}_run_{run}"
+            name = f"{self.label_learner}_{self.label_experiment}_run_{run}"
             for i in self.strategies:
                 self.strategies[i].save(
                     name=name,
-                    setting=self.mechanism_type,
+                    setting=self.label_mechanism,
                     path=self.path_exp,
                     save_init=self.save_init_strat,
                 )
@@ -217,11 +214,11 @@ class Experiment:
         """
         # init strategies
         self.strategies = self.config.create_strategies(self.game)
-        name = f"{self.learn_alg}_{self.experiment}_run_{run}"
+        name = f"{self.label_learner}_{self.label_experiment}_run_{run}"
         for i in self.strategies:
             self.strategies[i].load(
                 name=name,
-                setting=self.mechanism_type,
+                setting=self.label_mechanism,
                 path=self.path_exp,
             )
 
