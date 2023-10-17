@@ -7,8 +7,8 @@ PATH_TO_CONFIGS = "configs/"
 PATH_TO_EXPERIMENTS = "experiments/test/"
 
 NUMBER_RUNS = 3
-LEARNING = (True,)
-SIMULATION = (True,)
+LEARNING = True
+SIMULATION = True
 
 LOGGING = True
 SAVE_STRAT = True
