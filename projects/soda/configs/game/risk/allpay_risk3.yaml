@@ -1,0 +1,16 @@
+mechanism: soda.mechanism.all_pay.AllPayAuction
+bidder: ['1', '1']
+o_space:
+  '1': [0.0 ,1.0]
+a_space: 
+  '1': [0.0, 0.8]
+param_prior: 
+  distribution: 'uniform'
+param_util:
+  tie_breaking: 'lose'
+  payment_rule: 'first_price'
+  type: 'value'
+  utility_type: 'CRRA'
+  risk_parameter: 0.8
+n: 64
+m: 64
