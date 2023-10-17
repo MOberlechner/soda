@@ -1,7 +1,0 @@
-bidder: ['S', 'B']
-o_space: {'S': [0.0 ,1.0], 'B':[0.0, 1.0]}
-a_space: {'S': [0.0 ,1.0], 'B':[0.0, 1.0]}
-param_prior: {'distribution':'uniform'}
-param_util: {'payment_rule': 'average'}
-n: 64
-m: 64
