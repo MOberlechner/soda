@@ -3,9 +3,12 @@ from typing import Dict, List
 import numpy as np
 
 from soda.game import Game
-from soda.mechanism.mechanism import Mechanism
+from soda.mechanism.mechanism import (
+    Mechanism,
+    compute_probability_winning,
+    get_allocation_single_item,
+)
 from soda.strategy import Strategy
-from soda.util import mechanism_util
 
 # -------------------------------------------------------------------------------------------------------------------- #
 #                                             SINGLE-ITEM AUCTION                                                      #
@@ -179,7 +182,7 @@ class SingleItemAuction(Mechanism):
         Returns:
             np.ndarray: allocation vector for agent idx
         """
-        return mechanism_util.get_allocation_single_item(bids, idx, self.tie_breaking)
+        return get_allocation_single_item(bids, idx, self.tie_breaking)
 
     def compute_valuations_from_observations(
         self, obs_profile: np.ndarray
@@ -421,7 +424,7 @@ class SingleItemAuction(Mechanism):
         Returns:
             np.ndarray: gradient for agent
         """
-        prob_win = mechanism_util.compute_probability_winning(game, strategies, agent)
+        prob_win = compute_probability_winning(game, strategies, agent)
 
         # utility type
         obs_grid = (
