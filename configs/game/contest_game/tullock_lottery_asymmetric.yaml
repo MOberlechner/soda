@@ -1,4 +1,4 @@
-mechanism: src.mechanism.contest_game.ContestGame
+mechanism: soda.mechanism.contest_game.ContestGame
 bidder: ['weak', 'strong']
 o_space:
   weak: [0.0 ,1.0]

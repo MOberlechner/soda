@@ -1,4 +1,4 @@
-mechanism: src.mechanism.llg_auction.LLGAuction
+mechanism: soda.mechanism.llg_auction.LLGAuction
 bidder: ['L', 'L', 'G']
 o_space:
   L: [0.0 ,1.0]

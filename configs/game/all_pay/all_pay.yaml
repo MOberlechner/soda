@@ -1,4 +1,4 @@
-mechanism: src.mechanism.all_pay.AllPayAuction
+mechanism: soda.mechanism.all_pay.AllPayAuction
 bidder: ['1', '1']
 o_space:
   '1': [0.0 ,1.0]
