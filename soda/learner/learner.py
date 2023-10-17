@@ -191,8 +191,6 @@ class Learner:
 
 # Additional Functions used by several learning algorithms
 
-import numpy as np
-
 
 def project_euclidean(x: np.ndarray, prior: np.ndarray) -> np.ndarray:
     """Projection w.r.t. Euclidean distance
