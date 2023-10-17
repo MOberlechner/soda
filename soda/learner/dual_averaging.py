@@ -1,7 +1,6 @@
 import numpy as np
 
-from soda.learner.learner import Learner
-from soda.util import learner_util
+from soda.learner.learner import Learner, project_euclidean
 
 
 class SODA(Learner):
@@ -94,7 +93,7 @@ class SODA(Learner):
             tuple (np.ndarray): next dual and primal iterate
         """
         y += eta_t * grad
-        x = learner_util.project_euclidean(y, prior)
+        x = project_euclidean(y, prior)
         return x, y
 
     def update_step_entropic(
