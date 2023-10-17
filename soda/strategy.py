@@ -896,60 +896,39 @@ class Strategy:
 
     # -------------------------------------- METHODS USED TO SAVE AND LOAD --------------------------------------- #
 
-    def _get_path_file(
-        self, path: str, setting: str, name: str, appendix: str = ""
-    ) -> str:
-        """Get file name to save or load strategy
-
-        Args:
-            path (str): path to experiment directory
-            setting (str): mechanism
-            name (str): name of file
-            appendix (str): add appendix to file name
-
-        Returns:
-            str: file name
-        """
-        return f"{path}strategies/{setting}/{name}_agent_{self.agent}{appendix}.npy"
-
-    def save(self, name: str, setting: str, path: str, save_init: bool = False):
+    def save(self, name: str, path: str, save_init: bool = False):
         """Save strategy
 
         Args:
             name (str): name of strategy
-            setting (str): mechanism
-            path (str): path to experiment directory
+            path (str): path to strategy-directory
             save_init (bool, optional): Save initial strategy. Defaults to False.
         """
-        filename = self._get_path_file(path, setting, name)
+        filename = os.path.join(path, name) + ".npy"
         np.save(filename, self.x)
         if save_init:
-            filename_init = self._get_path_file(path, setting, name, appendix="_init")
+            filename_init = os.path.join(path, name) + "_init.npy"
             np.save(filename_init, self.history[0])
 
-    def load(self, name: str, setting: str, path: str) -> None:
+    def load(self, name: str, path: str, load_init: bool = False) -> None:
         """Load saved strategy
 
         Args:
             name (str): name of strategy
-            setting (str): mechanism
             path (str): path to experiment directory
         """
-        filename = self._get_path_file(path, setting, name)
+        filename = os.path.join(path, name) + (".npy" if not load_init else "_init.npy")
         try:
             self.x = np.load(filename)
         except:
             print(f"File {filename} not found.")
             self.x = None
 
-    def load_scale(
-        self, name: str, setting: str, path: str, n_scaled: int, m_scaled
-    ) -> None:
+    def load_scale(self, name: str, path: str, n_scaled: int, m_scaled) -> None:
         """Get a upscaled version of a strategy
 
         Args:
             name (str): name of saved strategy
-            setting (str): mechanism
             path (str): path to experiment directory
             n_scaled (int): discretization (type) in the larger setting
             m_scaled (_type_): discretization (action) in the larger setting
@@ -959,7 +938,7 @@ class Strategy:
             NotImplementedError: _description_
         """
         try:
-            filename = self._get_path_file(path, setting, name)
+            filename = os.path.join(path, name) + ".npy"
             strat = np.load(filename)
             bool_strat_loaded = True
 
