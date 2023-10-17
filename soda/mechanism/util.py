@@ -1,10 +1,10 @@
-from typing import Dict, List
+from typing import Dict
 
 import numpy as np
 from scipy.special import binom
 
-from src.game import Game
-from src.strategy import Strategy
+from soda.game import Game
+from soda.strategy import Strategy
 
 
 def get_allocation_single_item(

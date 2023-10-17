@@ -1,4 +1,4 @@
-mechanism: src.mechanism.single_item.SingleItemAuction
+mechanism: soda.mechanism.single_item.SingleItemAuction
 bidder: ['1', '1', '1']
 o_space:
   '1': [0.0 ,2.0]

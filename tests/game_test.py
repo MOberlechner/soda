@@ -4,8 +4,8 @@ This module tests the game class, which is used to create the approximation game
 import numpy as np
 import pytest
 
-from src.game import Game
-from src.mechanism.single_item import SingleItemAuction
+from soda.game import Game
+from soda.mechanism.single_item import SingleItemAuction
 
 
 @pytest.fixture

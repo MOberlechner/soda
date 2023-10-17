@@ -1,6 +1,6 @@
 from typing import List
 
-from src.util.experiment import Experiment
+from soda.util.experiment import Experiment
 
 
 def main(

@@ -4,10 +4,10 @@ This module tests the contest games
 import numpy as np
 import pytest
 
-from src.game import Game
-from src.learner.gradient import Gradient
-from src.mechanism.contest_game import ContestGame
-from src.strategy import Strategy
+from soda.game import Game
+from soda.learner.gradient import Gradient
+from soda.mechanism.contest_game import ContestGame
+from soda.strategy import Strategy
 
 
 @pytest.fixture

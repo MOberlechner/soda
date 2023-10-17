@@ -1,4 +1,4 @@
-mechanism: src.mechanism.double_auction.DoubleAuction
+mechanism: soda.mechanism.double_auction.DoubleAuction
 bidder: ['S', 'B']
 o_space:
   S: [0.0 ,30.0]  

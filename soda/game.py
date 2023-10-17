@@ -3,8 +3,8 @@ from typing import List
 
 import numpy as np
 
-from src.mechanism.mechanism import Mechanism
-from src.prior import compute_weights, marginal_prior_pdf
+from soda.mechanism.mechanism import Mechanism
+from soda.prior import compute_weights, marginal_prior_pdf
 
 # -------------------------------------------------------------------------------------------------------------------- #
 #                                      CLASS GAME : DISCRETIZED AUCTION GAME                                           #

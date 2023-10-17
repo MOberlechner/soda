@@ -3,11 +3,11 @@ from typing import Dict
 import numpy as np
 from scipy.stats import wasserstein_distance
 
-from src.game import Game
-from src.learner.gradient import Gradient
-from src.learner.soda import SODA
-from src.mechanism.mechanism import Mechanism
-from src.strategy import Strategy
+from soda.game import Game
+from soda.learner.dual_averaging import SODA
+from soda.learner.gradient import Gradient
+from soda.mechanism.mechanism import Mechanism
+from soda.strategy import Strategy
 
 
 def compute_l2_norm(

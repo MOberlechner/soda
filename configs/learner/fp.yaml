@@ -1,4 +1,4 @@
-learner: src.learner.fictitious_play.FictitiousPlay
+learner: soda.learner.fictitious_play.FictitiousPlay
 max_iter: 1000
 tol: 1e-4
 stop_criterion: 'util_loss'

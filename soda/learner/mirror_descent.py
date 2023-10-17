@@ -1,7 +1,6 @@
 import numpy as np
 
-from src.learner.learner import Learner
-from src.util import learner_util
+from soda.learner.learner import Learner, project_euclidean
 
 
 class SOMA(Learner):
@@ -78,7 +77,7 @@ class SOMA(Learner):
         Returns:
             np.ndarray: next iterate
         """
-        return learner_util.project_euclidean(x + grad * eta_t, prior)
+        return project_euclidean(x + grad * eta_t, prior)
 
     def update_step_entropic(
         self,
