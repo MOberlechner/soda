@@ -25,9 +25,9 @@ class Experiment:
         logging: bool,
         save_strat: bool,
         number_samples: int,
-        save_init_strat: bool,
         path_exp: str,
-        round_decimal: int,
+        round_decimal: int = 5,
+        experiment_tag: str = "",
     ) -> None:
         """Initialize Experiment
 
@@ -39,9 +39,9 @@ class Experiment:
             simulation (bool): run simulation to get metrics
             logging (bool): log results
             save_strat (bool): save strategies
-            save_init_strat (bool, optional): path to directory containing the config files. Defaults to True.
-            path_exp (str, optional): path to directory to save results. Defaults to "".
-            round_decimal (int, optional): accuracy of metric in logger. Defaults to 3.
+            path_exp (str, optional): path to directory to save results.
+            round_decimal (int, optional): accuracy of metric in logger. Defaults to 5.
+            experiment_tag (str, optional): name for a group of different settings. Allows us to structure our results in different experiments. If not specified, we group the results by mechanism.
         """
 
         self.config_game = config_game
@@ -53,9 +53,7 @@ class Experiment:
         self.number_samples = number_samples
 
         self.save_strat = save_strat
-        self.save_init_strat = save_init_strat
         self.logging = logging
-        self.path_exp = self._get_path(path_exp)
 
         print(f"Experiment started".ljust(100, "."))
         print(f" - game:    {self.config_game}\n - learner: {self.config_learner}")
@@ -65,26 +63,33 @@ class Experiment:
             self.config = Config(self.config_game, self.config_learner)
             self.game, self.learner = self.config.create_setting()
 
-            # initialize logger
             self.label_mechanism = self.game.name
-            self.label_experiment = Path(self.config_game).stem
+            self.experiment_tag = (
+                experiment_tag if experiment_tag != "" else self.label_mechanism
+            )
+            self.label_setting = Path(self.config_game).stem
             self.label_learner = Path(self.config_learner).stem
+
+            # create directories (if necessary)
+            self.path_log = os.path.join(path_exp, "log", self.experiment_tag)
+            self.path_strat = os.path.join(path_exp, "strategies", self.experiment_tag)
+
+            if self.logging:
+                Path(self.path_log).mkdir(parents=True, exist_ok=True)
+
+            if self.save_strat:
+                Path(self.path_strat).mkdir(parents=True, exist_ok=True)
+
+            # initialize logger
             self.logger = Logger(
-                self.path_exp,
+                self.path_log,
+                self.experiment_tag,
                 self.label_mechanism,
-                self.label_experiment,
+                self.label_setting,
                 self.label_learner,
                 logging,
                 round_decimal,
             )
-
-            # create directories (if necessary)
-            if self.logging or self.save_strat:
-                if self.path_exp == "":
-                    raise ValueError("path to store strategies/log-files not given")
-                Path(self.path_exp + "strategies/" + self.label_mechanism).mkdir(
-                    parents=True, exist_ok=True
-                )
             print(f" - Setting created ")
 
         except Exception as e:
@@ -117,7 +122,7 @@ class Experiment:
         t0 = time()
         if not self.game.mechanism.own_gradient:
             self.game.get_utility()
-            print(" - utilities of approximation game computed")
+            print("    utilities of approximation game computed")
         time_init = time() - t0
 
         # repeat experiment
@@ -126,7 +131,7 @@ class Experiment:
             unit_scale=True,
             bar_format="{l_bar}{bar:20}{r_bar}{bar:-10b}",
             colour="green",
-            desc="   Progress",
+            desc="    Progress",
         ):
 
             # init strategies
@@ -160,7 +165,7 @@ class Experiment:
             unit_scale=True,
             bar_format="{l_bar}{bar:20}{r_bar}{bar:-10b}",
             colour="blue",
-            desc="   Progress",
+            desc="    Progress",
         ):
 
             # load computed strategies
@@ -197,13 +202,12 @@ class Experiment:
             run (int): current repetition of experiment
         """
         if self.save_strat:
-            name = f"{self.label_learner}_{self.label_experiment}_run_{run}"
+            name = f"{self.label_learner}_{self.label_setting}_run_{run}"
             for i in self.strategies:
                 self.strategies[i].save(
                     name=name,
-                    setting=self.label_mechanism,
-                    path=self.path_exp,
-                    save_init=self.save_init_strat,
+                    path=self.path_strat,
+                    save_init=True,
                 )
 
     def load_strategies(self, run: int) -> None:
@@ -214,22 +218,9 @@ class Experiment:
         """
         # init strategies
         self.strategies = self.config.create_strategies(self.game)
-        name = f"{self.label_learner}_{self.label_experiment}_run_{run}"
+        name = f"{self.label_learner}_{self.label_setting}_run_{run}"
         for i in self.strategies:
             self.strategies[i].load(
                 name=name,
-                setting=self.label_mechanism,
-                path=self.path_exp,
+                path=self.path_strat,
             )
-
-    def _get_path(self, path_dir: str = "experiments/test/") -> str:
-        """Get path to project (soda) and directory for experiment
-
-        Args:
-            path_dir (str): path from project directory to experiment directory
-
-        Returns:
-            path (str): path to experiment directory
-        """
-        path_into_project = os.getcwd().split("soda")[0] + "soda/"
-        return path_into_project + path_dir

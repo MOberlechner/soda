@@ -1,28 +1,38 @@
 from itertools import product
 from time import time
 
+from projects.soda.config_exp import *
 from soda.util.experiment import Experiment
 
-PATH_TO_CONFIGS = "configs/"
-PATH_TO_EXPERIMENTS = "experiments/test/"
-
-NUMBER_RUNS = 3
-LEARNING = True
-SIMULATION = True
-
-LOGGING = True
-SAVE_STRAT = True
-NUMBER_SAMPLES = int(2**22)
-ROUND_DECIMALS = 3
-
-EXPERIMENT_TAG = "main"
-games = ["all_pay/all_pay.yaml", "contest_game/tullock_contest_linear.yaml"]
-
-learner = [
-    "sofw.yaml",
+allpay_game = [
+    "risk/allpay_risk0.yaml",
+    "risk/allpay_risk1.yaml",
+    "risk/allpay_risk2.yaml",
+    "risk/allpay_risk3.yaml",
+    "risk/allpay_risk4.yaml",
+    "risk/allpay_risk5.yaml",
 ]
-
-experiment_list = list(product(games, learner))
+allpay_learner = [
+    "soda1_eta25_beta05.yaml",
+]
+fpsb_game = [
+    "risk/fpsb_risk0.yaml",
+    "risk/fpsb_risk1.yaml",
+    "risk/fpsb_risk2.yaml",
+    "risk/fpsb_risk3.yaml",
+    "risk/fpsb_risk4.yaml",
+    "risk/fpsb_risk5.yaml",
+]
+fpsb_learner = [
+    "soda1_eta20_beta05.yaml",
+    "soda2_eta01_beta05.yaml",
+    "soma2_eta05_beta50.yaml",
+    "sofw.yaml",
+    "fp.yaml",
+]
+experiment_list = list(product(allpay_game, allpay_learner)) + list(
+    product(fpsb_game, fpsb_learner)
+)
 
 if __name__ == "__main__":
     print(f"\nRunning {len(experiment_list)} Experiments".ljust(100, "."), "\n")
@@ -39,9 +49,9 @@ if __name__ == "__main__":
             LOGGING,
             SAVE_STRAT,
             NUMBER_SAMPLES,
+            SAVE_INIT_STRAT,
             PATH_TO_EXPERIMENTS,
             ROUND_DECIMALS,
-            EXPERIMENT_TAG,
         )
         exp_handler.run()
     t1 = time()

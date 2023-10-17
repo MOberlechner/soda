@@ -11,10 +11,18 @@ The basic functionality can be seen in the [intro notebook](https://gitlab.lrz.d
 
 ---
 
-### References:
-- **package opt_einsum:** Daniel G. A. Smith and Johnnie Gray, opt_einsum - A Python package for optimizing contraction order for einsum-like expressions. Journal of Open Source Software, 2018, 3(26), 753
+### Notation
+Some notes on the general notation used in this project
 
-- **projection onto simplex** is based on "W. Wang and M. A. Carreira-Perpinan - Projection onto the probability simplex: An efficient algorithm with a simple proof, and an application" (https://arxiv.org/abs/1309.1541)
+| Variable | Description |
+| --- | --- |
+|`mechanism` | Describes the underlying mechanis,<br> e.g., all-pay auction, single-item auction, contest, ... |
+| `setting` |  A setting is a specific instance of a mechanism, <br> e.g. FPSB (single-item auction), with uniform prior and two agents. |
+| `game` | The discretized version of a specific setting |
+| `learner` | Denotes a specific learning method, <br> e.g., SODA, SOMA, ... |
+| `experiment` | An experiment consists of a setting (-> game) + learner. |
+| `experiment_tag` | Allows us to group experiments by using the same tag, <br> e.g., risk-aversion might contain different settings with different levels of risk aversion
+---
 
 
 ## Setup
@@ -22,32 +30,47 @@ The basic functionality can be seen in the [intro notebook](https://gitlab.lrz.d
 Note: These setup instructions assume a Linux-based OS and uses python 3.8.10 (or higher).
 
 Install virtualenv (or whatever you prefer for virtual envs)
-
-`sudo apt-get install virtualenv`
+```bash
+sudo apt-get install virtualenv
+```
 
 Create a virtual environment with virtual env (you can also choose your own name)
 
-`virtualenv venv`
+```bash
+virtualenv venv
+```
 
 You can specify the python version for the virtual environment via the -p flag. 
 Note that this version already needs to be installed on the system (e.g. `virtualenv - p python3 venv` uses the 
 standard python3 version from the system).
 
 activate the environment with
-
-`source ./venv/bin/activate`
-
+```bash
+source ./venv/bin/activate
+```
 Install all requirements
 
-`pip install -r requirements.txt`
+```bash
+pip install -r requirements.txt`
+```
+Install the soda package.
+
+```bash
+pip install -e .
+```
+You can also run "pip install ." if you don't want to edit the code. The "-e" flag ensures that pip does not copy the code but uses the editable files instead.
 
 ## Install pre-commit hooks (for development)
 Install pre-commit hooks for your project
 
-`pre-commit install`
+```bash
+pre-commit install
+```
 
 Verify by running on all files:
 
-`pre-commit run --all-files`
+```bash
+pre-commit run --all-files
+```
 
 For more information see https://pre-commit.com/.
