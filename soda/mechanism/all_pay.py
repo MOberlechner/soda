@@ -4,11 +4,8 @@ import numpy as np
 from scipy.special import binom
 
 from soda.game import Game
-from soda.mechanism.mechanism import (
-    Mechanism,
-    compute_probability_winning,
-    get_allocation_single_item,
-)
+from soda.mechanism.mechanism import Mechanism
+from soda.mechanism.util import compute_probability_winning, get_allocation_single_item
 from soda.strategy import Strategy
 
 # -------------------------------------------------------------------------------------------------------------------- #
