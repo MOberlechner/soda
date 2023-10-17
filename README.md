@@ -53,6 +53,12 @@ Install all requirements
 ```bash
 pip install -r requirements.txt`
 ```
+Install the soda package.
+
+```bash
+pip install -e .
+```
+You can also run "pip install ." if you don't want to edit the code. The "-e" flag ensures that pip does not copy the code but uses the editable files instead.
 
 ## Install pre-commit hooks (for development)
 Install pre-commit hooks for your project
