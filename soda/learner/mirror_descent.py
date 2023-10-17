@@ -1,5 +1,4 @@
 import numpy as np
-
 from src.learner.learner import Learner
 from src.util import learner_util
 

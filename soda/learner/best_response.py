@@ -1,6 +1,6 @@
 import numpy as np
 
-from .learner import Learner
+from soda.learner.learner import Learner
 
 
 class BestResponse(Learner):

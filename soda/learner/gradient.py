@@ -1,7 +1,6 @@
 from typing import Dict, List
 
 import numpy as np
-
 from src.game import Game
 from src.strategy import Strategy
 

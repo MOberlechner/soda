@@ -2,7 +2,6 @@ from itertools import product
 from typing import List
 
 import numpy as np
-
 from src.mechanism.mechanism import Mechanism
 from src.prior import compute_weights, marginal_prior_pdf
 

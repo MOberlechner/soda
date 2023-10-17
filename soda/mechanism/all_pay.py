@@ -2,7 +2,6 @@ from typing import Dict, List
 
 import numpy as np
 from scipy.special import binom
-
 from src.game import Game
 from src.mechanism.mechanism import Mechanism
 from src.strategy import Strategy

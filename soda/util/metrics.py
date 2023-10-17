@@ -2,10 +2,9 @@ from typing import Dict
 
 import numpy as np
 from scipy.stats import wasserstein_distance
-
 from src.game import Game
+from src.learner.dual_averaging import SODA
 from src.learner.gradient import Gradient
-from src.learner.soda import SODA
 from src.mechanism.mechanism import Mechanism
 from src.strategy import Strategy
 
