@@ -42,8 +42,8 @@ class Learner:
             stop_criterion (str): specify stopping criterion. Defaults to "util_loss"
         """
         self.name = "not defined"
-        self.max_iter = max_iter
-        self.tol = tol
+        self.max_iter = int(max_iter)
+        self.tol = float(tol)
         self.stop_criterion = stop_criterion
         self.param = param
 
