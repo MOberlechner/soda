@@ -1,19 +1,19 @@
 from itertools import product
 from time import time
 
+from projects.ad_auctions.config_exp import (
+    LOGGING,
+    NUMBER_SAMPLES,
+    PATH_TO_CONFIGS,
+    PATH_TO_EXPERIMENTS,
+    ROUND_DECIMALS,
+    SAVE_STRAT,
+)
 from soda.util.experiment import Experiment
 
-PATH_TO_CONFIGS = "projects/ad-auctions/configs/"
-PATH_TO_EXPERIMENTS = "experiments/ad_auctions/"
-
 NUMBER_RUNS = 10
-LEARNING = (True,)
-SIMULATION = (True,)
-
-LOGGING = True
-SAVE_STRAT = True
-NUMBER_SAMPLES = int(2**22)
-ROUND_DECIMALS = 5
+LEARNING = True
+SIMULATION = True
 
 EXPERIMENT_TAG = "revenue"
 games = [
