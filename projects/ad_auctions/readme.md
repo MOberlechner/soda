@@ -7,13 +7,13 @@ These are the numerical experiments for:
 ---
 
 ### Simulation
-- the results will be stored in `PATH_TO_EXPERIMENTS = "experiments/ad-auctions/"` 
-- the config files can be found in `PATH_TO_CONFIGS = "projects/ad-auction/configs/"`
+- the results will be stored in<br> `PATH_TO_EXPERIMENTS = "experiments/ad_auctions/"` 
+- the config files can be found in<br> `PATH_TO_CONFIGS = "projects/ad-auction/configs/"`
 
 To compute the strategies (learning) and evaluate them (simulation) run the following scripts (from the main directory of the repo).
 
 **Exp 1 - FPSB and SPSB for different utility models (large)**<br>
-*Number of settings: 10 (10 runs each), Runtime: ~?min*  <br>
+*Number of settings: 10 (10 runs each), Runtime: 18 min*  <br>
 Experiments to compute BNE for different utility models and compare expected revenue
 ```bash
 python projects/soda/simulation/run_revenue.py
