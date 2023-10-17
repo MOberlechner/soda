@@ -1,0 +1,13 @@
+PATH_TO_CONFIGS = "projects/soda/configs/"
+PATH_TO_EXPERIMENTS = "experiments/soda/"
+
+LEARNING = True
+SIMULATION = True
+
+NUMBER_RUNS = 10
+NUMBER_SAMPLES = int(2**22)
+
+LOGGING = True
+ROUND_DECIMALS = 3
+SAVE_INIT_STRAT = True
+SAVE_STRAT = True
