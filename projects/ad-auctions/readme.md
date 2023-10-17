@@ -1,7 +1,7 @@
 # Project: Ad-Auctions
 These are the numerical experiments for:
 
-**Low Revenue in Display Ad Auctions: Algorithmic Collusion vs. Non-Quasilinear Preferences**<br>
+>**Low Revenue in Display Ad Auctions: Algorithmic Collusion vs. Non-Quasilinear Preferences**<br>
 *Martin Bichler, Alok Gupta, Laura Mathews, Matthias Oberlechner (2023, Working Paper)*
 
 ---

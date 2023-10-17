@@ -1,8 +1,14 @@
 # Project: SODA
 
+These are the numerical experiments for
 
+>**Computing Bayes Nash Equilibrium Strategies in Auction Games via Simultaneous Online Dual Averaging.**<br>
+*Martin Bichler, Maximilian Fichtl, Matthias Oberlechner*<br>
+24th ACM Conference on Economics and Computation (ACM-EC), 2023
 
-## Simulation
+---
+
+### Simulation
 To compute the strategies (learning) and evaluate them (simulation) run the following scripts.
 The results will be stored in `experiments/soda/`
 
