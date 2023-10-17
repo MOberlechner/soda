@@ -2,10 +2,11 @@ from typing import Dict, List
 
 import numpy as np
 from scipy.special import binom
-from src.game import Game
-from src.mechanism.mechanism import Mechanism
-from src.strategy import Strategy
-from src.util import mechanism_util
+
+from soda.game import Game
+from soda.mechanism.mechanism import Mechanism
+from soda.strategy import Strategy
+from soda.util import mechanism_util
 
 # -------------------------------------------------------------------------------------------------------------------- #
 #                                                ALL-PAY AUCTION                                                       #

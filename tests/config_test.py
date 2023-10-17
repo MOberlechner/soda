@@ -8,9 +8,9 @@ from typing import Tuple
 import numpy as np
 import pytest
 
-from src.game import Game
-from src.learner.learner import Learner
-from src.util.config import Config
+from soda.game import Game
+from soda.learner.learner import Learner
+from soda.util.config import Config
 
 """ Add paths to config directories """
 path_to_config_dir = ["config/"]

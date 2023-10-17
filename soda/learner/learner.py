@@ -2,11 +2,12 @@ from time import sleep, time
 from typing import Dict, List, Tuple
 
 import numpy as np
-from src.game import Game
-from src.learner.gradient import Gradient
-from src.mechanism.mechanism import Mechanism
-from src.strategy import Strategy
 from tqdm import tqdm
+
+from soda.game import Game
+from soda.learner.gradient import Gradient
+from soda.mechanism.mechanism import Mechanism
+from soda.strategy import Strategy
 
 
 class Learner:

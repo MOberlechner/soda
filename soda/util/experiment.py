@@ -3,9 +3,10 @@ from pathlib import Path
 from time import time
 
 import numpy as np
-from src.util.config import Config
-from src.util.logging import Logger
 from tqdm import tqdm
+
+from soda.util.config import Config
+from soda.util.logging import Logger
 
 
 class Experiment:

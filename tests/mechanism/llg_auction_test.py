@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 from scipy.stats import pearsonr
 
-from src.mechanism.llg_auction import LLGAuction
+from soda.mechanism.llg_auction import LLGAuction
 
 
 @pytest.fixture

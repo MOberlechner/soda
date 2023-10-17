@@ -4,10 +4,10 @@ This module tests the all-pay mechanism
 import numpy as np
 import pytest
 
-from src.game import Game
-from src.learner.gradient import Gradient
-from src.mechanism.all_pay import AllPayAuction
-from src.strategy import Strategy
+from soda.game import Game
+from soda.learner.gradient import Gradient
+from soda.mechanism.all_pay import AllPayAuction
+from soda.strategy import Strategy
 
 
 @pytest.fixture

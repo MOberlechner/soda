@@ -1,5 +1,6 @@
 import numpy as np
-from src.learner.learner import Learner
+
+from soda.learner.learner import Learner
 
 
 class FictitiousPlay(Learner):

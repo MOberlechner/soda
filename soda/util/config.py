@@ -4,11 +4,12 @@ from pathlib import Path
 from typing import Dict, Tuple, Union
 
 import yaml
-from src.game import Game
-from src.learner.learner import Learner
-from src.mechanism.mechanism import Mechanism
-from src.strategy import Strategy
 from yaml.loader import SafeLoader
+
+from soda.game import Game
+from soda.learner.learner import Learner
+from soda.mechanism.mechanism import Mechanism
+from soda.strategy import Strategy
 
 
 def import_attribute(import_string: str):

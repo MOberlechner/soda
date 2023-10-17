@@ -1,6 +1,7 @@
 import numpy as np
-from src.learner.learner import Learner
-from src.util import learner_util
+
+from soda.learner.learner import Learner
+from soda.util import learner_util
 
 
 class SODA(Learner):
