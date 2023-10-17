@@ -54,8 +54,13 @@ class Game:
         self.dim_o, self.dim_a = self.mechanism.dim_o, self.mechanism.dim_a
 
         # discrete action and observation space (and optional valuation space)
+        midpoint_typespace = (
+            True
+            if "midpoint" not in self.mechanism.param_prior
+            else self.mechanism.param_prior["midpoint"]
+        )
         self.o_discr = {
-            i: Game.discr_spaces(mechanism.o_space[i], n, midpoint=True)
+            i: Game.discr_spaces(mechanism.o_space[i], n, midpoint=midpoint_typespace)
             for i in self.set_bidder
         }
         self.a_discr = {
@@ -63,7 +68,9 @@ class Game:
             for i in self.set_bidder
         }
         if hasattr(mechanism, "v_space"):
-            self.v_discr = Game.discr_spaces(mechanism.v_space, n, midpoint=True)
+            self.v_discr = Game.discr_spaces(
+                mechanism.v_space, n, midpoint=midpoint_typespace
+            )
 
         # marginal prior for bidder
         self.prior = {i: self.get_prior(i) for i in self.set_bidder}
