@@ -1,4 +1,4 @@
-learn_alg: 'frank_wolfe'
+learner: src.learner.frank_wolfe.FrankWolfe
 max_iter: 1000
 tol: 1e-4
 stop_criterion: 'util_loss'
@@ -6,5 +6,4 @@ parameter: {
   'method': 'standard',
   'steprule_bool': False,
 }
-
 init_method: 'random'
