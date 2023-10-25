@@ -49,9 +49,9 @@ if __name__ == "__main__":
             LOGGING,
             SAVE_STRAT,
             NUMBER_SAMPLES,
+            SAVE_INIT_STRAT,
             PATH_TO_EXPERIMENTS,
             ROUND_DECIMALS,
-            experiment_tag="risk",
         )
         exp_handler.run()
     t1 = time()

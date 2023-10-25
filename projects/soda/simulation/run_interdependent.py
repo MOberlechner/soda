@@ -8,10 +8,10 @@ game_affiliated = [
     "interdependent/affiliated_values.yaml",
 ]
 game_common = [
-    "interdependent/common_values_values.yaml",
+    "interdependent/common_value.yaml",
 ]
 learner_affiliated = [
-    "soda1_eta25_beta50.yaml",
+    "soda1_eta100_beta50.yaml",
     "soda2_eta1_beta50.yaml",
     "soma2_eta1_beta50.yaml",
     "sofw.yaml",
@@ -43,9 +43,9 @@ if __name__ == "__main__":
             LOGGING,
             SAVE_STRAT,
             NUMBER_SAMPLES,
-            SAVE_INIT_STRAT,
             PATH_TO_EXPERIMENTS,
             ROUND_DECIMALS,
+            experiment_tag="interdependent",
         )
         exp_handler.run()
     t1 = time()

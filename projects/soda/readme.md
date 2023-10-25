@@ -12,15 +12,16 @@ These are the numerical experiments for
 To compute the strategies (learning) and evaluate them (simulation) run the following scripts.
 The results will be stored in `experiments/soda/`
 
-**Exp 1 - Single-Object Auctions (Section 4.2)**<br>
+**Exp 1 "interdependent" - Single-Object Auctions (Section 4.2)**<br>
+Run experiments for single-item auctions with interdependencies, i.e., affiliated values auction and common value auction.
 ```bash
-python
+python projects/soda/simulation/run_interdependent.py
 ```
-<sub>Number of settings: x, Runtime: ~?min</sub>
+<sub>Number of settings: 10, Runtime: ~?min</sub>
 
-**Exp 2 - Combinatorial Auctions in the Local-Local-Global Model (Section 4.3.)**<br>
+**Exp 2 "llg" - Combinatorial Auctions in the Local-Local-Global Model (Section 4.3.)**<br>
 ```bash
-python
+python projects/soda/simulation/run_llg.py
 ```
 <sub>Number of settings: x, Runtime: ~?min</sub>
 
@@ -32,12 +33,12 @@ python
 ```
 <sub>Number of settings: x, Runtime: ~?min</sub>
 
-**Exp 4 - Single-Object Auctions with Risk-Averse Bidders (Section 4.5.)** <br>
+**Exp 4 "risk" - Single-Object Auctions with Risk-Averse Bidders (Section 4.5.)** <br>
 Run experiment for first-price sealed-bid auction and all-pay auction with different levels of risk aversion.
 ```bash
 python projects/soda/simulation/run_risk.py
 ```
-<sub>Number of settings: x, Runtime: ~?min</sub>
+<sub>Number of settings: 36 (x 10 runs ), runtime incl. simulation: ~15min</sub>
 
 **Exp 5 - Tullock Contests (Section 4.6.)**<br>
 ```bash
