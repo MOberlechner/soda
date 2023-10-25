@@ -4,7 +4,7 @@ from time import time
 from projects.soda.config_exp import *
 from soda.util.experiment import Experiment
 
-allpay_game = [
+game_allpay = [
     "risk/allpay_risk0.yaml",
     "risk/allpay_risk1.yaml",
     "risk/allpay_risk2.yaml",
@@ -12,10 +12,10 @@ allpay_game = [
     "risk/allpay_risk4.yaml",
     "risk/allpay_risk5.yaml",
 ]
-allpay_learner = [
+learner_allpay = [
     "soda1_eta25_beta05.yaml",
 ]
-fpsb_game = [
+game_fpsb = [
     "risk/fpsb_risk0.yaml",
     "risk/fpsb_risk1.yaml",
     "risk/fpsb_risk2.yaml",
@@ -23,15 +23,15 @@ fpsb_game = [
     "risk/fpsb_risk4.yaml",
     "risk/fpsb_risk5.yaml",
 ]
-fpsb_learner = [
+learner_fpsb = [
     "soda1_eta20_beta05.yaml",
     "soda2_eta01_beta05.yaml",
     "soma2_eta05_beta50.yaml",
     "sofw.yaml",
     "fp.yaml",
 ]
-experiment_list = list(product(allpay_game, allpay_learner)) + list(
-    product(fpsb_game, fpsb_learner)
+experiment_list = list(product(game_allpay, learner_allpay)) + list(
+    product(game_fpsb, learner_fpsb)
 )
 
 if __name__ == "__main__":
