@@ -4,34 +4,33 @@ from time import time
 from projects.soda.config_exp import *
 from soda.util.experiment import Experiment
 
-game_allpay = [
-    "risk/allpay_risk0.yaml",
-    "risk/allpay_risk1.yaml",
-    "risk/allpay_risk2.yaml",
-    "risk/allpay_risk3.yaml",
-    "risk/allpay_risk4.yaml",
-    "risk/allpay_risk5.yaml",
+game_llg = [
+    "llg/nb_gamma1.yaml",
+    "llg/nb_gamma2.yaml",
+    "llg/nb_gamma3.yaml",
+    "llg/nz_gamma1.yaml",
+    "llg/nz_gamma2.yaml",
+    "llg/nz_gamma3.yaml",
+    "llg/nvcg_gamma1.yaml",
+    "llg/nvcg_gamma2.yaml",
+    "llg/nvcg_gamma3.yaml",
 ]
-learner_allpay = [
-    "soda1_eta25_beta05.yaml",
+game_llg_fp = [
+    "llg/fp_gamma1.yaml",
+    "llg/fp_gamma2.yaml",
+    "llg/fp_gamma3.yaml",
 ]
-game_fpsb = [
-    "risk/fpsb_risk0.yaml",
-    "risk/fpsb_risk1.yaml",
-    "risk/fpsb_risk2.yaml",
-    "risk/fpsb_risk3.yaml",
-    "risk/fpsb_risk4.yaml",
-    "risk/fpsb_risk5.yaml",
-]
-learner_fpsb = [
-    "soda1_eta20_beta05.yaml",
-    "soda2_eta01_beta05.yaml",
-    "soma2_eta05_beta50.yaml",
+learner_llg = [
+    "soda1_eta100_beta05.yaml",
+    "soda2_eta50_beta05.yaml",
+    "soma2_eta50_beta05.yaml",
     "sofw.yaml",
     "fp.yaml",
 ]
-experiment_list = list(product(game_allpay, learner_allpay)) + list(
-    product(game_fpsb, learner_fpsb)
+learner_llg_fp = ["sofw.yaml"]
+
+experiment_list = list(product(game_llg, learner_llg)) + list(
+    product(game_llg_fp, learner_llg_fp)
 )
 
 if __name__ == "__main__":
@@ -49,9 +48,9 @@ if __name__ == "__main__":
             LOGGING,
             SAVE_STRAT,
             NUMBER_SAMPLES,
-            SAVE_INIT_STRAT,
             PATH_TO_EXPERIMENTS,
             ROUND_DECIMALS,
+            experiment_tag="llg",
         )
         exp_handler.run()
     t1 = time()

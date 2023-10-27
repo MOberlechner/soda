@@ -34,11 +34,11 @@ python
 <sub>Number of settings: x, Runtime: ~?min</sub>
 
 **Exp 4 "risk" - Single-Object Auctions with Risk-Averse Bidders (Section 4.5.)** <br>
-Run experiment for first-price sealed-bid auction and all-pay auction with different levels of risk aversion.
+Run experiment for first-price sealed-bid auction and all-pay auction with different levels of risk aversion. <br>
+Number of settings: 36 (x 10 runs ), runtime incl. simulation: 
 ```bash
 python projects/soda/simulation/run_risk.py
 ```
-<sub>Number of settings: 36 (x 10 runs ), runtime incl. simulation: ~15min</sub>
 
 **Exp 5 - Tullock Contests (Section 4.6.)**<br>
 ```bash
