@@ -8,30 +8,28 @@ These are the numerical experiments for
 
 ---
 
-### Simulation
+### Computation
 To compute the strategies (learning) and evaluate them (simulation) run the following scripts.
 The results will be stored in `experiments/soda/`
 
 **Exp 1 "interdependent" - Single-Object Auctions (Section 4.2)**<br>
 Run experiments for single-item auctions with interdependencies, i.e., affiliated values auction and common value auction.
 ```bash
-python projects/soda/simulation/run_interdependent.py
+python projects/soda/computation/run_interdependent.py
 ```
 <sub>Number of settings: 10, Runtime: ~?min</sub>
 
 **Exp 2 "llg" - Combinatorial Auctions in the Local-Local-Global Model (Section 4.3.)**<br>
 ```bash
-python projects/soda/simulation/run_llg.py
+python projects/soda/computation/run_llg.py
 ```
 <sub>Number of settings: x, Runtime: ~?min</sub>
 
-**Exp 3 - Combinatorial Split-Award Auction (Section 4.4.)** <br>
-*Number of settings: x, Runtime: ~?min*  <br>
-
+**Exp 3  "split_award" - Combinatorial Split-Award Auction (Section 4.4.)** <br>
+Number of settings: 10 (x 10 runs ), runtime incl. simulation: 
 ```bash
-python
+python projects/soda/simulation/run_split_award.py
 ```
-<sub>Number of settings: x, Runtime: ~?min</sub>
 
 **Exp 4 "risk" - Single-Object Auctions with Risk-Averse Bidders (Section 4.5.)** <br>
 Run experiment for first-price sealed-bid auction and all-pay auction with different levels of risk aversion. <br>
