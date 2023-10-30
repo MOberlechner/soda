@@ -102,7 +102,7 @@ class Learner:
                 t, strategies, min_max_value
             )
             if self.convergence:
-                self.t_max = t
+                t_max = t
                 break
 
             # update strategy
