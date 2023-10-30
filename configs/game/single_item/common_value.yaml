@@ -7,7 +7,8 @@ a_space:
 param_prior:
   distribution: 'common_value'
 param_util:
-  payment_rule: 'second_price'
   tie_breaking: 'lose'
+  payment_rule: 'second_price'
+  utility_type: 'QL'
 n: 64
 m: 64
