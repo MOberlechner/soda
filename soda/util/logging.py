@@ -176,18 +176,18 @@ class Logger:
                 .agg({c: "mean" for c in columns})
                 .reset_index()
             )
-            df_mean = df_mean.melt(indices, var_name="Metric", value_name="Mean")
+            df_mean = df_mean.melt(indices, var_name="metric", value_name="mean")
             # std
             df_std = (
                 self.file_log_learning.groupby(indices)
                 .agg({c: "std" for c in columns[:-1]})
                 .reset_index()
             )
-            df_std = df_std.melt(indices, var_name="Metric", value_name="Std")
+            df_std = df_std.melt(indices, var_name="metric", value_name="std")
             # combine
             return (
-                df_mean.merge(df_std, on=indices + ["Metric"], how="outer")
-                .sort_values(indices + ["Metric"])
+                df_mean.merge(df_std, on=indices + ["metric"], how="outer")
+                .sort_values(indices + ["metric"])
                 .round(self.round_decimal)
             )
         else:
