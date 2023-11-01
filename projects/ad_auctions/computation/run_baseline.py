@@ -26,7 +26,7 @@ games = [
 ]
 
 learner = [
-    "soda2_baseline.yaml",
+    "soma2_baseline.yaml",
 ]
 
 experiment_list = list(product(games, learner))

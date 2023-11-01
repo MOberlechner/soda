@@ -88,7 +88,8 @@ def plot_strategies_revenue(
     ax.set_ylim(0, 1)
     ax.set_xlim(0, 1)
     fig.savefig(
-        f"{path_save}/strategies_revenue_{payment_rule}.pdf", bbox_inches="tight"
+        f"{path_save}/strategies_revenue_{payment_rule}_{game.n_bidder}.pdf",
+        bbox_inches="tight",
     )
 
 
@@ -130,7 +131,7 @@ def plot_revenue(n_bidder: int, path_to_configs, path_to_experiments, path_save)
     ax.bar([-1], [1], label="First-Price", facecolor="white", edgecolor="k")
     ax.bar([-1], [1], label="Second-Price", hatch="//", color="white", edgecolor="k")
     ax.legend(fontsize=PARAM["fontsize_legend"], loc=2)
-    fig.savefig(f"{path_save}/revenue.pdf", bbox_inches="tight")
+    fig.savefig(f"{path_save}/revenue_{n_bidder}.pdf", bbox_inches="tight")
 
 
 if __name__ == "__main__":

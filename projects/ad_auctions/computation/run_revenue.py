@@ -30,7 +30,7 @@ games = [
 ]
 
 learner = [
-    "soda2_revenue.yaml",
+    "soda1_revenue.yaml",
 ]
 
 experiment_list = list(product(games, learner))
