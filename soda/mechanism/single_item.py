@@ -86,7 +86,7 @@ class SingleItemAuction(Mechanism):
         )
         return payoff
 
-    def get_revenue(self, bid_profile: np.ndarray) -> np.ndarray:
+    def revenue(self, bid_profile: np.ndarray) -> np.ndarray:
         """Compute revenue (sum of payments) for auctioneer
 
         Args:
