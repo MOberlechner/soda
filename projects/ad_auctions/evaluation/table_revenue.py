@@ -6,7 +6,7 @@ import pandas as pd
 from projects.ad_auctions.config_exp import PATH_TO_EXPERIMENTS
 
 
-def create_table(experiment_tag: str, round_dec: int) -> pd.DataFrame:
+def create_table_sim(experiment_tag: str, round_dec: int) -> pd.DataFrame:
 
     # Parameter
     file_learn = os.path.join(
@@ -47,7 +47,7 @@ def create_table(experiment_tag: str, round_dec: int) -> pd.DataFrame:
 if __name__ == "__main__":
 
     experiment_tag = "revenue"
-    df = create_table("revenue", round_dec=3)
+    df = create_table_sim("revenue", round_dec=3)
     table = df.to_markdown(
         index=False, tablefmt="pipe", colalign=["center"] * len(df.columns)
     )
