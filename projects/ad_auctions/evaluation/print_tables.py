@@ -51,4 +51,4 @@ if __name__ == "__main__":
     table = df.to_markdown(
         index=False, tablefmt="pipe", colalign=["center"] * len(df.columns)
     )
-    print("\nTABLE REVENUE\n", table, "\n")
+    print(f"\nTABLE REVENUE\n\n{table}\n")
