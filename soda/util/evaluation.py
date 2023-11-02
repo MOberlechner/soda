@@ -27,8 +27,8 @@ def get_results(
     """
 
     config = Config(
-        path_to_configs + "game/" + config_game,
-        path_to_configs + "learner/" + config_learner,
+        os.path.join(path_to_configs, "game", config_game),
+        os.path.join(path_to_configs, "learner/", config_learner),
     )
     game, learner = config.create_setting()
     strategies = config.create_strategies(game)
