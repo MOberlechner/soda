@@ -28,13 +28,13 @@ def get_results(
 
     config = Config(
         os.path.join(path_to_configs, "game", config_game),
-        os.path.join(path_to_configs, "learner/", config_learner),
+        os.path.join(path_to_configs, "learner", config_learner),
     )
     game, learner = config.create_setting()
     strategies = config.create_strategies(game)
 
-    learner_name = config_learner.split(".")[0]
-    game_name = config_game.split(".")[0]
+    learner_name = os.path.basename(config_learner).replace(".yaml", "")
+    game_name = os.path.basename(config_game).replace(".yaml", "")
     name = f"{learner_name}_{game_name}_run_{run}"
     path = os.path.join(path_to_experiment, "strategies", experiment_tag)
 
