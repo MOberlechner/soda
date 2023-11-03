@@ -16,24 +16,33 @@ LEARNING = True
 SIMULATION = True
 
 EXPERIMENT_TAG = "revenue"
-games = [
-    "ql_fp_2.yaml",
-    "ql_sp_2.yaml",
-    "roi_fp_2.yaml",
-    "roi_sp_2.yaml",
-    "rosb_fp_2.yaml",
-    "rosb_sp_2.yaml",
-    "ql_fp_3.yaml",
-    "ql_sp_3.yaml",
-    "roi_fp_3.yaml",
-    "roi_sp_3.yaml",
+games_uniform = [
+    "revenue/ql_fp_2.yaml",
+    "revenue/ql_sp_2.yaml",
+    "revenue/roi_fp_2.yaml",
+    "revenue/roi_sp_2.yaml",
+    "revenue/rosb_fp_2.yaml",
+    "revenue/rosb_sp_2.yaml",
+    "revenue/ql_fp_3.yaml",
+    "revenue/ql_sp_3.yaml",
+    "revenue/roi_fp_3.yaml",
+    "revenue/roi_sp_3.yaml",
+]
+
+games_gaussian = [
+    "revenue/gaus_ql_fp_2.yaml",
+    "revenue/gaus_ql_sp_2.yaml",
+    "revenue/gaus_roi_fp_2.yaml",
+    "revenue/gaus_roi_sp_2.yaml",
+    "revenue/gaus_rosb_fp_2.yaml",
+    "revenue/gaus_rosb_sp_2.yaml",
 ]
 
 learner = [
     "soda1_revenue.yaml",
 ]
 
-experiment_list = list(product(games, learner))
+experiment_list = list(product(games_uniform + games_gaussian, learner))
 
 if __name__ == "__main__":
     print(f"\nRunning {len(experiment_list)} Experiments".ljust(100, "."), "\n")

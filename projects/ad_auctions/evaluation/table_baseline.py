@@ -5,7 +5,11 @@ from typing import Dict
 import numpy as np
 import pandas as pd
 
-from projects.ad_auctions.config_exp import PATH_TO_CONFIGS, PATH_TO_EXPERIMENTS
+from projects.ad_auctions.config_exp import (
+    PATH_SAVE,
+    PATH_TO_CONFIGS,
+    PATH_TO_EXPERIMENTS,
+)
 from soda.game import Game
 from soda.strategy import Strategy
 from soda.util.config import Config
@@ -78,16 +82,15 @@ def create_table(games: list, learner: list) -> pd.DataFrame:
 if __name__ == "__main__":
 
     EXPERIMENT_TAG = "baseline"
-    PATH_SAVE = "projects/ad_auctions/results/"
     os.makedirs(PATH_SAVE, exist_ok=True)
 
     games = [
-        "baseline_ql_fp_3.yaml",
-        "baseline_ql_sp_3.yaml",
-        "baseline_roi_fp_3.yaml",
-        "baseline_roi_sp_3.yaml",
-        "baseline_rosb_fp_3.yaml",
-        "baseline_rosb_sp_3.yaml",
+        "baseline/ql_fp_3.yaml",
+        "baseline/ql_sp_3.yaml",
+        "baseline/roi_fp_3.yaml",
+        "baseline/roi_sp_3.yaml",
+        "baseline/rosb_fp_3.yaml",
+        "baseline/rosb_sp_3.yaml",
     ]
 
     learner = [

@@ -3,7 +3,7 @@ import os
 import numpy as np
 import pandas as pd
 
-from projects.ad_auctions.config_exp import PATH_TO_EXPERIMENTS
+from projects.ad_auctions.config_exp import PATH_SAVE, PATH_TO_EXPERIMENTS
 
 
 def create_table_sim(experiment_tag: str, round_dec: int) -> pd.DataFrame:
@@ -52,3 +52,5 @@ if __name__ == "__main__":
         index=False, tablefmt="pipe", colalign=["center"] * len(df.columns)
     )
     print(f"\nTABLE REVENUE\n\n{table}\n")
+
+    df.to_csv(os.path.join(PATH_SAVE, "table_revenue.csv"), index=False)
