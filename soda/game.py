@@ -85,14 +85,7 @@ class Game:
         """Compute utility array for discretized game
         For each agent an array is stored which contains all possible combinations of
         observations/valuations and bid profiles
-
-        Args:
-            mechanism: mechanism (e.g. auction game) which has a method utility
-
-        Raises:
-            ValueError: values unknown
         """
-
         for i in self.set_bidder:
             index_agent = self.bidder.index(i)
             bids = self.create_all_bid_profiles()

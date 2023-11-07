@@ -249,25 +249,17 @@ class Strategy:
             )
 
     # --------------------------------------- METHODS USED TO UPDATE METRICS ---------------------------------------- #
-    def update_utility(self, t: int):
-        """Compute and save current utility
+    def get_utility(self):
+        """Compute current utility"""
+        return (self.x * self.gradient).sum()
 
-        Args:
-            t (int): iteration
-            gradient (np.ndarray): current gradient
-        """
-        self.utility[t] = (self.x * self.gradient).sum()
-
-    def update_utility_loss(self, t: int):
+    def get_utility_loss(self):
         """Compute and save relative utility loss for current strategy
         Add 1e-20 so that we don't divide by zero
-
-        Args:
-            t (int): current iteration
         """
         util_br = (self.best_response(self.gradient) * self.gradient).sum()
         util = (self.x * self.gradient).sum()
-        self.utility_loss[t] = np.abs(
+        return np.abs(
             1 - util / (util_br if not np.isclose(util_br, 0, atol=1e-20) else 1e-20)
         )
 
@@ -324,8 +316,9 @@ class Strategy:
             gradient (np.ndarray): current gradient
             save_history_bool (bool): save history of strategies, gradients, ...
         """
-        self.update_utility(t)
-        self.update_utility_loss(t)
+        self.utility[t] = self.get_utility()
+        self.utility_loss[t] = self.get_utility_loss()
+
         self.update_dist_prev_iter(
             t,
         )

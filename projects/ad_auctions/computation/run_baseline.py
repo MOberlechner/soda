@@ -1,32 +1,32 @@
 from itertools import product
 from time import time
 
+from projects.ad_auctions.config_exp import (
+    LOGGING,
+    NUMBER_SAMPLES,
+    PATH_TO_CONFIGS,
+    PATH_TO_EXPERIMENTS,
+    ROUND_DECIMALS,
+    SAVE_STRAT,
+)
 from soda.util.experiment import Experiment
 
-PATH_TO_CONFIGS = "projects/ad-auctions/configs/"
-PATH_TO_EXPERIMENTS = "experiments/ad_auctions/"
-
 NUMBER_RUNS = 1
-LEARNING = (True,)
-SIMULATION = (False,)
-
-LOGGING = True
-SAVE_STRAT = True
-NUMBER_SAMPLES = int(2**22)
-ROUND_DECIMALS = 3
+LEARNING = True
+SIMULATION = False
 
 EXPERIMENT_TAG = "baseline"
 games = [
-    "baseline_ql_fp_3.yaml",
-    "baseline_ql_sp_3.yaml",
-    "baseline_roi_fp_3.yaml",
-    "baseline_roi_sp_3.yaml",
-    "baseline_rosb_fp_3.yaml",
-    "baseline_rosb_sp_3.yaml",
+    "baseline/ql_fp_3.yaml",
+    "baseline/ql_sp_3.yaml",
+    "baseline/roi_fp_3.yaml",
+    "baseline/roi_sp_3.yaml",
+    "baseline/rosb_fp_3.yaml",
+    "baseline/rosb_sp_3.yaml",
 ]
 
 learner = [
-    "soda2_baseline.yaml",
+    "soma2_baseline.yaml",
 ]
 
 experiment_list = list(product(games, learner))
