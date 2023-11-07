@@ -54,7 +54,6 @@ def get_runtimes(path_to_experiments: str, experiment_tag: str) -> pd.DataFrame:
     Returns:
         pd.DataFrame: df containing the runtimes
     """
-
     # import file
     file_log_learn = os.path.join(
         path_to_experiments, "log", experiment_tag, "log_learn.csv"
