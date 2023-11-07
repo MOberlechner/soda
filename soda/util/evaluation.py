@@ -42,3 +42,53 @@ def get_results(
         strategies[i].load(name, path, load_init=False)
 
     return game, learner, strategies
+
+
+def get_runtimes(path_to_experiments: str, experiment_tag: str) -> pd.DataFrame:
+    """Get runtimes for logging of learning
+
+    Args:
+        path_to_experiments (str): path to respective subdirectory of experiments
+        experiment_tag (str): experiment tag, i.e., subdirectory of log directory
+
+    Returns:
+        pd.DataFrame: df containing the runtimes
+    """
+
+    # import file
+    file_log_learn = os.path.join(
+        path_to_experiments, "log", experiment_tag, "log_learn.csv"
+    )
+    df = pd.read_csv(file_log_learn)
+
+    # get relevant columns and delete duplicates (due to several agents)
+    cols = ["mechanism", "setting", "learner", "run", "time_init", "time_run"]
+    df = df[cols].drop_duplicates().reset_index(drop=True)
+
+    # get runtimes (min, max)
+    df["time_total"] = df["time_init"] + df["time_run"]
+    df = df.groupby(["setting", "mechanism", "learner"]).agg(
+        {"time_init": "first", "time_run": ["min", "max"], "time_total": ["min", "max"]}
+    )
+    df = df.reset_index()
+
+    # create text for table
+    df["time"] = [
+        time_to_str(t_min=df["time_total"]["min"][i], t_max=df["time_total"]["max"][i])
+        for i in df.index
+    ]
+    return df
+
+
+def time_to_str(t_min, t_max) -> str:
+    """Method that brings runtime in format for table."""
+    if t_max < 100:
+        if t_min < 2:
+            return f"{t_min:.1f}-{t_max:.1f} s"
+        else:
+            return f"{t_min:.0f}-{t_max:.0f} s"
+    else:
+        if t_min < 300:
+            return f"{t_min/60:.1f}-{np.ceil(t_max/60):.1f} min"
+        else:
+            return f"{t_min/60:.0f}-{np.ceil(t_max/60):.0f} min"
