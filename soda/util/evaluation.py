@@ -25,11 +25,10 @@ def get_results(
         experiment_tag (str): experiment tag i.e. subdirectory in experiments
         run (int, optional): Run of experiment. Defaults to 0.
     """
+    config_game = os.path.join(path_to_configs, "game", config_game)
+    config_learner = os.path.join(path_to_configs, "learner", config_learner)
 
-    config = Config(
-        os.path.join(path_to_configs, "game", config_game),
-        os.path.join(path_to_configs, "learner", config_learner),
-    )
+    config = Config(config_game, config_learner)
     game, learner = config.create_setting()
     strategies = config.create_strategies(game)
 
