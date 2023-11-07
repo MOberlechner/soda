@@ -84,8 +84,28 @@ class SingleItemAuction(Mechanism):
         payoff = self.get_payoff(
             allocation=allocation, valuation=valuation, payment=payment
         )
-
         return payoff
+
+    def revenue(self, bid_profile: np.ndarray) -> np.ndarray:
+        """Compute revenue (sum of payments) for auctioneer
+
+        Args:
+            bid_profile (np.ndarray): bids of all agents
+
+        Returns:
+            np.ndarray: revenues
+        """
+        allocations = np.array(
+            [self.get_allocation(bid_profile, i) for i in range(self.n_bidder)]
+        )
+        payments = np.array(
+            [
+                self.get_payment(bid_profile, allocations[i], i)
+                for i in range(self.n_bidder)
+            ]
+        )
+        revenue = (allocations * payments).sum(axis=0)
+        return revenue
 
     def get_payoff(
         self, allocation: np.ndarray, valuation: np.ndarray, payment: np.ndarray
