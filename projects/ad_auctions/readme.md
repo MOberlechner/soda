@@ -2,13 +2,11 @@
 These are the numerical experiments (with SODA) for:
 
 >**Low Revenue in Display Ad Auctions: Algorithmic Collusion vs. Non-Quasilinear Preferences**<br>
-*Martin Bichler, Alok Gupta, Laura Mathews, Matthias Oberlechner (2023, Working Paper)*
-
-For questions regarding the experiments contact: matthias.oberlechner@tum.de
+*Martin Bichler, Alok Gupta, Laura Mathews, Matthias Oberlechner<br> 2023, Working Paper*
 
 ---
 
-### Computation
+## Computation
 - the results will be stored in<br> `PATH_TO_EXPERIMENTS = "experiments/ad_auctions/"` 
 - the config files can be found in<br> `PATH_TO_CONFIGS = "projects/ad_auction/configs/"`
 
@@ -29,7 +27,7 @@ Experiments with a low discretization (n=21) as a baseline to compare to results
 python projects/soda/computation/run_baseline.py
 ```
 
-### Evaluation
+## Evaluation
 After the strategies are computed and saved (together with log files) in the `PATH_TO_EXPERIMENT` directory, we can evaluate our results.
 
 **Exp 1 - FPSB and SPSB for different utility models (large)**<br>
@@ -43,7 +41,9 @@ python projects/soda/evaluation/table_revenue.py
 ```
 
 **Exp 2 - FPSB and SPSB for different utility models (baseline)**<br>
-We compute the expected revenue in the discretized setting to serve as a baseline for the bandit learner
+We compute the expected revenue in the discretized setting to serve as a baseline for the bandit learner.
 ```bash
 python projects/soda/evaluation/table_baseline.py
 ```
+---
+*contact: matthias.oberlechner@tum.de*
