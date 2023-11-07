@@ -70,7 +70,7 @@ def create_table(games: list, learner: list) -> pd.DataFrame:
         rev = get_revenue(game, strategies)
         data = [
             {
-                "game": config_game.replace(".yaml", ""),
+                "game": os.path.basename(config_game).replace(".yaml", ""),
                 "learner": config_learner.replace(".yaml", ""),
                 "revenue": round(rev, 4),
             }
