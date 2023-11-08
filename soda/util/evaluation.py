@@ -80,9 +80,6 @@ def create_table(path_to_experiments: str, experiment_tag: str) -> pd.DataFrame:
     runtime = get_runtimes(path_to_experiments, experiment_tag)
     df = df.merge(runtime[cols_index + ["time"]], on=cols_index, how="outer")
 
-    # formatting
-    df["learner"] = [df.learner[i].split("_")[0] for i in df.index]
-
     return df.sort_values(cols_index).reset_index(drop=True).fillna("-")
 
 
@@ -119,19 +116,16 @@ def get_runtimes(path_to_experiments: str, experiment_tag: str) -> pd.DataFrame:
         pd.DataFrame: df containing the runtimes
     """
     cols_index = ["setting", "mechanism", "learner", "agent"]
-
     # import file
     file_log_learn = os.path.join(
         path_to_experiments, "log", experiment_tag, "log_learn.csv"
     )
     df = pd.read_csv(file_log_learn)
-
     # get runtimes (min, max)
     df["time_total"] = df["time_init"] + df["time_run"]
     df = df.groupby(cols_index).agg(
         {"time_init": "first", "time_run": ["min", "max"], "time_total": ["min", "max"]}
     )
-
     # create text for table
     df["time"] = [
         time_to_str(t_min=df["time_total"]["min"][i], t_max=df["time_total"]["max"][i])
