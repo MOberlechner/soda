@@ -3,6 +3,9 @@
 # -------------------------------------------------------------------------------------------------------------------- #
 import os
 
+import numpy as np
+import pandas as pd
+
 from soda.strategy import Strategy
 from soda.util.config import Config
 
