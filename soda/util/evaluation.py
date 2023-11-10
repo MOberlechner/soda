@@ -64,35 +64,57 @@ def create_table(path_to_experiments: str, experiment_tag: str) -> pd.DataFrame:
     # get log files
     df_learn, df_sim = get_log_files(path_to_experiments, experiment_tag)
 
-    # get metrics over runs
-    df_sim = aggregate_metrics_over_runs(df_sim, cols_index, cols_metrics_sim)
+    if df_learn is None:
+        print(f"log files for experiment '{experiment_tag}' are missing!")
+        return None
+
     df_learn = aggregate_metrics_over_runs(df_learn, cols_index, cols_metrics_learn)
-
-    # create column with str
     df_learn = create_str_col(df_learn, "util_loss_discr", "utility_loss")
-    df_sim = create_str_col(df_sim, "util_loss", "util_loss")
-    df_sim = create_str_col(df_sim, "l2_norm", "l2_norm")
 
-    # merge results and add runtimes
-    df = df_sim[cols_index + cols_metrics_sim].merge(
-        df_learn[cols_index + ["util_loss_discr"]], on=cols_index, how="outer"
-    )
+    if df_sim is None:
+        df = df_learn[cols_index + ["util_loss_discr"]]
+    else:
+        # add results from simulation to taoble
+        df_sim = aggregate_metrics_over_runs(df_sim, cols_index, cols_metrics_sim)
+        df_sim = create_str_col(df_sim, "util_loss", "util_loss")
+        df_sim = create_str_col(df_sim, "l2_norm", "l2_norm")
+        df = df_sim[cols_index + cols_metrics_sim].merge(
+            df_learn[cols_index + ["util_loss_discr"]], on=cols_index, how="outer"
+        )
+
+    # merge runtime into table
     runtime = get_runtimes(path_to_experiments, experiment_tag)
     df = df.merge(runtime[cols_index + ["time"]], on=cols_index, how="outer")
 
-    return df.sort_values(cols_index).reset_index(drop=True).fillna("-")
+    df.insert(
+        2, "learner_label", [df["learner"][i].split("_")[0].upper() for i in df.index]
+    )
+    df = df.sort_values(
+        by=["mechanism", "setting", "learner_label"],
+        key=lambda x: x.map(custom_sort_learner),
+    )
+    return df.reset_index(drop=True).fillna("-")
 
 
 def get_log_files(path_to_experiments: str, experiment_tag: str) -> pd.DataFrame:
     """Import log files from experiment"""
+    # log_learn_agg.csv
     file_log_learn_agg = os.path.join(
         path_to_experiments, "log", experiment_tag, "log_learn_agg.csv"
     )
+    if os.path.exists(file_log_learn_agg):
+        df_learn = pd.read_csv(file_log_learn_agg)
+    else:
+        df_learn = None
+    # log_sim_agg.csv
     file_log_sim_agg = os.path.join(
         path_to_experiments, "log", experiment_tag, "log_sim_agg.csv"
     )
-    df_learn = pd.read_csv(file_log_learn_agg)
-    df_sim = pd.read_csv(file_log_sim_agg)
+    if os.path.exists(file_log_learn_agg):
+        df_sim = pd.read_csv(file_log_sim_agg)
+    else:
+        df_sim = None
+
     return df_learn, df_sim
 
 
@@ -161,3 +183,11 @@ def create_str_col(
         metric_to_str(df[f"mean_{column}"][i], df[f"std_{column}"][i]) for i in df.index
     ]
     return df
+
+
+def custom_sort_learner(val: str):
+    learner_order = {"SODA1": 0, "SODA2": 1, "SOMA2": 2, "SOFW": 3, "FP": 4}
+    if val in learner_order:
+        return learner_order[val]
+    else:
+        return val
