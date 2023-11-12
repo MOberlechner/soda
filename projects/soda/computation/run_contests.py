@@ -22,6 +22,7 @@ learner_contests = [
 experiment_list = list(product(game_contests, learner_contests))
 
 SIMULATION = False
+NUMBER_RUNS = 1
 
 if __name__ == "__main__":
     print(f"\nRunning {len(experiment_list)} Experiments".ljust(100, "."), "\n")
