@@ -3,7 +3,11 @@ import os
 import numpy as np
 import pandas as pd
 
-from projects.soda.config_exp import PATH_TO_EXPERIMENTS, PATH_TO_RESULTS
+from projects.soda.config_exp import (
+    PATH_TO_EXPERIMENTS,
+    PATH_TO_RESULTS,
+    ROUND_DECIMALS_TABLE,
+)
 from soda.util.evaluation import create_table
 
 
@@ -32,7 +36,9 @@ def save_table(df, table_nummer: int, label: str = "") -> None:
 def generate_table_interdependent():
     """Tables for common and affiliated values model (table 3 & 4)"""
     if check_log_exists("interdependent"):
-        df = create_table(PATH_TO_EXPERIMENTS, "interdependent")
+        df = create_table(
+            PATH_TO_EXPERIMENTS, "interdependent", num_decimals=ROUND_DECIMALS_TABLE
+        )
         df_com = df[df.setting == "common_value"].drop(columns=["util_loss_discr"])
         df_aff = df[df.setting == "affiliated_values"].drop(columns=["util_loss_discr"])
         save_table(df_com, 3)
@@ -42,22 +48,34 @@ def generate_table_interdependent():
 def generate_table_llg():
     """Tables for LLG auction (table 5, 6, 7)"""
     if check_log_exists("llg"):
-        df = create_table(PATH_TO_EXPERIMENTS, "llg")
+        df = create_table(PATH_TO_EXPERIMENTS, "llg", num_decimals=ROUND_DECIMALS_TABLE)
         for i, pr in enumerate(["nb", "nvcg", "nz"]):
-            table = df[df.setting == f"llg_auction_{pr}"]
+            table = df[
+                df.setting.isin([f"{pr}_gamma{i}" for i in [1, 2, 3]])
+                & (df.agent == "L")
+            ].drop(columns=["util_loss_discr"])
             save_table(table, 5 + i)
 
 
 def generate_table_split_award():
     """Tables for Split Award auction (table 8, 9)"""
-    pass
+    if check_log_exists("split_award"):
+        df = create_table(
+            PATH_TO_EXPERIMENTS, "split_award", num_decimals=ROUND_DECIMALS_TABLE
+        )
+        table = df[df.setting == "sa_gaussian"].drop(columns=["util_loss_discr"])
+        save_table(table, 8)
+        table = df[df.setting == "sa_uniform"].drop(columns=["util_loss_discr"])
+        save_table(table, 9)
 
 
 def generate_table_risk():
     """Results for FPSB with risk aversion (table 10)"""
     if check_log_exists("risk"):
         settings = ["fpsb_risk0", "fpsb_risk2", "fpsb_risk4"]
-        df = create_table(PATH_TO_EXPERIMENTS, "risk")
+        df = create_table(
+            PATH_TO_EXPERIMENTS, "risk", num_decimals=ROUND_DECIMALS_TABLE
+        )
         df = df[df.setting.isin(settings)].drop(columns=["util_loss_discr"])
         save_table(df, 10)
     else:
