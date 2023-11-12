@@ -29,16 +29,19 @@ learner_llg = [
 ]
 learner_llg_fp = ["sofw.yaml"]
 
-experiment_list = list(product(game_llg, learner_llg)) + list(
-    product(game_llg_fp, learner_llg_fp)
-)
+experiment_list = list(product(game_llg, learner_llg))
+experiment_list_fp = list(product(game_llg_fp, learner_llg_fp))
 
 if __name__ == "__main__":
-    print(f"\nRunning {len(experiment_list)} Experiments".ljust(100, "."), "\n")
+    print(
+        f"\nRunning {len(experiment_list) + len(experiment_list_fp)} Experiments".ljust(
+            100, "."
+        ),
+        "\n",
+    )
     t0 = time()
 
     for config_game, config_learner in experiment_list:
-
         exp_handler = Experiment(
             PATH_TO_CONFIGS + "game/" + config_game,
             PATH_TO_CONFIGS + "learner/" + config_learner,
@@ -53,5 +56,26 @@ if __name__ == "__main__":
             experiment_tag="llg",
         )
         exp_handler.run()
+
+    # No BNE for first-price setting, i.e., no simulation and 1 run
+    NUMBER_RUNS = 1
+    SIMULATION = False
+
+    for config_game, config_learner in experiment_list_fp:
+        exp_handler = Experiment(
+            PATH_TO_CONFIGS + "game/" + config_game,
+            PATH_TO_CONFIGS + "learner/" + config_learner,
+            NUMBER_RUNS,
+            LEARNING,
+            SIMULATION,
+            LOGGING,
+            SAVE_STRAT,
+            NUMBER_SAMPLES,
+            PATH_TO_EXPERIMENTS,
+            ROUND_DECIMALS,
+            experiment_tag="llg",
+        )
+        exp_handler.run()
+
     t1 = time()
     print(f"\nExperiments finished ({(t1-t0)/60:.1f} min)".ljust(100, "."), "\n")
