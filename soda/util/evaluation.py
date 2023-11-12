@@ -47,7 +47,9 @@ def get_results(
     return game, learner, strategies
 
 
-def create_table(path_to_experiments: str, experiment_tag: str) -> pd.DataFrame:
+def create_table(
+    path_to_experiments: str, experiment_tag: str, num_decimals: int = 3
+) -> pd.DataFrame:
     """Create table with utility loss, l2 distance etc for experiment
 
     Args:
@@ -69,7 +71,9 @@ def create_table(path_to_experiments: str, experiment_tag: str) -> pd.DataFrame:
         return None
 
     df_learn = aggregate_metrics_over_runs(df_learn, cols_index, cols_metrics_learn)
-    df_learn = create_str_col(df_learn, "util_loss_discr", "utility_loss")
+    df_learn = create_str_col(
+        df_learn, "util_loss_discr", "utility_loss", num_decimals=num_decimals
+    )
 
     if df_sim is None:
         df = df_learn[cols_index + ["util_loss_discr"]]
