@@ -27,13 +27,14 @@ def get_bne(game: Game, agent: str):
     return x, bne
 
 
-def get_data(config_game, config_learner, experiment_tag, agent):
+def get_data(config_game, config_learner, experiment_tag, agent, run=0):
     game, _, strategies = get_results(
         config_game,
         config_learner,
         PATH_TO_CONFIGS,
         PATH_TO_EXPERIMENTS,
         experiment_tag,
+        run=0,
     )
     obs, bids = get_bids(game, strategies, agent)
     x, bne = get_bne(game, agent)
@@ -104,10 +105,10 @@ def generate_plots_llg():
     gammas = [0.1, 0.5, 0.9]
 
     for j in range(3):
-        fig, ax = set_axis((0, 2), (0, 1.5), labels[j])
+        fig, ax = set_axis((0, 1), (0, 1), labels[j])
         for i in range(3):
             obs, bids, x, bne = get_data(
-                f"llg/{pr[j]}_gamma{i+1}.yaml" "soda2_eta50_beta05.yaml", "llg", "L"
+                f"llg/{pr[j]}_gamma{i+1}.yaml", "soda2_eta50_beta05.yaml", "llg", "L"
             )
             # plot strategy & BNE
             ax.scatter(
@@ -125,8 +126,8 @@ def generate_plots_llg():
             ax.plot(
                 [],
                 [],
-                color=colors[i],
-                marker=marker[i],
+                color=COLORS[i],
+                marker=MARKER[i],
                 linestyle="-",
                 linewidth=2,
                 zorder=1,
@@ -134,9 +135,51 @@ def generate_plots_llg():
             )
         ax.legend(fontsize=FONTSIZE_LEGEND, loc=2)
         path_save = os.path.join(PATH_TO_RESULTS, "plots", f"figure3_{j+1}.pdf")
-        fig.savefig(f"plots/{experiment}.pdf", bbox_inches="tight")
+        fig.savefig(path_save, bbox_inches="tight")
+
+
+def generate_plots_llg_fp():
+    """Generate plots for Figure 4 (LLG Auction First-Price)"""
+    gammas = [0.1, 0.5, 0.9]
+    for j in range(3):
+        fig, ax = set_axis((0, 2), (0, 1), f"Correlation $\gamma = {gammas[j]}$")
+        ax.set_aspect(2)
+        for i, agent in enumerate(["L", "G"]):
+            obs, bids, x, bne = get_data(
+                f"llg/fp_gamma{j+1}.yaml",
+                "sofw.yaml",
+                "llg",
+                agent,
+                run=1,
+            )
+            # plot strategy & BNE
+            ax.scatter(
+                obs,
+                bids,
+                facecolors=COLORS[i],
+                edgecolors="none",
+                marker=MARKER[i],
+                s=MARKER_SIZE,
+                zorder=2,
+                alpha=1,
+            )
+            # legend
+            ax.scatter(
+                [],
+                [],
+                facecolors=COLORS[i],
+                edgecolors="none",
+                marker=MARKER[0],
+                s=40,
+                label={"L": "Local Bidder", "G": "Global Bidder"}[agent],
+            )
+        ax.legend(fontsize=FONTSIZE_LEGEND, loc=2)
+        path_save = os.path.join(PATH_TO_RESULTS, "plots", f"figure4_{j+1}.pdf")
+        fig.savefig(path_save, bbox_inches="tight")
 
 
 if __name__ == "__main__":
     os.makedirs(os.path.join(PATH_TO_RESULTS, "plots"), exist_ok=True)
     generate_plots_interdependent()
+    generate_plots_llg()
+    generate_plots_llg_fp()
