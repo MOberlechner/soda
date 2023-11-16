@@ -2,10 +2,12 @@
 #                                  SCRIPT WITH USEFUL METHODS FOR EVALUATION etc                                       #
 # -------------------------------------------------------------------------------------------------------------------- #
 import os
+from typing import Dict
 
 import numpy as np
 import pandas as pd
 
+from soda.game import Game
 from soda.strategy import Strategy
 from soda.util.config import Config
 
@@ -45,6 +47,22 @@ def get_results(
         strategies[i].load(name, path, load_init=False)
 
     return game, learner, strategies
+
+
+def get_bids(game: Game, strategies: Dict[str, Strategy], agent: str, sample_size: int):
+    """Sample observation from mechanism and corresponding bids from agent's strategy"""
+    idx_agent = game.bidder.index(agent)
+    obs = game.mechanism.sample_types(sample_size)[idx_agent]
+    bids = strategies[agent].sample_bids(obs)
+    return obs, bids
+
+
+def get_bne(game: Game, agent: str):
+    """Get BNE for agent in mechanism"""
+    lb, ub = game.mechanism.o_space[agent]
+    x = np.linspace(lb + 1e-5, ub - 1e-5, 100)
+    bne = game.mechanism.get_bne(agent, x)
+    return x, bne
 
 
 def create_table(
