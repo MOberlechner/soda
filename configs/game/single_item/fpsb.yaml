@@ -9,6 +9,6 @@ param_prior:
 param_util:
   payment_rule: 'first_price'
   tie_breaking: 'lose'
-  utility_typle: 'QL'
+  utility_type: 'QL'
 n: 64
 m: 64
