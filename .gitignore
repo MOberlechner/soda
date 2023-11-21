@@ -7,7 +7,7 @@ strategies/
 results
 hyperparameter/
 .vscode/
-experiment/test
+experiment/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
