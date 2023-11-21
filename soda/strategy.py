@@ -897,11 +897,10 @@ class Strategy:
             path (str): path to strategy-directory
             save_init (bool, optional): Save initial strategy. Defaults to False.
         """
-        filename = os.path.join(path, name) + ".npy"
-        np.save(filename, self.x)
+        filename = os.path.join(path, name + f"_agent_{self.agent}")
+        np.save(filename + ".npy", self.x)
         if save_init:
-            filename_init = os.path.join(path, name) + "_init.npy"
-            np.save(filename_init, self.history[0])
+            np.save(filename + "_init.npy", self.history[0])
 
     def load(self, name: str, path: str, load_init: bool = False) -> None:
         """Load saved strategy
@@ -910,9 +909,10 @@ class Strategy:
             name (str): name of strategy
             path (str): path to experiment directory
         """
-        filename = os.path.join(path, name) + (".npy" if not load_init else "_init.npy")
+        filename = os.path.join(path, name + f"_agent_{self.agent}")
         try:
-            self.x = np.load(filename)
+            if not load_init:
+                self.x = np.load(filename + ("_init.npy" if load_init else ".npy"))
         except:
             print(f"File {filename} not found.")
             self.x = None
