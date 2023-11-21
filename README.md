@@ -1,26 +1,17 @@
 # Computing Bayes Nash Equilibrium Strategies in Auction Games via Simultaneous Online Dual Averaging (SODA)
-If you find this code helpful and use it in your work, please consider using the following citation:
-```
-@misc{bichler2023soda,
-      title={Computing Bayes Nash Equilibrium Strategies in Auction Games 
-      via Simultaneous Online Dual Averaging}, 
-      author={Martin Bichler and Maximilian Fichtl and Matthias Oberlechner},  
-      year={2023},  
-      eprint={2208.02036}, 
-      archivePrefix={arXiv},  
-      primaryClass={cs.GT}  
-}
-```
+This code is provided for academic research purposes only. This code is not licensed for commercial use.
+If you find this code helpful and use it in your research, please cite the following paper:
 
-## Experiments from Publications
-You can use the config files to reproduce the experiments from the publications
+>**Computing Bayes Nash Equilibrium Strategies in Auction Games via Simultaneous Online Dual Averaging.**<br>
+*Martin Bichler, Maximilian Fichtl, Matthias Oberlechner*<br>
+Operations Research, 2023 (Forthcoming)
 
-- **Computing Bayes Nash Equilibrium Strategies in Auction Games via Simultaneous Online Dual Averaging** 
-<br> Martin Bichler, Maximilian Fichtl, Matthias Oberlechner [[arXiv:2208.02036](https://arxiv.org/abs/2208.02036)]
-<br> >> run experiments in [experiments/paper_soda_arxiv](https://github.com/MOberlechner/soda/tree/main/experiments/paper_soda_arxiv)
-- **Learning equilibrium in bilateral bargaining games**
-<br> Martin Bichler, Nils Kohring, Matthias Oberlechner, Fabian R Pieroth [[EJOR](https://www.sciencedirect.com/science/article/abs/pii/S0377221722009705)]
-<br> ... to be included ...
+## Projects
+This repository contains numerical experiments for the following publications:
+
+1. Project soda:
+
+2. Project contests
 
 ## What is implemented?
 
@@ -41,3 +32,54 @@ By discretizing the type and action space, and using distributional strategies, 
 - Mirror Ascent (projected gradient ascent, exponentiated gradient ascent)
 - Frank-Wolfe Algorithm
 - Fictitious Play
+
+
+## Setup
+
+Note: These setup instructions assume a Linux-based OS and uses python 3.8.10 (or higher).
+
+Install virtualenv (or whatever you prefer for virtual envs)
+```bash
+sudo apt-get install virtualenv
+```
+
+Create a virtual environment with virtual env (you can also choose your own name)
+
+```bash
+virtualenv venv
+```
+
+You can specify the python version for the virtual environment via the -p flag. 
+Note that this version already needs to be installed on the system (e.g. `virtualenv - p python3 venv` uses the 
+standard python3 version from the system).
+
+activate the environment with
+```bash
+source ./venv/bin/activate
+```
+Install all requirements
+
+```bash
+pip install -r requirements.txt`
+```
+Install the soda package.
+
+```bash
+pip install -e .
+```
+You can also run "pip install ." if you don't want to edit the code. The "-e" flag ensures that pip does not copy the code but uses the editable files instead.
+
+## Install pre-commit hooks (for development)
+Install pre-commit hooks for your project
+
+```bash
+pre-commit install
+```
+
+Verify by running on all files:
+
+```bash
+pre-commit run --all-files
+```
+
+For more information see https://pre-commit.com/.
