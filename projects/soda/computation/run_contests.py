@@ -45,4 +45,9 @@ if __name__ == "__main__":
         )
         exp_handler.run()
     t1 = time()
-    print(f"\nExperiments finished ({(t1-t0)/60:.1f} min)".ljust(100, "."), "\n")
+    print(
+        f"\n {len(experiment_list)} Experiments finished in {(t1-t0)/60:.1f} min".ljust(
+            100, "."
+        ),
+        "\n",
+    )
