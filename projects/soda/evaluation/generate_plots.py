@@ -8,23 +8,13 @@ import pandas as pd
 from projects.soda.config_exp import *
 from soda.game import Game
 from soda.strategy import Strategy
-from soda.util.evaluation import get_results
-
-
-def get_bids(game: Game, strategies: Dict[str, Strategy], agent: str):
-    """Sample observation from mechanism and corresponding bids from agent's strategy"""
-    idx_agent = game.bidder.index(agent)
-    obs = game.mechanism.sample_types(SAMPLES)[idx_agent]
-    bids = strategies[agent].sample_bids(obs)
-    return obs, bids
-
-
-def get_bne(game: Game, agent: str):
-    """Get BNE for agent in mechanism"""
-    lb, up = game.mechanism.o_space[agent]
-    x = np.linspace(lb, up, 100)
-    bne = game.mechanism.get_bne(agent, x)
-    return x, bne
+from soda.util.evaluation import (
+    aggregate_metrics_over_runs,
+    get_bids,
+    get_bne,
+    get_log_files,
+    get_results,
+)
 
 
 def get_data(config_game, config_learner, experiment_tag, agent, run=0):
@@ -36,7 +26,7 @@ def get_data(config_game, config_learner, experiment_tag, agent, run=0):
         experiment_tag,
         run=0,
     )
-    obs, bids = get_bids(game, strategies, agent)
+    obs, bids = get_bids(game, strategies, agent, SAMPLES)
     x, bne = get_bne(game, agent)
     return obs, bids, x, bne
 
@@ -55,6 +45,30 @@ def set_axis(xlim, ylim, title, xlabel: str = "Observation o", ylabel: str = "Bi
     return fig, ax
 
 
+def plot_scatter(ax, obs, bids, index, label_legend: str = None):
+    """Standard scatter plot we use to plot obs/bids"""
+    ax.scatter(
+        obs,
+        bids,
+        facecolors=COLORS[index],
+        edgecolors="none",
+        marker=MARKER[index],
+        s=MARKER_SIZE,
+        zorder=2,
+    )
+    if label_legend is not None:
+        ax.scatter(
+            [],
+            [],
+            facecolors=COLORS[index],
+            edgecolors="none",
+            marker=MARKER[index],
+            s=40,
+            label=label_legend,
+        )
+    return ax
+
+
 def generate_plots_interdependent():
     """Generate plots for Figure 2  (Affiliated & Common Value Model)"""
     configs_game = [
@@ -69,32 +83,17 @@ def generate_plots_interdependent():
             configs_game[i], "soda1_eta100_beta50.yaml", "interdependent", "1"
         )
         fig, ax = set_axis((0, 2), (0, 1.5), labels[i])
-        ax.scatter(
-            obs,
-            bids,
-            facecolors=COLORS[0],
-            edgecolors="none",
-            marker=MARKER[0],
-            s=MARKER_SIZE,
-            zorder=2,
-            alpha=1,
-        )
+
+        # plot strategy & BNE
+        ax = plot_scatter(ax, obs, bids, index=0, label_legend="$\mathrm{SODA}_1$")
         ax.plot(x, bne, color=COLORS[0], linestyle="-", zorder=1, alpha=0.9)
+
         # legend
-        ax.scatter(
-            [],
-            [],
-            facecolors=COLORS[0],
-            edgecolors="none",
-            marker=MARKER[0],
-            s=40,
-            label="$\mathrm{SODA}_1$",
-        )
         ax.plot(
             [], [], label="analyt. BNE", color=COLORS[0], linestyle="-", linewidth=2
         )
         ax.legend(fontsize=FONTSIZE_LEGEND, loc=2)
-        path_save = os.path.join(PATH_TO_RESULTS, "plots", f"figure2_{i+1}.pdf")
+        path_save = os.path.join(PATH_TO_RESULTS, "plots", f"figure_2_{i+1}.pdf")
         fig.savefig(path_save, bbox_inches="tight")
 
 
@@ -111,17 +110,9 @@ def generate_plots_llg():
                 f"llg/{pr[j]}_gamma{i+1}.yaml", "soda2_eta50_beta05.yaml", "llg", "L"
             )
             # plot strategy & BNE
-            ax.scatter(
-                obs,
-                bids,
-                facecolors=COLORS[i],
-                edgecolors="none",
-                marker=MARKER[i],
-                s=MARKER_SIZE,
-                zorder=2,
-                alpha=1,
-            )
+            ax = plot_scatter(ax, obs, bids, index=i, label_legend=None)
             ax.plot(x, bne, color=COLORS[i], linestyle="-", zorder=1)
+
             # legend
             ax.plot(
                 [],
@@ -134,7 +125,7 @@ def generate_plots_llg():
                 label=f"$\gamma={gammas[i]}$",
             )
         ax.legend(fontsize=FONTSIZE_LEGEND, loc=2)
-        path_save = os.path.join(PATH_TO_RESULTS, "plots", f"figure3_{j+1}.pdf")
+        path_save = os.path.join(PATH_TO_RESULTS, "plots", f"figure_3_{j+1}.pdf")
         fig.savefig(path_save, bbox_inches="tight")
 
 
@@ -152,29 +143,178 @@ def generate_plots_llg_fp():
                 agent,
                 run=1,
             )
-            # plot strategy & BNE
-            ax.scatter(
-                obs,
-                bids,
-                facecolors=COLORS[i],
-                edgecolors="none",
-                marker=MARKER[i],
-                s=MARKER_SIZE,
-                zorder=2,
-                alpha=1,
-            )
-            # legend
-            ax.scatter(
-                [],
-                [],
-                facecolors=COLORS[i],
-                edgecolors="none",
-                marker=MARKER[0],
-                s=40,
-                label={"L": "Local Bidder", "G": "Global Bidder"}[agent],
-            )
+            # plot strategy
+            label_legend = {"L": "Local Bidder", "G": "Global Bidder"}[agent]
+            ax = plot_scatter(ax, obs, bids, i, label_legend)
+
         ax.legend(fontsize=FONTSIZE_LEGEND, loc=2)
-        path_save = os.path.join(PATH_TO_RESULTS, "plots", f"figure4_{j+1}.pdf")
+        path_save = os.path.join(PATH_TO_RESULTS, "plots", f"figure_4_{j+1}.pdf")
+        fig.savefig(path_save, bbox_inches="tight")
+
+
+def generate_plots_split_award():
+    """Generate plots for Figure 5 (Split-Award Gaussian)"""
+    game, _, strategies = get_results(
+        "split_award/sa_gaussian.yaml",
+        "sofw.yaml",
+        PATH_TO_CONFIGS,
+        PATH_TO_EXPERIMENTS,
+        "split_award",
+        run=0,
+    )
+    # get bids
+    agent = "1"
+    obs, bids = get_bids(game, strategies, agent, SAMPLES)
+
+    # get BNES
+    x, bne_pool_upper = get_bne(game, agent)
+    bne_pool_lower = game.mechanism.equilibrium_pooling(agent, x, "lower")
+    bne_wta = game.mechanism.equilibrium_wta(agent, x)
+
+    # Plot 100%
+    fig, ax = set_axis((1, 1.4), (0, 2.5), "Sole Source Award (100%)")
+    ax.set_aspect(0.75 * 0.4 / 2.5)
+
+    # plot strategy and BNE
+    ax = plot_scatter(ax, obs, bids[0], index=0, label_legend="$\mathrm{SODA}_1$")
+    ax.fill_between(
+        x, bne_pool_lower[0], bne_pool_upper[0], color=COLORS[0], zorder=1, alpha=0.3
+    )
+    ax.plot(x, bne_wta[0], linestyle="--", color="k")
+
+    # legend
+    ax.plot([], [], label="WTA-BNE", color="k", linestyle="--", linewidth=2)
+    ax.fill_between([], [], color=COLORS[0], zorder=1, alpha=0.3, label="Pooling-BNE")
+    ax.legend(fontsize=FONTSIZE_LEGEND, loc=2)
+
+    path_save = os.path.join(PATH_TO_RESULTS, "plots", f"figure_5_1.pdf")
+    fig.savefig(path_save, bbox_inches="tight")
+
+    # Plot 50%
+    # TODO
+
+
+def generate_plots_risk():
+    """Generate Plots for Figure 6 (risk)"""
+    risk = [0.5, 0.7, 0.9]
+    # First-Price
+    fig, ax = set_axis((0, 1), (0, 0.8), "First-Price Auction")
+    ax.set_aspect(1.25)
+    for i, r in enumerate(risk):
+        obs, bids, x, bne = get_data(
+            f"risk/fpsb_risk{2*i}.yaml",
+            "soda1_eta20_beta05.yaml",
+            "risk",
+            "1",
+        )
+        # plot strategy
+        ax = plot_scatter(ax, obs, bids, i, r"$\rho$" + f" = {r}")
+        ax.plot(x, bne, color=COLORS[i], linestyle="-", zorder=1)
+    ax.plot(x, 0.5 * x, color="k", linestyle="--", label="risk-neutral")
+    ax.legend(fontsize=FONTSIZE_LEGEND, loc=2)
+    path_save = os.path.join(PATH_TO_RESULTS, "plots", f"figure_6_1.pdf")
+    fig.savefig(path_save, bbox_inches="tight")
+
+    # All-Pay
+    fig, ax = set_axis((0, 1), (0, 0.8), "All-Pay Auction")
+    ax.set_aspect(1.25)
+    for i, r in enumerate(risk):
+        obs, bids, x, bne = get_data(
+            f"risk/allpay_risk{2*i}.yaml",
+            "soda1_eta25_beta05.yaml",
+            "risk",
+            "1",
+        )
+        # plot strategy
+        ax = plot_scatter(ax, obs, bids, i, r"$\rho$" + f" = {r}")
+    ax.plot(x, 0.5 * x**2, color="k", linestyle="--", label="risk-neutral")
+    ax.legend(fontsize=FONTSIZE_LEGEND, loc=2)
+    path_save = os.path.join(PATH_TO_RESULTS, "plots", f"figure_6_2.pdf")
+    fig.savefig(path_save, bbox_inches="tight")
+
+    # Revenue
+    risk = [0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+    _, df_sim = get_log_files(PATH_TO_EXPERIMENTS, "risk")
+    cols_index = ["mechanism", "setting", "learner", "agent"]
+    df = aggregate_metrics_over_runs(df_sim, cols_index, ["revenue"])
+    df = df.sort_values(["mechanism", "setting"]).reset_index(drop=True)
+
+    fig, ax = set_axis(
+        (0.45, 1.05), (0.325, 0.575), "Revenue", r"Risk Parameter $\rho$", "Revenue"
+    )
+    ax.set_aspect(0.6 / 0.25)
+    # First-Price
+    revenue = df[
+        (df.mechanism == "single_item") & (df.learner == "soda1_eta20_beta05")
+    ].mean_revenue
+    ax.plot(
+        risk,
+        revenue,
+        color=COLORS[0],
+        marker=MARKER[0],
+        linestyle="-",
+        linewidth=2,
+        zorder=1,
+        label="First-Price",
+    )
+    # All-Pay
+    revenue = df[
+        (df.mechanism == "all_pay") & (df.learner == "soda1_eta25_beta05")
+    ].mean_revenue
+    ax.plot(
+        risk,
+        revenue,
+        color=COLORS[1],
+        marker=MARKER[1],
+        linestyle="-",
+        linewidth=2,
+        zorder=1,
+        label="All-Pay",
+    )
+    ax.legend(fontsize=FONTSIZE_LEGEND, loc=2)
+    path_save = os.path.join(PATH_TO_RESULTS, "plots", f"figure_6_3.pdf")
+    fig.savefig(path_save, bbox_inches="tight")
+
+
+def generate_plots_contests():
+    """Generate Plots for Figure 7 (contests)"""
+    labels = ["Symmetric", "Asymmetric, Weak Bidder", "Asymmetric, Strong Bidder"]
+    ratio = [0.5, 1.0, 1.5]
+
+    # symmetric
+    fig, ax = set_axis((0, 1), (0, 0.5), "Symmetric")
+    ax.set_aspect(2)
+    for i, r in enumerate(ratio):
+        obs, bids, x, bne = get_data(
+            f"contests/sym_ratio{i+1}.yaml",
+            "soda1_eta100_beta05.yaml",
+            "contests",
+            "1",
+        )
+        # plot strategy
+        ax = plot_scatter(ax, obs, bids, i, f"r = {r}")
+
+    ax.legend(fontsize=FONTSIZE_LEGEND, loc=2)
+    path_save = os.path.join(PATH_TO_RESULTS, "plots", f"figure_7_1.pdf")
+    fig.savefig(path_save, bbox_inches="tight")
+
+    # asymmetric
+    for j in range(2):
+        agent, label = [("weak", "Weak Bidder"), ("strong", "Strong Bidder")][j]
+        fig, ax = set_axis((0 + j, 1 + j), (0, 0.5), f"Asymmetric, {label}")
+        ax.set_aspect(2)
+        for i, r in enumerate(ratio):
+            obs, bids, x, bne = get_data(
+                f"contests/asym_ratio{i+1}.yaml",
+                "soda1_eta100_beta05.yaml",
+                "contests",
+                agent,
+            )
+            # plot strategy
+            ax = plot_scatter(ax, obs, bids, i, f"r = {r}")
+
+        ax.legend(fontsize=FONTSIZE_LEGEND, loc=2)
+        path_save = os.path.join(PATH_TO_RESULTS, "plots", f"figure_7_{j+2}.pdf")
         fig.savefig(path_save, bbox_inches="tight")
 
 
@@ -183,3 +323,6 @@ if __name__ == "__main__":
     generate_plots_interdependent()
     generate_plots_llg()
     generate_plots_llg_fp()
+    generate_plots_split_award()
+    generate_plots_risk()
+    generate_plots_contests()
