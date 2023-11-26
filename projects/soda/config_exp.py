@@ -14,7 +14,6 @@ SAVE_INIT_STRAT = True
 SAVE_STRAT = True
 
 # parameter for evaluations
-PATH_TO_RESULTS = PATH_TO_EXPERIMENTS
 ROUND_DECIMALS_TABLE = 3
 
 # Parameter plots

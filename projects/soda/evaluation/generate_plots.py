@@ -93,7 +93,7 @@ def generate_plots_interdependent():
             [], [], label="analyt. BNE", color=COLORS[0], linestyle="-", linewidth=2
         )
         ax.legend(fontsize=FONTSIZE_LEGEND, loc=2)
-        path_save = os.path.join(PATH_TO_RESULTS, "plots", f"figure_2_{i+1}.pdf")
+        path_save = os.path.join(PATH_TO_EXPERIMENTS, "plots", f"figure_2_{i+1}.pdf")
         fig.savefig(path_save, bbox_inches="tight")
 
 
@@ -125,7 +125,7 @@ def generate_plots_llg():
                 label=f"$\gamma={gammas[i]}$",
             )
         ax.legend(fontsize=FONTSIZE_LEGEND, loc=2)
-        path_save = os.path.join(PATH_TO_RESULTS, "plots", f"figure_3_{j+1}.pdf")
+        path_save = os.path.join(PATH_TO_EXPERIMENTS, "plots", f"figure_3_{j+1}.pdf")
         fig.savefig(path_save, bbox_inches="tight")
 
 
@@ -148,7 +148,7 @@ def generate_plots_llg_fp():
             ax = plot_scatter(ax, obs, bids, i, label_legend)
 
         ax.legend(fontsize=FONTSIZE_LEGEND, loc=2)
-        path_save = os.path.join(PATH_TO_RESULTS, "plots", f"figure_4_{j+1}.pdf")
+        path_save = os.path.join(PATH_TO_EXPERIMENTS, "plots", f"figure_4_{j+1}.pdf")
         fig.savefig(path_save, bbox_inches="tight")
 
 
@@ -187,7 +187,7 @@ def generate_plots_split_award():
     ax.fill_between([], [], color=COLORS[0], zorder=1, alpha=0.3, label="Pooling-BNE")
     ax.legend(fontsize=FONTSIZE_LEGEND, loc=2)
 
-    path_save = os.path.join(PATH_TO_RESULTS, "plots", f"figure_5_1.pdf")
+    path_save = os.path.join(PATH_TO_EXPERIMENTS, "plots", f"figure_5_1.pdf")
     fig.savefig(path_save, bbox_inches="tight")
 
     # Plot 50%
@@ -212,7 +212,7 @@ def generate_plots_risk():
         ax.plot(x, bne, color=COLORS[i], linestyle="-", zorder=1)
     ax.plot(x, 0.5 * x, color="k", linestyle="--", label="risk-neutral")
     ax.legend(fontsize=FONTSIZE_LEGEND, loc=2)
-    path_save = os.path.join(PATH_TO_RESULTS, "plots", f"figure_6_1.pdf")
+    path_save = os.path.join(PATH_TO_EXPERIMENTS, "plots", f"figure_6_1.pdf")
     fig.savefig(path_save, bbox_inches="tight")
 
     # All-Pay
@@ -229,7 +229,7 @@ def generate_plots_risk():
         ax = plot_scatter(ax, obs, bids, i, r"$\rho$" + f" = {r}")
     ax.plot(x, 0.5 * x**2, color="k", linestyle="--", label="risk-neutral")
     ax.legend(fontsize=FONTSIZE_LEGEND, loc=2)
-    path_save = os.path.join(PATH_TO_RESULTS, "plots", f"figure_6_2.pdf")
+    path_save = os.path.join(PATH_TO_EXPERIMENTS, "plots", f"figure_6_2.pdf")
     fig.savefig(path_save, bbox_inches="tight")
 
     # Revenue
@@ -272,7 +272,7 @@ def generate_plots_risk():
         label="All-Pay",
     )
     ax.legend(fontsize=FONTSIZE_LEGEND, loc=2)
-    path_save = os.path.join(PATH_TO_RESULTS, "plots", f"figure_6_3.pdf")
+    path_save = os.path.join(PATH_TO_EXPERIMENTS, "plots", f"figure_6_3.pdf")
     fig.savefig(path_save, bbox_inches="tight")
 
 
@@ -295,7 +295,7 @@ def generate_plots_contests():
         ax = plot_scatter(ax, obs, bids, i, f"r = {r}")
 
     ax.legend(fontsize=FONTSIZE_LEGEND, loc=2)
-    path_save = os.path.join(PATH_TO_RESULTS, "plots", f"figure_7_1.pdf")
+    path_save = os.path.join(PATH_TO_EXPERIMENTS, "plots", f"figure_7_1.pdf")
     fig.savefig(path_save, bbox_inches="tight")
 
     # asymmetric
@@ -314,12 +314,12 @@ def generate_plots_contests():
             ax = plot_scatter(ax, obs, bids, i, f"r = {r}")
 
         ax.legend(fontsize=FONTSIZE_LEGEND, loc=2)
-        path_save = os.path.join(PATH_TO_RESULTS, "plots", f"figure_7_{j+2}.pdf")
+        path_save = os.path.join(PATH_TO_EXPERIMENTS, "plots", f"figure_7_{j+2}.pdf")
         fig.savefig(path_save, bbox_inches="tight")
 
 
 if __name__ == "__main__":
-    os.makedirs(os.path.join(PATH_TO_RESULTS, "plots"), exist_ok=True)
+    os.makedirs(os.path.join(PATH_TO_EXPERIMENTS, "plots"), exist_ok=True)
     generate_plots_interdependent()
     generate_plots_llg()
     generate_plots_llg_fp()

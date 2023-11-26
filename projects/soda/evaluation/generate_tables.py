@@ -3,11 +3,7 @@ import os
 import numpy as np
 import pandas as pd
 
-from projects.soda.config_exp import (
-    PATH_TO_EXPERIMENTS,
-    PATH_TO_RESULTS,
-    ROUND_DECIMALS_TABLE,
-)
+from projects.soda.config_exp import PATH_TO_EXPERIMENTS, ROUND_DECIMALS_TABLE
 from soda.util.evaluation import create_table
 
 
@@ -26,7 +22,7 @@ def save_table(df, table_nummer: int, label: str = "") -> None:
         index=False, tablefmt="pipe", colalign=["center"] * len(df.columns)
     )
     path_table = os.path.join(
-        os.path.join(PATH_TO_RESULTS, "tables", f"table_{table_nummer:02.0f}.txt")
+        os.path.join(PATH_TO_EXPERIMENTS, "tables", f"table_{table_nummer:02.0f}.txt")
     )
     f = open(path_table, "w")
     f.write(table)
@@ -82,10 +78,25 @@ def generate_table_risk():
         print("Log-files for experiments 'risk' not found")
 
 
+def generate_table_discretization():
+    """Results for FPSB with different levels of discretization (table 11)"""
+    if check_log_exists("discretization"):
+        discr = ["16", "32", "64", "128", "256"]
+        settings = [f"fast_2_discr{d}" for d in discr]
+        df = create_table(
+            PATH_TO_EXPERIMENTS, "discretization", num_decimals=ROUND_DECIMALS_TABLE
+        )
+        df = df[df.setting.isin(settings)].drop(columns=["util_loss_discr"])
+        save_table(df, 11)
+    else:
+        print("Log-files for experiments 'discretization' not found")
+
+
 if __name__ == "__main__":
-    os.makedirs(os.path.join(PATH_TO_RESULTS, "tables"), exist_ok=True)
+    os.makedirs(os.path.join(PATH_TO_EXPERIMENTS, "tables"), exist_ok=True)
 
     generate_table_interdependent()
     generate_table_llg()
     generate_table_split_award()
     generate_table_risk()
+    generate_table_discretization()
