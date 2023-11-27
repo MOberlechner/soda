@@ -7,11 +7,12 @@ If you find this code helpful and use this code in your research, please cite th
 Operations Research, 2023 (Forthcoming)
 
 ## Projects
-The code contains different projects and can be used to reproduce the respective results
+The code contains different projects and can be used to reproduce the respective results.
 
 - **Computing Bayes Nash Equilibrium Strategies in Auction Games via Simultaneous Online Dual Averaging.**<br>
 *Martin Bichler, Maximilian Fichtl, Matthias Oberlechner*<br>
 Operations Research, 2023 (Forthcoming) <br> See `projects/soda/readme` for experiments.
+- (tbd)
 
 ## What is implemented?
 
@@ -20,19 +21,24 @@ By discretizing the type and action space, and using distributional strategies, 
 
 #### Mechanisms
 
-- Single-Item Auctions (first- and second-price auctions with risk-aversion, ...)
-- All-Pay Auctions (first- and second-price, i.e. War of attrition)
-- LLG-Auction (small combinatorial auction with 2 items, 2 local bidders, and 1 global bidder)
-- Split-Award Auction (procurement auction with 2 agents)
-- Tullock Contests
+- Single-Item Auctions <br>*first- and second-price auctions with risk-aversion, different utility functions (quasi-linear, return-on-invest, return-on-spent)*
+- All-Pay Auctions<br>
+ *first- and second-price (war of attrition), risk aversion*
+- LLG-Auction <br>
+  *small combinatorial auction with 2 items, 2 local bidders, and 1 global bidder and correlated valuations of local bidders*
+- Split-Award Auction <br> 
+ *procurement auction with 2 agents and (dis-)economies of scale*
+- Tullock Contests <br> *different discrimination parameters*
 
 #### Learning Algorithms
 
-- Dual Averaging (Gradient ascent with lazy projection, exponentiated gradient ascent)
-- Mirror Ascent (projected gradient ascent, exponentiated gradient ascent)
+- Dual Averaging <br> *Gradient ascent with lazy projection, exponentiated gradient ascent*
+- Mirror Ascent <br> *projected gradient ascent, exponentiated gradient ascent*
 - Frank-Wolfe Algorithm
 - Fictitious Play
 
+## Intro
+A short explanation of the code can be found in the jupyter notebooks.
 
 ## Setup
 
