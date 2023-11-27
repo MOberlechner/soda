@@ -45,7 +45,7 @@ def generate_table_llg():
     """Tables for LLG auction (table 5, 6, 7)"""
     if check_log_exists("llg"):
         df = create_table(PATH_TO_EXPERIMENTS, "llg", num_decimals=ROUND_DECIMALS_TABLE)
-        for i, pr in enumerate(["nb", "nvcg", "nz"]):
+        for i, pr in enumerate(["nz", "nvcg", "nb"]):
             table = df[
                 df.setting.isin([f"{pr}_gamma{i}" for i in [1, 2, 3]])
                 & (df.agent == "L")
@@ -81,7 +81,7 @@ def generate_table_risk():
 def generate_table_discretization():
     """Results for FPSB with different levels of discretization (table 11)"""
     if check_log_exists("discretization"):
-        discr = ["16", "32", "64", "128", "256"]
+        discr = ["016", "032", "064", "128", "256"]
         settings = [f"fast_2_discr{d}" for d in discr]
         df = create_table(
             PATH_TO_EXPERIMENTS, "discretization", num_decimals=ROUND_DECIMALS_TABLE
