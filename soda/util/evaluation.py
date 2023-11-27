@@ -78,7 +78,7 @@ def create_table(
         pd.DataFrame
     """
     cols_index = ["mechanism", "setting", "learner", "agent"]
-    cols_metrics_sim = ["l2_norm", "util_loss"]
+    cols_metrics_sim = ["util_loss", "l2_norm"]
     cols_metrics_learn = ["utility_loss"]
 
     # get log files
@@ -168,7 +168,11 @@ def get_runtimes(path_to_experiments: str, experiment_tag: str) -> pd.DataFrame:
     # get runtimes (min, max)
     df["time_total"] = df["time_init"] + df["time_run"]
     df = df.groupby(cols_index).agg(
-        {"time_init": "first", "time_run": ["min", "max"], "time_total": ["min", "max"]}
+        {
+            "time_init": "first",
+            "time_run": ["min", "max", "mean"],
+            "time_total": ["min", "max", "mean"],
+        }
     )
     # create text for table
     df["time"] = [
