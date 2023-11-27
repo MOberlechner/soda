@@ -10,12 +10,18 @@ Operations Research, 2023 (Forthcoming)
 ## Computation
 To compute the strategies (learning) and the relevant metrics (simulation) run the following scripts. The results will be stored in `PATH_TO_EXPERIMENTS = "experiments/soda/"`.
 
+**Example**<br>
+Number of experiments: 1, runtime: 1s
+```bash
+python projects/soda/computation/run_example.py
+```
+
 **Exp 1 "interdependent" - Single-Object Auctions (Section 4.2)**<br>
-Run experiments for single-item auctions with interdependencies, i.e., affiliated values auction and common value auction. <br>
-Number of experiments: 10 (x 10 runs), runtime incl. simulation: ~?min</sub>
+Number of experiments: 10 (x 10 runs), runtime incl. simulation: 6.7h<br>
 ```bash
 python projects/soda/computation/run_interdependent.py
 ```
+Run experiments for single-item auctions with interdependencies, i.e., affiliated values auction and common value auction. <br>
 
 **Exp 2 "llg" - Combinatorial Auctions in the Local-Local-Global Model (Section 4.3.)**<br>
 Number of experiments: 45 (x 10 runs ) + 3 (x 1 run), runtime incl. simulation: 3.5h 
@@ -24,7 +30,7 @@ python projects/soda/computation/run_llg.py
 ```
 
 **Exp 3  "split_award" - Combinatorial Split-Award Auction (Section 4.4.)** <br>
-Number of experiments: 10 (x 10 runs ), runtime incl. simulation: 9.5h
+Number of experiments: 10 (x 10 runs ), runtime incl. simulation: 11h
 ```bash
 python projects/soda/computation/run_split_award.py
 ```
@@ -41,13 +47,19 @@ Number of experiments: 10 (x 1 run ), runtime incl. simulation: 20s
 ```bash
 python projects/soda/computation/run_contests.py
 ```
+
+**Exp 6 - Discretizations (Appendix)**<br>
+Number of experiments: 17 (x 10 run ), runtime incl. simulation: 50min
+```bash
+python projects/soda/computation/run_discretization.py
+```
+
 ## Evaluation
-To create the tables from the numerical experiments, i.e., Table 3-10 run
+To create the tables and the plots run the following scripts.
+The results are stored in separate directories in `PATH_TO_EXPERIMENTS`.
 ```bash
 python projects/soda/evaluation/generate_tables.py
-```
-To create the figures from the numerical experiments, i.e., Figure 2-7 run
-```bash
 python projects/soda/evaluation/generate_plots.py
+python projects/soda/evaluation/generate_plots_appendix.py
 ```
-The results are stored in separate directory in `PATH_TO_RESULTS = "experiments/soda/"`.
+
