@@ -4,10 +4,10 @@ This module tests the single-item mechanism
 import numpy as np
 import pytest
 
-from src.game import Game
-from src.learner.gradient import Gradient
-from src.mechanism.single_item import SingleItemAuction
-from src.strategy import Strategy
+from soda.game import Game
+from soda.learner.gradient import Gradient
+from soda.mechanism.single_item import SingleItemAuction
+from soda.strategy import Strategy
 
 
 @pytest.fixture

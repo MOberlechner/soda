@@ -2,58 +2,58 @@
 This module tests if all config files are feasible
 """
 import os
+from itertools import product
+from typing import Tuple
 
 import numpy as np
 import pytest
 
-from src.game import Game
-from src.learner.learner import Learner
-from src.util.config import Config
+from soda.game import Game
+from soda.learner.learner import Learner
+from soda.util.config import Config
 
 """ Add paths to config directories """
-
-paths_to_config = [
+path_to_config_dir = [
     "configs/",
-    "experiments/paper_soda_arxiv/configs/",
+    "projects/soda/configs",
 ]
 
 
-""" Test config files from specified paths"""
-path_into_project = os.getcwd().split("soda")[0] + "soda/"
-for path_config in paths_to_config:
+def get_all_configs(dir_config: str) -> tuple:
+    """Returns a list of all config files for settings and learners within a specified directory
+    We assume the following structure
+    -path_to_config_dir:    - game
+                                - mechanism1
+                                    - config_file1
+                                    - config_file2
+                                - mechanism2
+                                    - config_file3
+                                    - config_file4
+                                ...
+                            - learner
+                                - config_file5
+                                - config_file6
+                                ...
 
-    # get all config files
-    testdata_experiments, testdata_learner = [], []
-    for mechanism_type in os.listdir(f"{path_into_project}{path_config}"):
-        for experiment in os.listdir(
-            f"{path_into_project}{path_config}{mechanism_type}/"
-        ):
-            if experiment != "learner":
-                testdata_experiments += [
-                    (mechanism_type, experiment.replace(".yaml", ""))
-                ]
+    """
+    list_settings, list_learner = [], []
+    for root, _, files in os.walk(dir_config):
+        if root.split("/")[-2] == "game":
+            for f in files:
+                list_settings.append(os.path.join(root, f))
+        elif root.split("/")[-1] == "learner":
+            for f in files:
+                list_learner.append(os.path.join(root, f))
+    return list_settings, list_learner
 
-        for learn_alg in os.listdir(
-            f"{path_into_project}{path_config}{mechanism_type}/learner/"
-        ):
-            testdata_learner += [(mechanism_type, learn_alg.replace(".yaml", ""))]
 
-    # test config files for games
-    @pytest.mark.parametrize("mechanism_type, experiment", testdata_experiments)
-    def test_config_games(mechanism_type, experiment):
-        config = Config()
-        config.get_path(path_config)
-        config.get_config_game(mechanism_type, experiment)
-        game = config.create_game()
+for dir_config in path_to_config_dir:
+    list_settings, list_learner = get_all_configs(dir_config=dir_config)
+    test_data = product(list_settings, list_learner)
 
+    @pytest.mark.parametrize("config_game, config_learner", test_data)
+    def test_config(config_game, config_learner):
+        config = Config(config_game, config_learner)
+        game, learner = config.create_setting()
         assert isinstance(game, Game)
-
-    # test config files for learner
-    @pytest.mark.parametrize("mechanism_type, learn_alg", testdata_learner)
-    def test_config_learner(mechanism_type, learn_alg):
-        config = Config()
-        config.get_path(path_config)
-        config.get_config_learner(mechanism_type, learn_alg)
-        learner = config.create_learner()
-
         assert isinstance(learner, Learner)

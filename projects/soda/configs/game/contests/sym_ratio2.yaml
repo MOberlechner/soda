@@ -1,0 +1,14 @@
+mechanism: soda.mechanism.contest_game.ContestGame
+bidder: ['1', '1']
+o_space:
+  '1': [0.0 ,1.0]
+a_space:
+  '1': [0.0, 0.5]
+param_prior: 
+  distribution: 'uniform'
+param_util:
+  type: 'value'
+  csf: 'ratio_form'
+  csf_parameter: 1.0
+n: 64
+m: 64

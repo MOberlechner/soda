@@ -4,7 +4,7 @@ This module tests the single-item mechanism
 import numpy as np
 import pytest
 
-from src.mechanism.split_award import SplitAwardAuction
+from soda.mechanism.split_award import SplitAwardAuction
 
 
 @pytest.fixture
