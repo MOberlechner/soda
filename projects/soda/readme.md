@@ -1,13 +1,17 @@
 # Project: SODA
 
-These are the numerical experiments for
-
 >**Computing Bayes Nash Equilibrium Strategies in Auction Games via Simultaneous Online Dual Averaging.**<br>
 *Martin Bichler, Maximilian Fichtl, Matthias Oberlechner*<br>
 Operations Research, 2023 (Forthcoming)
 
+To reproduce the numerical experiments from the paper:
+1. run the scripts in [projects/soda/computation](./computation) to compute the strategies and respective metrics. 
+2. create the plots and tables from the paper by running the scripts in  [projects/soda/computation](./evaluation).
+
+All parameters for the specific experiments can be found in [projects/soda/configs](./configs). More general parameters for the experiments and visualizations can be found in [projects/soda/config_exp](./config_exp.py).
+
 ---
-## Computation
+### **Computation**
 To compute the strategies (learning) and the relevant metrics (simulation) run the following scripts. The results will be stored in `PATH_TO_EXPERIMENTS = "experiments/soda/"`.
 
 **Example**<br>
@@ -54,7 +58,7 @@ Number of experiments: 17 (x 10 run ), runtime incl. simulation: 50min
 python projects/soda/computation/run_discretization.py
 ```
 
-## Evaluation
+### **Evaluation**
 To create the tables and the plots run the following scripts.
 The results are stored in separate directories in `PATH_TO_EXPERIMENTS`.
 ```bash
