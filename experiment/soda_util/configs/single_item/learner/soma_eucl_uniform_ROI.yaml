@@ -1,9 +1,0 @@
-name: 'soma'
-max_iter: 5000
-tol: 1e-5
-stop_criterion: 'dist_euclidean'
-mirror_map: 'euclidean'
-steprule_bool: True
-eta: 0.5
-beta: 0.5
-init_method: 'random'
