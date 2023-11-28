@@ -17,7 +17,7 @@ class FictitiousPlay(Learner):
     def __init__(
         self, max_iter: int, tol: float, stop_criterion: str, param: dict = {}
     ):
-        super().__init__(max_iter, tol, stop_criterion)
+        super().__init__(max_iter, tol, stop_criterion, param)
         self.name = "fictitious_play"
 
     def update_strategy(self, strategy, gradient: np.ndarray, t: int) -> None:

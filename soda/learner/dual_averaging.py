@@ -25,7 +25,7 @@ class SODA(Learner):
         stop_criterion: str,
         param: dict,
     ):
-        super().__init__(max_iter, tol, stop_criterion)
+        super().__init__(max_iter, tol, stop_criterion, param)
         self.check_input(param)
 
         self.name = "soda_" + param["regularizer"]
