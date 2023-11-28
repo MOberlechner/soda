@@ -63,7 +63,7 @@ def compute_weights(game, mechanism):
 
     if "corr" in mechanism.param_prior:
         if mechanism.param_prior["corr"] == 0.0:
-            # this is used to avoid own mechanism
+            # this is used to avoid 'own_gradient'
             return None
 
         if mechanism.prior == "uniform":

@@ -4,34 +4,28 @@ from time import time
 from projects.soda.config_exp import *
 from soda.util.experiment import Experiment
 
-allpay_game = [
-    "risk/allpay_risk0.yaml",
-    "risk/allpay_risk1.yaml",
-    "risk/allpay_risk2.yaml",
-    "risk/allpay_risk3.yaml",
-    "risk/allpay_risk4.yaml",
-    "risk/allpay_risk5.yaml",
+game_affiliated = [
+    "interdependent/affiliated_values.yaml",
 ]
-allpay_learner = [
-    "soda1_eta25_beta05.yaml",
+game_common = [
+    "interdependent/common_value.yaml",
 ]
-fpsb_game = [
-    "risk/fpsb_risk0.yaml",
-    "risk/fpsb_risk1.yaml",
-    "risk/fpsb_risk2.yaml",
-    "risk/fpsb_risk3.yaml",
-    "risk/fpsb_risk4.yaml",
-    "risk/fpsb_risk5.yaml",
-]
-fpsb_learner = [
-    "soda1_eta20_beta05.yaml",
-    "soda2_eta01_beta05.yaml",
-    "soma2_eta05_beta50.yaml",
+learner_affiliated = [
+    "soda1_eta100_beta50.yaml",
+    "soda2_eta1_beta50.yaml",
+    "soma2_eta1_beta50.yaml",
     "sofw.yaml",
     "fp.yaml",
 ]
-experiment_list = list(product(allpay_game, allpay_learner)) + list(
-    product(fpsb_game, fpsb_learner)
+learner_common = [
+    "soda1_eta100_beta50.yaml",
+    "soda2_eta1_beta05.yaml",
+    "soma2_eta50_beta50.yaml",
+    "sofw.yaml",
+    "fp.yaml",
+]
+experiment_list = list(product(game_affiliated, learner_affiliated)) + list(
+    product(game_common, learner_common)
 )
 
 if __name__ == "__main__":
@@ -49,10 +43,15 @@ if __name__ == "__main__":
             LOGGING,
             SAVE_STRAT,
             NUMBER_SAMPLES,
-            SAVE_INIT_STRAT,
             PATH_TO_EXPERIMENTS,
             ROUND_DECIMALS,
+            experiment_tag="interdependent",
         )
         exp_handler.run()
     t1 = time()
-    print(f"\nExperiments finished ({(t1-t0)/60:.1f} min)".ljust(100, "."), "\n")
+    print(
+        f"\n {len(experiment_list)} Experiments finished in {(t1-t0)/60:.1f} min".ljust(
+            100, "."
+        ),
+        "\n",
+    )

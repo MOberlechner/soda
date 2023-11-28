@@ -13,7 +13,7 @@ def read(fname):
 
 setup(
     name="soda",
-    version="1.0.0",
+    version="2.0.0",
     packages=["soda"],
     py_modules=["main"],
     long_description=read("README.md"),

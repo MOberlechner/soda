@@ -1,29 +1,44 @@
-# SODA
+# Computing Bayes Nash Equilibrium Strategies in Auction Games via Simultaneous Online Dual Averaging (SODA)
+This code is provided for academic research purposes only. This code is not licensed for commercial use.
+If you find this code helpful and use this code in your research, please cite the following paper:
 
-### Structure of the Code
-There are four central classes
-- [Mechanism](https://gitlab.lrz.de/ga38fip/soda/-/blob/main/src/mechanism/mechanism.py) - represents the auction/contest mechanism we want to consider
-- [Game](https://gitlab.lrz.de/ga38fip/soda/-/blob/main/src/game.py) - represents the discretized version of the mechanism
-- [Strategy](https://gitlab.lrz.de/ga38fip/soda/-/blob/main/src/strategy.py) - represents the distributional strategy we want to compute
-- [Learner](https://gitlab.lrz.de/ga38fip/soda/-/blob/main/src/learner/learner.py) - represents the learning algorithm we use to compute the equilibrium strategy
+>**Computing Bayes Nash Equilibrium Strategies in Auction Games via Simultaneous Online Dual Averaging.**<br>
+*Martin Bichler, Maximilian Fichtl, Matthias Oberlechner*<br>
+Operations Research, 2023 (Forthcoming)
 
-The basic functionality can be seen in the [intro notebook](https://gitlab.lrz.de/ga38fip/soda/-/blob/main/notebooks/intro.ipynb).
+## Projects
+The code contains different projects and can be used to reproduce the respective results.
 
----
+- **Computing Bayes Nash Equilibrium Strategies in Auction Games via Simultaneous Online Dual Averaging.**<br>
+*Martin Bichler, Maximilian Fichtl, Matthias Oberlechner*<br>
+Operations Research, 2023 (Forthcoming) <br> See `projects/soda/readme` for experiments.
+- (tbd)
 
-### Notation
-Some notes on the general notation used in this project
+## What is implemented?
 
-| Variable | Description |
-| --- | --- |
-|`mechanism` | Describes the underlying mechanis,<br> e.g., all-pay auction, single-item auction, contest, ... |
-| `setting` |  A setting is a specific instance of a mechanism, <br> e.g. FPSB (single-item auction), with uniform prior and two agents. |
-| `game` | The discretized version of a specific setting |
-| `learner` | Denotes a specific learning method, <br> e.g., SODA, SOMA, ... |
-| `experiment` | An experiment consists of a setting (-> game) + learner. |
-| `experiment_tag` | Allows us to group experiments by using the same tag, <br> e.g., risk-aversion might contain different settings with different levels of risk aversion
----
+We focus on incomplete-information (Bayesian) games with continuous type and action space. 
+By discretizing the type and action space, and using distributional strategies, we can apply standard (gradient-based) learning algorithms to approximate Bayes-Nash equilibria (BNE) of given mechanisms.
 
+#### Mechanisms
+
+- Single-Item Auctions <br>*first- and second-price auctions with risk-aversion, different utility functions (quasi-linear, return-on-invest, return-on-spent)*
+- All-Pay Auctions<br>
+ *first- and second-price (war of attrition), risk aversion*
+- LLG-Auction <br>
+  *small combinatorial auction with 2 items, 2 local bidders, and 1 global bidder and correlated valuations of local bidders*
+- Split-Award Auction <br> 
+ *procurement auction with 2 agents and (dis-)economies of scale*
+- Tullock Contests <br> *different discrimination parameters*
+
+#### Learning Algorithms
+
+- Dual Averaging <br> *Gradient ascent with lazy projection, exponentiated gradient ascent*
+- Mirror Ascent <br> *projected gradient ascent, exponentiated gradient ascent*
+- Frank-Wolfe Algorithm
+- Fictitious Play
+
+## Intro
+A short explanation of the code can be found in the jupyter notebooks.
 
 ## Setup
 

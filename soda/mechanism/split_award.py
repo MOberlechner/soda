@@ -211,3 +211,21 @@ class SplitAwardAuction(Mechanism):
             raise ValueError("specify payment_rule in param_util")
         if "scale" not in self.param_util:
             raise ValueError("specify scale in param_util")
+
+    def compute_l2_norm(self, agent: str, obs: np.ndarray, bids: np.ndarray) -> float:
+        """For the split-award auction we use a separete l2 distance metric, since we have a conintinuum of equilibria.
+        We only compare with the 50% share
+
+        Args:
+            agent (str): agent
+            obs (np.ndarray): observations
+            bids (np.ndarray): bids we want to compare to BNE
+
+        Returns:
+            float: approximated l2 norm
+        """
+        bne = self.get_bne(agent, obs)
+        if bne is None:
+            return np.nan
+        else:
+            return np.sqrt(1 / len(obs) * ((bids[1] - bne[1]) ** 2).sum())

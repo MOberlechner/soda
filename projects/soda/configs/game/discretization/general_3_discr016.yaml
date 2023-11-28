@@ -1,0 +1,15 @@
+mechanism: soda.mechanism.single_item.SingleItemAuction
+bidder: ['1', '1', '1']
+o_space:
+  '1': [0.0 ,1.0]
+a_space:
+  '1': [0.0 ,1.0]
+param_prior:
+  distribution: 'uniform'
+  corr: 0.0
+param_util:
+  payment_rule: 'first_price'
+  tie_breaking: 'lose'
+  utility_type: 'QL'
+n: 16
+m: 16

@@ -21,7 +21,7 @@ def import_attribute(import_string: str):
 
 def import_config_file(path: str) -> dict:
     """Import config file from given path"""
-    assert path.split(".")[-1] == "yaml"
+    assert path.split(".")[-1] == "yaml", "include .yaml to the config file"
     if os.path.exists(path):
         with open(path) as f:
             return yaml.load(f, Loader=SafeLoader)

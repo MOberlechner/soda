@@ -396,34 +396,3 @@ def wasserstein_dist(strategies, game):
             for t in range(iter - 1)
         ]
     )
-
-
-def get_bne_fpsb(n: int, odd: bool = True) -> np.ndarray:
-    """Discrete BNE for FPSB unform prior, 2 bidder
-
-    Args:
-        n (int): number of discretization points
-        odd (bool, optional): which BNE. Defaults to True.
-
-    Returns:
-        np.ndarray: bne
-    """
-
-    # bne_odd
-    if odd:
-        bne = np.vstack(
-            [
-                [0] * (n // 2 - 1),
-                (np.kron(np.eye(n // 2 - 1), np.ones(2)).T),
-                [0] * (n // 2 - 1),
-            ]
-        )
-        bne = np.hstack(
-            [np.eye(1, n, 0).reshape(n, 1), bne, np.eye(1, n, n - 1).reshape(n, 1)]
-        )
-        x = np.hstack([bne, np.zeros((n, n // 2 - 1))])
-
-    else:
-        # bne even
-        x = np.hstack([np.kron(np.eye(n // 2), np.ones(2)).T, np.zeros((n, n // 2))])
-    return x / x.sum()

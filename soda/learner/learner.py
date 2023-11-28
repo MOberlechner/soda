@@ -52,6 +52,18 @@ class Learner:
     def __repr__(self) -> str:
         return f"Learner({self.name})"
 
+    def __str__(self) -> str:
+        general_info = f"Learner({self.name})\n- max_iter: {self.max_iter}\n- stop_criterion: {self.stop_criterion} < {self.tol}\n"
+        print(self.param)
+        if self.param != {}:
+            str_parameter = f"- parameter:\n"
+            for key, value in self.param.items():
+                str_parameter += f"   - {key}: {value}\n"
+        else:
+            str_parameter = ""
+
+        return general_info + str_parameter
+
     def run(
         self,
         game: Game,

@@ -13,7 +13,10 @@ from soda.learner.learner import Learner
 from soda.util.config import Config
 
 """ Add paths to config directories """
-path_to_config_dir = ["config/"]
+path_to_config_dir = [
+    "configs/",
+    "projects/soda/configs",
+]
 
 
 def get_all_configs(dir_config: str) -> tuple:
@@ -45,7 +48,7 @@ def get_all_configs(dir_config: str) -> tuple:
 
 
 for dir_config in path_to_config_dir:
-    list_settings, list_learner = get_all_configs(dir_config="configs/")
+    list_settings, list_learner = get_all_configs(dir_config=dir_config)
     test_data = product(list_settings, list_learner)
 
     @pytest.mark.parametrize("config_game, config_learner", test_data)
