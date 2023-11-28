@@ -1,16 +1,10 @@
 # Computing Bayes Nash Equilibrium Strategies in Auction Games via Simultaneous Online Dual Averaging (SODA)
-If you find this code helpful and use it in your work, please consider using the following citation:
-```
-@misc{bichler2023soda,
-      title={Computing Bayes Nash Equilibrium Strategies in Auction Games 
-      via Simultaneous Online Dual Averaging}, 
-      author={Martin Bichler and Maximilian Fichtl and Matthias Oberlechner},  
-      year={2023},  
-      eprint={2208.02036}, 
-      archivePrefix={arXiv},  
-      primaryClass={cs.GT}  
-}
-```
+This code is provided for academic research purposes only. This code is not licensed for commercial use.
+If you find this code helpful and use this code in your research, please cite the following paper:
+
+>**Computing Bayes Nash Equilibrium Strategies in Auction Games via Simultaneous Online Dual Averaging.**<br>
+*Martin Bichler, Maximilian Fichtl, Matthias Oberlechner*<br>
+Operations Research, 2023 (Forthcoming)
 
 ## Experiments from Publications
 You can use the config files to reproduce the experiments from the publications
