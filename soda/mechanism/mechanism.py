@@ -68,6 +68,29 @@ class Mechanism:
     def __repr__(self) -> str:
         return f"Mechanism({self.name})"
 
+    def __str__(self) -> str:
+        general_info = f"Mechanism({self.name})\n- bidder: {self.bidder} \n"
+
+        str_o_space = f"- observation space:\n"
+        for key, value in self.o_space.items():
+            str_o_space += f"   - {key}: {value}\n"
+
+        str_a_space = f"- action space:\n"
+        for key, value in self.a_space.items():
+            str_a_space += f"   - {key}: {value}\n"
+
+        str_param_prior = f"- prior\n"
+        for key, value in self.param_prior.items():
+            str_param_prior += f"   - {key}: {value}\n"
+
+        str_param_util = f"- utility\n"
+        for key, value in self.param_util.items():
+            str_param_util += f"   - {key}: {value}\n"
+
+        return (
+            general_info + str_o_space + str_a_space + str_param_prior + str_param_util
+        )
+
     # ------------------------------- methods for computation of utilities ------------------------------------- #
 
     def utility(

@@ -3,10 +3,10 @@ from typing import Dict, List
 import numpy as np
 from scipy.special import binom
 
-from src.game import Game
-from src.mechanism.mechanism import Mechanism
-from src.strategy import Strategy
-from src.util import mechanism_util
+from soda.game import Game
+from soda.mechanism.mechanism import Mechanism
+from soda.mechanism.util import compute_probability_winning, get_allocation_single_item
+from soda.strategy import Strategy
 
 # -------------------------------------------------------------------------------------------------------------------- #
 #                                                ALL-PAY AUCTION                                                       #
@@ -163,9 +163,7 @@ class AllPayAuction(Mechanism):
         Returns:
             np.ndarray: allocation vector for agent idx
         """
-        return mechanism_util.get_allocation_single_item(
-            bids, idx, self.tie_breaking, zero_wins=True
-        )
+        return get_allocation_single_item(bids, idx, self.tie_breaking, zero_wins=True)
 
     # --------------------------------- methods to compute metrics --------------------------------- #
 
@@ -279,9 +277,7 @@ class AllPayAuction(Mechanism):
         Returns:
             np.ndarray: gradient for agent
         """
-        prob_win = mechanism_util.compute_probability_winning(
-            game, strategies, agent, zero_wins=True
-        )
+        prob_win = compute_probability_winning(game, strategies, agent, zero_wins=True)
         obs_grid = (
             np.ones((strategies[agent].m, strategies[agent].n))
             * strategies[agent].o_discr

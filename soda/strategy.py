@@ -4,7 +4,7 @@ from itertools import product
 import matplotlib.pyplot as plt
 import numpy as np
 
-from src.game import Game
+from soda.game import Game
 
 
 class Strategy:
@@ -102,7 +102,7 @@ class Strategy:
             if self.dim_o == self.dim_a == 1:
                 aa, oo = np.meshgrid(self.a_discr, self.o_discr)
                 sigma = np.random.uniform(0, 1, size=self.x.shape)
-                sigma[np.array(oo <= aa)] = lower_bound
+                sigma[np.array(oo < aa)] = lower_bound
             else:
                 raise NotImplementedError(
                     "random_no_overbid only available for 1-dim action and observation space"
@@ -249,25 +249,17 @@ class Strategy:
             )
 
     # --------------------------------------- METHODS USED TO UPDATE METRICS ---------------------------------------- #
-    def update_utility(self, t: int):
-        """Compute and save current utility
+    def get_utility(self):
+        """Compute current utility"""
+        return (self.x * self.gradient).sum()
 
-        Args:
-            t (int): iteration
-            gradient (np.ndarray): current gradient
-        """
-        self.utility[t] = (self.x * self.gradient).sum()
-
-    def update_utility_loss(self, t: int):
+    def get_utility_loss(self):
         """Compute and save relative utility loss for current strategy
         Add 1e-20 so that we don't divide by zero
-
-        Args:
-            t (int): current iteration
         """
         util_br = (self.best_response(self.gradient) * self.gradient).sum()
         util = (self.x * self.gradient).sum()
-        self.utility_loss[t] = np.abs(
+        return np.abs(
             1 - util / (util_br if not np.isclose(util_br, 0, atol=1e-20) else 1e-20)
         )
 
@@ -324,8 +316,9 @@ class Strategy:
             gradient (np.ndarray): current gradient
             save_history_bool (bool): save history of strategies, gradients, ...
         """
-        self.update_utility(t)
-        self.update_utility_loss(t)
+        self.utility[t] = self.get_utility()
+        self.utility_loss[t] = self.get_utility_loss()
+
         self.update_dist_prev_iter(
             t,
         )
@@ -896,60 +889,39 @@ class Strategy:
 
     # -------------------------------------- METHODS USED TO SAVE AND LOAD --------------------------------------- #
 
-    def _get_path_file(
-        self, path: str, setting: str, name: str, appendix: str = ""
-    ) -> str:
-        """Get file name to save or load strategy
-
-        Args:
-            path (str): path to experiment directory
-            setting (str): mechanism
-            name (str): name of file
-            appendix (str): add appendix to file name
-
-        Returns:
-            str: file name
-        """
-        return f"{path}strategies/{setting}/{name}_agent_{self.agent}{appendix}.npy"
-
-    def save(self, name: str, setting: str, path: str, save_init: bool = False):
+    def save(self, name: str, path: str, save_init: bool = False):
         """Save strategy
 
         Args:
             name (str): name of strategy
-            setting (str): mechanism
-            path (str): path to experiment directory
+            path (str): path to strategy-directory
             save_init (bool, optional): Save initial strategy. Defaults to False.
         """
-        filename = self._get_path_file(path, setting, name)
-        np.save(filename, self.x)
+        filename = os.path.join(path, name + f"_agent_{self.agent}")
+        np.save(filename + ".npy", self.x)
         if save_init:
-            filename_init = self._get_path_file(path, setting, name, appendix="_init")
-            np.save(filename_init, self.history[0])
+            np.save(filename + "_init.npy", self.history[0])
 
-    def load(self, name: str, setting: str, path: str) -> None:
+    def load(self, name: str, path: str, load_init: bool = False) -> None:
         """Load saved strategy
 
         Args:
             name (str): name of strategy
-            setting (str): mechanism
             path (str): path to experiment directory
         """
-        filename = self._get_path_file(path, setting, name)
+        filename = os.path.join(path, name + f"_agent_{self.agent}")
         try:
-            self.x = np.load(filename)
+            if not load_init:
+                self.x = np.load(filename + ("_init.npy" if load_init else ".npy"))
         except:
             print(f"File {filename} not found.")
             self.x = None
 
-    def load_scale(
-        self, name: str, setting: str, path: str, n_scaled: int, m_scaled
-    ) -> None:
+    def load_scale(self, name: str, path: str, n_scaled: int, m_scaled) -> None:
         """Get a upscaled version of a strategy
 
         Args:
             name (str): name of saved strategy
-            setting (str): mechanism
             path (str): path to experiment directory
             n_scaled (int): discretization (type) in the larger setting
             m_scaled (_type_): discretization (action) in the larger setting
@@ -959,7 +931,7 @@ class Strategy:
             NotImplementedError: _description_
         """
         try:
-            filename = self._get_path_file(path, setting, name)
+            filename = os.path.join(path, name) + ".npy"
             strat = np.load(filename)
             bool_strat_loaded = True
 

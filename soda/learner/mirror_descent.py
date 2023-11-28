@@ -1,11 +1,10 @@
 import numpy as np
 
-from src.learner.learner import Learner
-from src.util import learner_util
+from soda.learner.learner import Learner, project_euclidean
 
 
-class SODA(Learner):
-    """Simultaneous Online Dual Averaging
+class SOMA(Learner):
+    """Simultaneous Online Mirror Ascent
 
     Attributes:
         method (str): specify learning algorithm
@@ -13,7 +12,7 @@ class SODA(Learner):
         tol (float): stopping criterion (relative utility loss)
         stop_criterion (str): specify stopping criterion. Defaults to "util_loss"
 
-        regularizer (str): regularizer for dual averaging
+        mirror_map (str): distance generating function for mirror ascent
         step_rule (bool): if True we use decreasing, else heuristic step size
         eta (float): factor for stepsize
         beta (float): rate the stepsize decreases with each iteration
@@ -26,44 +25,31 @@ class SODA(Learner):
         stop_criterion: str,
         param: dict,
     ):
-        super().__init__(max_iter, tol, stop_criterion)
+        super().__init__(max_iter, tol, stop_criterion, param)
         self.check_input(param)
 
-        self.name = "soda_" + param["regularizer"]
+        self.name = "soma_" + param["mirror_map"]
+        self.mirror_map = param["mirror_map"]
         self.steprule_bool = param["steprule_bool"]
         self.eta = param["eta"]
         self.beta = param["beta"]
-        self.regularizer = param["regularizer"]
-
-    def check_input(self):
-        """Check Paramaters for Learner
-
-        Raises:
-            ValueError: regulizer unknown
-        """
-        if self.regularizer not in ["euclidean", "entropic"]:
-            raise ValueError('Regularizer "{}" unknown'.format(self.regularizer))
 
     def update_strategy(self, strategy, gradient: np.ndarray, t: int) -> None:
-        """Update Step for SODA
+        """Update strategy: Projected Gradient Ascent
 
-        Attributes:
-            method (str): specify learning algorithm
-            max_iter (int): maximal number of iterations
-            tol (float): stopping criterion (relative utility loss)
-
-            step_rule (bool): if True we use decreasing, else heuristic step size
-            eta (float): factor for stepsize
-            beta (float): rate the stepsize decreases with each iteration
+        Args:
+            strategy (class): strategy class
+            gradient (np.ndarray): current gradient for agent i
+            t (int): iteration
         """
         # compute stepsize
         stepsize = self.step_rule(t, gradient, strategy.dim_o, strategy.dim_a)
         # make update step
-        if self.regularizer == "euclidean":
-            strategy.x, strategy.y = self.update_step_euclidean(
-                strategy.y, gradient, stepsize, strategy.prior
+        if self.mirror_map == "euclidean":
+            strategy.x = self.update_step_euclidean(
+                strategy.x, gradient, stepsize, strategy.prior
             )
-        elif self.regularizer == "entropic":
+        elif self.mirror_map == "entropic":
             strategy.x = self.update_step_entropic(
                 strategy.x,
                 gradient,
@@ -72,30 +58,26 @@ class SODA(Learner):
                 strategy.dim_o,
                 strategy.dim_a,
             )
-        else:
-            raise ValueError(f"regularizer {self.regularizer} unknown for soda")
 
     def update_step_euclidean(
         self,
-        y: np.ndarray,
+        x: np.ndarray,
         grad: np.ndarray,
         eta_t: np.ndarray,
         prior: np.ndarray,
-    ) -> tuple:
-        """Update step SODA with euclidean mirror map, i.e. Lazy Projected Online Gradient Ascent
+    ) -> np.ndarray:
+        """Update step SOMA with euclidean mirror map, i.e. Projected Online Gradient Ascent
 
         Args:
-            y (np.ndarray): current (dual) iterate
+            x (np.ndarray): current iterate
             grad (np.ndarray): gradient
-            eta_t (np.ndarray): step size at iteration t
             prior (np.ndarray): marginal prior distribution (scaling of prob. simplex)
+            eta_t (np.ndarray): step size at iteration t
 
         Returns:
-            tuple (np.ndarray): next dual and primal iterate
+            np.ndarray: next iterate
         """
-        y += eta_t * grad
-        x = learner_util.project_euclidean(y, prior)
-        return x, y
+        return project_euclidean(x + grad * eta_t, prior)
 
     def update_step_entropic(
         self,
@@ -103,21 +85,21 @@ class SODA(Learner):
         grad: np.ndarray,
         eta_t: np.ndarray,
         prior: np.ndarray,
-        dim_o: int = 1,
-        dim_a: int = 1,
-    ):
-        """Update step SODA with entropic regularizer, i.e. Entropic Ascent Algorithm
+        dim_o: int,
+        dim_a: int,
+    ) -> np.ndarray:
+        """Update step SOMA with entropic mirror map, i.e. Entropic Ascent Algorithm
 
         Args:
             x (np.ndarray): current iterate
             grad (np.ndarray): gradient
-            eta_t (np.ndarray): stepsize
+            eta_t (np.ndarray): step size at iteration t
             prior (np.ndarray): marginal prior distribution (scaling of prob. simplex)
-            dim_o (int): dimension of type space
-            dim_a (int): dimension of action space
+            dim_o (int): dimension observation space
+            dim_a (int): dimension action space
 
         Returns:
-            np.ndarray: updateted strategy
+            np.ndarray: next iterate
         """
         xc_exp = x * np.exp(grad * eta_t)
         xc_exp_sum = xc_exp.sum(axis=tuple(range(dim_o, dim_o + dim_a))).reshape(
@@ -152,17 +134,20 @@ class SODA(Learner):
             stepsize = self.eta / scale
             return stepsize.reshape(list(stepsize.shape) + [1] * dim_a)
 
-    def check_input(self, param: dict) -> None:
-        """Check if all necessary parameters are in dict
+    def check_input(self, param: dict):
+        """Check if all parameters are in dict
 
         Args:
-            param (dict): parameter for SODA algorithm
+            param (dict): parameter for learning algorithmus
 
         Raises:
-            ValueError: something is missing
+            ValueError: mirror_map unkown
         """
-        for key in ["regularizer", "steprule_bool", "eta", "beta"]:
-            if key not in param:
-                raise ValueError(f"Define {key} in param")
-        if param["regularizer"] not in ["entropic", "euclidean"]:
-            raise ValueError("regularizer unkown")
+        if "mirror_map" not in param:
+            raise ValueError("define mirror_map in param")
+        elif param["mirror_map"] not in ["euclidean", "entropic"]:
+            raise ValueError("mirror map unknown")
+        if "steprule_bool" not in param:
+            raise ValueError("define steprule_bool in param")
+        elif ("eta" not in param) or ("beta" not in param):
+            raise ValueError("define eta and beta in param")

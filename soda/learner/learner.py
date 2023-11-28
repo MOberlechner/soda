@@ -4,10 +4,10 @@ from typing import Dict, List, Tuple
 import numpy as np
 from tqdm import tqdm
 
-from src.game import Game
-from src.learner.gradient import Gradient
-from src.mechanism.mechanism import Mechanism
-from src.strategy import Strategy
+from soda.game import Game
+from soda.learner.gradient import Gradient
+from soda.mechanism.mechanism import Mechanism
+from soda.strategy import Strategy
 
 
 class Learner:
@@ -42,8 +42,8 @@ class Learner:
             stop_criterion (str): specify stopping criterion. Defaults to "util_loss"
         """
         self.name = "not defined"
-        self.max_iter = max_iter
-        self.tol = tol
+        self.max_iter = int(max_iter)
+        self.tol = float(tol)
         self.stop_criterion = stop_criterion
         self.param = param
 
@@ -51,6 +51,18 @@ class Learner:
 
     def __repr__(self) -> str:
         return f"Learner({self.name})"
+
+    def __str__(self) -> str:
+        general_info = f"Learner({self.name})\n- max_iter: {self.max_iter}\n- stop_criterion: {self.stop_criterion} < {self.tol}\n"
+        print(self.param)
+        if self.param != {}:
+            str_parameter = f"- parameter:\n"
+            for key, value in self.param.items():
+                str_parameter += f"   - {key}: {value}\n"
+        else:
+            str_parameter = ""
+
+        return general_info + str_parameter
 
     def run(
         self,
@@ -102,7 +114,7 @@ class Learner:
                 t, strategies, min_max_value
             )
             if self.convergence:
-                self.t_max = t
+                t_max = t
                 break
 
             # update strategy
@@ -187,3 +199,56 @@ class Learner:
             print("No convergence with stopping criterion")
             print(f"Current value of ({self.stop_criterion}): {max_value:.5f}")
             print(f"Best value of ({self.stop_criterion})   : {min_max_value:.5f})")
+
+
+# Additional Functions used by several learning algorithms
+
+
+def project_euclidean(x: np.ndarray, prior: np.ndarray) -> np.ndarray:
+    """Projection w.r.t. Euclidean distance
+    each row x[i] is projected to the probability simplex scaled by prior[i]
+    Algorithm based on https://arxiv.org/pdf/1309.1541.pdf
+    We allow for 1-dim observation space and 1- or 2-dim action space
+
+    Args:
+        x (np.ndarry):
+        prior (np.ndarray): marginal prior
+
+    Returns:
+        np.ndarray: projection of x
+    """
+    bool_split_award = False
+    if len(x.shape) > 2:
+        # Split Award (1-dim observation space, 2-dim action space)
+        if (len(prior.shape) == 1) & (len(x.shape) == 3):
+            bool_split_award = True
+            n, m1, m2 = x.shape
+            x = x.reshape(n, m1 * m2)
+        else:
+            raise NotImplementedError(
+                "Projection only implemented for 1-dim action space and valuation space"
+            )
+
+    n, m = x.shape
+
+    assert n == len(prior), "dimensions of strategy and prior not compatible"
+
+    # sort
+    x_sort = -np.sort(-x, axis=1)
+    x_cumsum = x_sort.cumsum(axis=1)
+    # find rho
+    rho = np.array(
+        (x_sort + (prior.reshape(n, 1) - x_cumsum) / np.arange(1, m + 1) > 0).sum(
+            axis=1
+        ),
+        dtype=int,
+    )
+    # define lambda
+    lamb = 1 / rho * (prior - x_cumsum[range(n), rho - 1])
+    x_proj = (x + np.repeat(lamb, m).reshape(n, m)).clip(min=0)
+
+    # Split Award (1-dim observation space, 2-dim action space)
+    if bool_split_award:
+        return x_proj.reshape(n, m1, m2)
+    else:
+        return x_proj

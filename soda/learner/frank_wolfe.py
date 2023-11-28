@@ -1,6 +1,6 @@
 import numpy as np
 
-from src.learner.learner import Learner
+from soda.learner.learner import Learner
 
 
 class FrankWolfe(Learner):
@@ -22,7 +22,7 @@ class FrankWolfe(Learner):
         stop_criterion: str,
         param: dict,
     ):
-        super().__init__(max_iter, tol, stop_criterion)
+        super().__init__(max_iter, tol, stop_criterion, param)
         self.check_input(param)
 
         self.name = "frank_wolfe"

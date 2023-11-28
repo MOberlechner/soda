@@ -3,8 +3,8 @@ from typing import List
 
 import numpy as np
 
-from src.mechanism.mechanism import Mechanism
-from src.prior import compute_weights, marginal_prior_pdf
+from soda.mechanism.mechanism import Mechanism
+from soda.prior import compute_weights, marginal_prior_pdf
 
 # -------------------------------------------------------------------------------------------------------------------- #
 #                                      CLASS GAME : DISCRETIZED AUCTION GAME                                           #
@@ -54,8 +54,13 @@ class Game:
         self.dim_o, self.dim_a = self.mechanism.dim_o, self.mechanism.dim_a
 
         # discrete action and observation space (and optional valuation space)
+        midpoint_typespace = (
+            True
+            if "midpoint" not in self.mechanism.param_prior
+            else self.mechanism.param_prior["midpoint"]
+        )
         self.o_discr = {
-            i: Game.discr_spaces(mechanism.o_space[i], n, midpoint=True)
+            i: Game.discr_spaces(mechanism.o_space[i], n, midpoint=midpoint_typespace)
             for i in self.set_bidder
         }
         self.a_discr = {
@@ -63,7 +68,9 @@ class Game:
             for i in self.set_bidder
         }
         if hasattr(mechanism, "v_space"):
-            self.v_discr = Game.discr_spaces(mechanism.v_space, n, midpoint=True)
+            self.v_discr = Game.discr_spaces(
+                mechanism.v_space, n, midpoint=midpoint_typespace
+            )
 
         # marginal prior for bidder
         self.prior = {i: self.get_prior(i) for i in self.set_bidder}
@@ -78,14 +85,7 @@ class Game:
         """Compute utility array for discretized game
         For each agent an array is stored which contains all possible combinations of
         observations/valuations and bid profiles
-
-        Args:
-            mechanism: mechanism (e.g. auction game) which has a method utility
-
-        Raises:
-            ValueError: values unknown
         """
-
         for i in self.set_bidder:
             index_agent = self.bidder.index(i)
             bids = self.create_all_bid_profiles()

@@ -2,8 +2,8 @@ from typing import Dict, List
 
 import numpy as np
 
-from src.game import Game
-from src.strategy import Strategy
+from soda.game import Game
+from soda.strategy import Strategy
 
 
 class Gradient:

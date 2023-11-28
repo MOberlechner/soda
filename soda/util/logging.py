@@ -1,12 +1,12 @@
+import os
 from datetime import datetime
-from os.path import exists
 from pathlib import Path
 from typing import Dict
 
 import numpy as np
 import pandas as pd
 
-from src.strategy import Strategy
+from soda.strategy import Strategy
 
 
 class Logger:
@@ -16,9 +16,10 @@ class Logger:
 
     def __init__(
         self,
-        path: str,
+        path_log: str,
+        experiment_tag: str,
+        mechanism: str,
         setting: str,
-        experiment: str,
         learn_alg: str,
         logging: bool,
         round_decimal: int = 4,
@@ -26,28 +27,28 @@ class Logger:
         """Initialize Logger
 
         Args:
-            path (str): path to csv file which gets created
-            setting (str): mechanism/setting for experiment
-            experiment (str): experiment
+            path_log (str): path to csv file which gets created
+            experiment_tag (str): setting can denote a group of experiments. If None, we group experiments by mechanism
+            mechanism (str): mechanism for experiment
+            setting (str): setting (specific instance of mechanism)
             learn_alg (str): used learning algorithm
             logging (bool): store results in csv
         """
-        self.path = path + "log/" + setting + "/"
+        #  we group experiments by setting or mechanism if setting is not defined
+        self.path = path_log
+        self.experiment_tag = experiment_tag
+        self.mechanism = mechanism
         self.setting = setting
-        self.experiment = experiment
         self.learn_alg = learn_alg
         self.logging = logging
         self.round_decimal = round_decimal
 
-        # create directory for each setting
-        Path(self.path).mkdir(parents=True, exist_ok=True)
-
         # log run learning
-        self.filename_log_learning = "log_learn.csv"
-        self.filename_log_learning_agg = "log_learn_agg.csv"
+        self.filename_log_learning = os.path.join(self.path, "log_learn.csv")
+        self.filename_log_learning_agg = os.path.join(self.path, "log_learn_agg.csv")
         self.file_log_learning = pd.DataFrame(
             columns=[
-                "experiment",
+                "setting",
                 "mechanism",
                 "learner",
                 "run",
@@ -65,11 +66,11 @@ class Logger:
         )
 
         # log run simulation
-        self.filename_log_simulation = "log_sim.csv"
-        self.filename_log_simulation_agg = "log_sim_agg.csv"
+        self.filename_log_simulation = os.path.join(self.path, "log_sim.csv")
+        self.filename_log_simulation_agg = os.path.join(self.path, "log_sim_agg.csv")
         self.file_log_simulation = pd.DataFrame(
             columns=[
-                "experiment",
+                "setting",
                 "mechanism",
                 "learner",
                 "run",
@@ -94,12 +95,12 @@ class Logger:
 
     def save_learning_run(self) -> None:
         """Save csv from learning experiment"""
-        if exists(self.path + self.filename_log_learning):
-            log = pd.read_csv(self.path + self.filename_log_learning)
+        if os.path.exists(self.filename_log_learning):
+            log = pd.read_csv(self.filename_log_learning)
             log = pd.concat([log, self.file_log_learning])
         else:
             log = self.file_log_learning
-        log.to_csv(self.path + self.filename_log_learning, index=False)
+        log.to_csv(self.filename_log_learning, index=False)
 
     def log_learning_run(
         self,
@@ -123,8 +124,8 @@ class Logger:
         # entries
         rows = [
             {
-                "experiment": self.experiment,
-                "mechanism": self.setting,
+                "setting": self.setting,
+                "mechanism": self.mechanism,
                 "learner": self.learn_alg,
                 "run": run,
                 "agent": agent,
@@ -148,17 +149,17 @@ class Logger:
         """Save aggregated csv from learning experiment"""
         df = self.log_learning_aggr()
         if df is not None:
-            if exists(self.path + self.filename_log_learning_agg):
-                log = pd.read_csv(self.path + self.filename_log_learning_agg)
+            if os.path.exists(self.filename_log_learning_agg):
+                log = pd.read_csv(self.filename_log_learning_agg)
                 log = pd.concat([log, df])
             else:
                 log = df
-            log.to_csv(self.path + self.filename_log_learning_agg, index=False)
+            log.to_csv(self.filename_log_learning_agg, index=False)
 
     def log_learning_aggr(self):
         """Aggregate file_log_learning if there are more runs"""
         if self.file_log_learning["run"].max() > 0:
-            indices = ["experiment", "mechanism", "learner", "agent"]
+            indices = ["setting", "mechanism", "learner", "agent"]
             columns = [
                 "convergence",
                 "iterations",
@@ -175,18 +176,18 @@ class Logger:
                 .agg({c: "mean" for c in columns})
                 .reset_index()
             )
-            df_mean = df_mean.melt(indices, var_name="Metric", value_name="Mean")
+            df_mean = df_mean.melt(indices, var_name="metric", value_name="mean")
             # std
             df_std = (
                 self.file_log_learning.groupby(indices)
                 .agg({c: "std" for c in columns[:-1]})
                 .reset_index()
             )
-            df_std = df_std.melt(indices, var_name="Metric", value_name="Std")
+            df_std = df_std.melt(indices, var_name="metric", value_name="std")
             # combine
             return (
-                df_mean.merge(df_std, on=indices + ["Metric"], how="outer")
-                .sort_values(indices + ["Metric"])
+                df_mean.merge(df_std, on=indices + ["metric"], how="outer")
+                .sort_values(indices + ["metric"])
                 .round(self.round_decimal)
             )
         else:
@@ -200,18 +201,18 @@ class Logger:
         """
         if self.logging:
             self.save_simulation_run()
-            self.save_simulatioa_aggr()
+            self.save_simulation_aggr()
         else:
             print("Results not logged.")
 
     def save_simulation_run(self) -> None:
         """Save csv from learning experiment"""
-        if exists(self.path + self.filename_log_simulation):
-            log = pd.read_csv(self.path + self.filename_log_simulation)
+        if os.path.exists(self.filename_log_simulation):
+            log = pd.read_csv(self.filename_log_simulation)
             log = pd.concat([log, self.file_log_simulation])
         else:
             log = self.file_log_simulation
-        log.to_csv(self.path + self.filename_log_simulation, index=False)
+        log.to_csv(self.filename_log_simulation, index=False)
 
     def log_simulation_run(self, run: int, agent: str, tag: str, value: dict):
         """Log metric created by simulation process
@@ -224,8 +225,8 @@ class Logger:
         # entries
         row = [
             {
-                "experiment": self.experiment,
-                "mechanism": self.setting,
+                "setting": self.setting,
+                "mechanism": self.mechanism,
                 "learner": self.learn_alg,
                 "run": run,
                 "agent": agent,
@@ -239,20 +240,20 @@ class Logger:
             [self.file_log_simulation, pd.DataFrame(row)]
         )
 
-    def save_simulatioa_aggr(self) -> None:
+    def save_simulation_aggr(self) -> None:
         """Save aggregated csv from simulation experiment"""
         df = self.log_simulation_aggr()
         if df is not None:
-            if exists(self.path + self.filename_log_simulation_agg):
-                log = pd.read_csv(self.path + self.filename_log_simulation_agg)
+            if os.path.exists(self.filename_log_simulation_agg):
+                log = pd.read_csv(self.filename_log_simulation_agg)
                 log = pd.concat([log, df])
             else:
                 log = df
-            log.to_csv(self.path + self.filename_log_simulation_agg, index=False)
+            log.to_csv(self.filename_log_simulation_agg, index=False)
 
     def log_simulation_aggr(self) -> pd.DataFrame:
         if self.file_log_simulation["run"].max() > 0:
-            indices = ["experiment", "mechanism", "learner", "agent", "tag"]
+            indices = ["setting", "mechanism", "learner", "agent", "tag"]
             # mean
             df_mean = (
                 self.file_log_simulation.groupby(indices)
@@ -271,10 +272,10 @@ class Logger:
             return (
                 df_mean.merge(
                     df_std,
-                    on=["experiment", "mechanism", "learner", "agent", "metric"],
+                    on=["setting", "mechanism", "learner", "agent", "metric"],
                     how="outer",
                 )
-                .sort_values(["experiment", "mechanism", "learner", "agent", "metric"])
+                .sort_values(["setting", "mechanism", "learner", "agent", "metric"])
                 .round(self.round_decimal)
             )
         else:
