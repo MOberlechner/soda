@@ -54,7 +54,7 @@ By discretizing the type and action space, and using distributional strategies, 
 
 ----
 ## How can I use the code
-After setting the repository up (see Installation) you can either run experiments using the method in [main.py](./main.py) or you can checkout the [notebooks](./notebooks/) for a more detailed introduction.
+After setting up the repository (see Installation) you can either run experiments using the method in [main.py](./main.py) or you can checkout the [notebooks](./notebooks/) for a more detailed introduction.
 
 <details> <summary> Installation </summary>
 
