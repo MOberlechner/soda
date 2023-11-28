@@ -1,87 +1,48 @@
-from typing import List
+from itertools import product
+from time import time
 
-from src.util.experiment import Experiment
+from soda.util.experiment import Experiment
 
+PATH_TO_CONFIGS = "configs/"
+PATH_TO_EXPERIMENTS = "experiments/test/"
 
-def main(
-    path_config: str,
-    path_exp: str,
-    experiment_list: List[tuple],
-    number_runs: int,
-    computation: bool,
-    simulation: bool,
-    logging: bool,
-    number_samples: int,
-    save_strat: bool,
-    save_init_strat: bool = True,
-    round_decimal: int = 3,
-):
-    """Run Experiments fom experiment_list, which are specified in respective config files
+NUMBER_RUNS = 3
+LEARNING = True
+SIMULATION = True
 
-    Args:
-        path_config (str): path to config file (should contain subdirectories for each mechanism_type)
-        path_exp (str): path to directory where results are stored
-        experiment_list (List[tuple]): list of experiments we want to perform, contains tuples (mechanism_type, experiment, learn_alg)
-        number_runs (int): number of repetitions for each experiment
-        computation (bool): learn strategies
-        simulation (bool): simulate mechanisms with saved strategies to evaluate
-        logging (bool): log results from computation/simulation
-        number_samples (int, optional): number of samples for simulation.
-        save_strat (bool): save strategies from computation
-        save_init_strat (bool, optional): save initial strategies . Defaults to True.
-        round_decimal (int, optional): Number of decimals we use for our metrics. Defaults to 3.
-    """
-    print(f"Running {len(experiment_list)} Experiments...\n")
+LOGGING = True
+SAVE_STRAT = True
+NUMBER_SAMPLES = int(2**22)
+ROUND_DECIMALS = 3
 
-    for mechanism_type, experiment, learn_alg in experiment_list:
-        exp_handler = Experiment(
-            mechanism_type,
-            experiment,
-            learn_alg,
-            number_runs,
-            computation,
-            simulation,
-            logging,
-            save_strat,
-            path_config,
-            number_samples,
-            save_init_strat,
-            path_exp,
-            round_decimal,
-        )
+EXPERIMENT_TAG = "main"
+games = ["all_pay/all_pay.yaml", "contest_game/tullock_contest_linear.yaml"]
 
-        exp_handler.run()
+learner = [
+    "sofw.yaml",
+]
 
+experiment_list = list(product(games, learner))
 
 if __name__ == "__main__":
+    print(f"\nRunning {len(experiment_list)} Experiments".ljust(100, "."), "\n")
+    t0 = time()
 
-    path_config = "configs/"
-    path_exp = "experiments/test/"
+    for config_game, config_learner in experiment_list:
 
-    experiment_list = [
-        ("single_item", "affiliated_values", "frank_wolfe"),
-    ]
-
-    number_runs = 1
-    learning = False
-    simulation = True
-    logging = True
-
-    number_samples = int(2**22)
-    save_strat = True
-    save_init_strat = False
-    round_decimal = 3
-
-    main(
-        path_config,
-        path_exp,
-        experiment_list,
-        number_runs,
-        learning,
-        simulation,
-        logging,
-        number_samples,
-        save_strat,
-        save_init_strat,
-        round_decimal,
-    )
+        exp_handler = Experiment(
+            PATH_TO_CONFIGS + "game/" + config_game,
+            PATH_TO_CONFIGS + "learner/" + config_learner,
+            NUMBER_RUNS,
+            LEARNING,
+            SIMULATION,
+            LOGGING,
+            SAVE_STRAT,
+            NUMBER_SAMPLES,
+            PATH_TO_EXPERIMENTS,
+            ROUND_DECIMALS,
+            EXPERIMENT_TAG,
+        )
+        exp_handler.run()
+    t1 = time()
+    print(f"\nExperiments finished ({(t1-t0)/60:.1f} min)".ljust(100, "."), "\n")
