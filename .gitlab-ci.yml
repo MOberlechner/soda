@@ -1,0 +1,5 @@
+test-job1:
+  stage: test
+  script:
+    - pytest
+    - pytest --cov=.
