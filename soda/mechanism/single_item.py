@@ -82,7 +82,10 @@ class SingleItemAuction(Mechanism):
         allocation = self.get_allocation(bids_profile, index_agent)
         payment = self.get_payment(bids_profile, allocation, index_agent)
         payoff = self.get_payoff(
-            allocation=allocation, valuation=valuation, payment=payment
+            allocation=allocation,
+            valuation=valuation,
+            payment=payment,
+            index_agent=index_agent,
         )
         return payoff
 
@@ -108,7 +111,11 @@ class SingleItemAuction(Mechanism):
         return revenue
 
     def get_payoff(
-        self, allocation: np.ndarray, valuation: np.ndarray, payment: np.ndarray
+        self,
+        allocation: np.ndarray,
+        valuation: np.ndarray,
+        payment: np.ndarray,
+        index_agent: int,
     ) -> np.ndarray:
         """compute payoff given allocation and payment vector for different utility types:
         QL: quasi-linear, ROI: return of investement, ROS: return on spend, ROSB: return on spend with budget
@@ -117,6 +124,7 @@ class SingleItemAuction(Mechanism):
             allocation (np.ndarray): allocation vector for agent
             valuation (np.ndarray) : valuation of bidder (idx), equal to observation in private value model
             payment (np.ndarray): payment vector for agent ()
+            index_agent (int): index of agent
 
         Returns:
             np.ndarray: payoff
@@ -135,6 +143,16 @@ class SingleItemAuction(Mechanism):
         elif self.utility_type == "ROS":
             payoff = np.divide(
                 valuation,
+                payment,
+                out=np.zeros_like((valuation - payment)),
+                where=payment != 0,
+            )
+        elif self.utility_type == "ROIS":
+            # mixture of ROI (lamb=0) and ROS (lambd=1)
+            # we allow for individual parameter
+            lambd = self.param_util["rois_parameter"][index_agent]
+            payoff = np.divide(
+                valuation - (1 - lambd) * payment,
                 payment,
                 out=np.zeros_like((valuation - payment)),
                 where=payment != 0,
@@ -455,7 +473,9 @@ class SingleItemAuction(Mechanism):
             self.reserve_price,
             None,
         )
-        payoff = self.get_payoff(np.ones_like(bid_grid), obs_grid, bid_grid)
+        payoff = self.get_payoff(
+            np.ones_like(bid_grid), obs_grid, bid_grid, index_agent=0
+        )
         return prob_win * payoff
 
     def check_own_gradient(self):
@@ -492,3 +512,18 @@ class SingleItemAuction(Mechanism):
                     )
         if "reserve_price" not in self.param_util:
             self.param_util["reserve_price"] = 0.0
+
+        if self.param_util["utility_type"] == "ROIS":
+            if "rois_parameter" not in self.param_util:
+                raise ValueError(
+                    "Specify rois_parameter (tuple or float) if using utility_type: ROIS"
+                )
+            else:
+                if isinstance(self.param_util["rois_parameter"], tuple):
+                    assert len(self.param_util["rois_parameter"]) == self.n_bidder
+                elif isinstance(self.param_util["rois_parameter"], float):
+                    self.param_util["rois_parameter"] = (
+                        self.param_util["rois_parameter"],
+                    ) * self.n_bidder
+                else:
+                    raise ValueError("rois_parameter should be tuple or float")
