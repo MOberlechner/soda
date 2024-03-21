@@ -253,6 +253,7 @@ class SingleItemAuction(Mechanism):
 
     def compute_expected_revenue(self, bid_profile: np.ndarray) -> float:
         """Computed expected revenue of single-item auction
+        In this setting we ignore other tie-breaking rules and always pick random
 
         Args:
             bid_profile (np.ndarray): bid profile
@@ -261,7 +262,10 @@ class SingleItemAuction(Mechanism):
             float: approximated expected revenue
         """
         allocations = np.array(
-            [self.get_allocation(bid_profile, i) for i in range(self.n_bidder)]
+            [
+                get_allocation_single_item(bid_profile, i, "random")
+                for i in range(self.n_bidder)
+            ]
         )
         payments = np.array(
             [
