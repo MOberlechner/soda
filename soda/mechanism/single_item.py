@@ -163,7 +163,7 @@ class SingleItemAuction(Mechanism):
                 payment,
                 out=np.zeros_like((valuation - payment)),
                 where=payment != 0,
-            ) + np.log(self.param_util["budget"] - payment)
+            )
 
         elif self.utility_type == "CRRA":
             rho = self.param_util["risk_parameter"]
@@ -171,6 +171,11 @@ class SingleItemAuction(Mechanism):
 
         else:
             raise ValueError(f"utility type {self.utility_type} not available")
+
+        # log barrier function for budget
+        if self.budget is not None:
+            payoff += self.budget_parameter * np.log(self.budget - payment)
+
         return allocation * payoff
 
     def get_payment(
@@ -516,6 +521,18 @@ class SingleItemAuction(Mechanism):
                     )
         if "reserve_price" not in self.param_util:
             self.param_util["reserve_price"] = 0.0
+
+        if "budget" in self.param_util:
+            self.budget = self.param_util["budget"]
+            assert np.all(
+                [self.budget > self.a_space[i][-1] for i in self.set_bidder]
+            ), "budget must be higher than maximal bid"
+            if "budget_parameter" in self.param_util:
+                self.budget_parameter = self.param_util["budget_parameter"]
+            else:
+                raise ValueError("budget active, but budget_parameter is not given")
+        else:
+            self.budget = None
 
         if self.param_util["utility_type"] == "ROIS":
             if "rois_parameter" not in self.param_util:
