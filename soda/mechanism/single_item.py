@@ -157,13 +157,6 @@ class SingleItemAuction(Mechanism):
                 out=np.zeros_like((valuation - payment)),
                 where=payment != 0,
             )
-        elif self.utility_type == "ROSB":
-            payoff = np.divide(
-                valuation,
-                payment,
-                out=np.zeros_like((valuation - payment)),
-                where=payment != 0,
-            )
 
         elif self.utility_type == "CRRA":
             rho = self.param_util["risk_parameter"]
