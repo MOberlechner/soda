@@ -6,46 +6,10 @@ import numpy as np
 import pandas as pd
 
 from projects.ad_auctions.config_exp import *
+from projects.ad_auctions.evaluation.util import *
 from soda.game import Game
 from soda.strategy import Strategy
 from soda.util.evaluation import get_results
-
-PARAM = {
-    "fontsize_title": 14,
-    "fontsize_legend": 13,
-    "fontsize_label": 13,
-}
-COLORS = ["#003f5c", "#ffa600", "#bc5090"]
-
-
-def set_axis(xlabel: str, ylabel: str, dpi=100, figsize=(5, 5)):
-    """General settings for axis"""
-    fig = plt.figure(tight_layout=True, dpi=dpi, figsize=figsize)
-    ax = fig.add_subplot(111)
-    ax.set_xlabel(xlabel, fontsize=PARAM["fontsize_label"])
-    ax.set_ylabel(ylabel, fontsize=PARAM["fontsize_label"])
-    ax.grid(
-        linestyle="-",
-        linewidth=0.25,
-        color="lightgrey",
-        zorder=-10,
-        alpha=0.5,
-        axis="y",
-    )
-    return fig, ax
-
-
-def get_bids(game: Game, strategies: Dict[str, Strategy], agent: str):
-    x = game.o_discr[agent]
-    bids = [strategies[agent].sample_bids(obs * np.ones(100)) for obs in x]
-    bids_mean, bids_std = np.mean(bids, axis=1), np.std(bids, axis=1)
-    bne = game.mechanism.get_bne(agent, x)
-    return x, bids_mean, bids_std, bne
-
-
-def get_revenue(path_to_experiments):
-    df = pd.read_csv(os.path.join(path_to_experiments, "log/revenue/log_sim_agg.csv"))
-    return df[df.metric == "revenue"].reset_index(drop=True)
 
 
 def plot_strategies_revenue(
@@ -101,7 +65,7 @@ def plot_revenue(
     labels = ["QL", "ROI", "ROSB"]
     learner = "soda1_revenue"
 
-    df = get_revenue(path_to_experiments)
+    df = get_revenue(path_to_experiments, "revenue")
     revenue = {}
     for payment_rule in ["fp", "sp"]:
         settings = [
@@ -116,7 +80,7 @@ def plot_revenue(
 
     fig, ax = set_axis("Utility Model", "Revenue")
     ax.set_xlim(0, 1)
-    ax.set_ylim(0, n_bidder / 4 + 0.02)
+    ax.set_ylim(0, 0.55)
     # plot revenue
     x = np.linspace(0.2, 0.8, 3)
     ax.bar(x - 0.055, revenue["fp"], width=0.1, color=COLORS)
@@ -140,6 +104,7 @@ def plot_revenue(
 if __name__ == "__main__":
 
     EXPERIMENT_TAG = "revenue"
+    path_save = f"{PATH_SAVE}/{EXPERIMENT_TAG}"
     os.makedirs(PATH_SAVE, exist_ok=True)
 
     # 2 agents uniform prior
@@ -157,10 +122,10 @@ if __name__ == "__main__":
             payment_rule,
             PATH_TO_CONFIGS,
             PATH_TO_EXPERIMENTS,
-            PATH_SAVE,
+            path_save,
         )
     n_bidder = 2
-    plot_revenue(n_bidder, PATH_TO_CONFIGS, PATH_TO_EXPERIMENTS, PATH_SAVE)
+    plot_revenue(n_bidder, PATH_TO_CONFIGS, PATH_TO_EXPERIMENTS, path_save)
 
     # 2 agents gaussian (truncated) prior
     for payment_rule in ["fp", "sp"]:
@@ -177,8 +142,8 @@ if __name__ == "__main__":
             payment_rule,
             PATH_TO_CONFIGS,
             PATH_TO_EXPERIMENTS,
-            PATH_SAVE,
+            path_save,
             tag="gaus_",
         )
     n_bidder = 2
-    plot_revenue(n_bidder, PATH_TO_CONFIGS, PATH_TO_EXPERIMENTS, PATH_SAVE, tag="gaus_")
+    plot_revenue(n_bidder, PATH_TO_CONFIGS, PATH_TO_EXPERIMENTS, path_save, tag="gaus_")
