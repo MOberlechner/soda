@@ -7,7 +7,7 @@ a_space:
 param_prior:
   distribution: 'gaussian_trunc'
   mu: 0.5
-  sigma: 0.15
+  sigma: 0.3
 param_util:
   payment_rule: 'first_price'
   tie_breaking: 'lose'
