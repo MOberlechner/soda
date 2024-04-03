@@ -17,25 +17,37 @@ SIMULATION = True
 
 EXPERIMENT_TAG = "revenue"
 games_uniform = [
+    # 2 agents
     "revenue/ql_fp_2.yaml",
     "revenue/ql_sp_2.yaml",
     "revenue/roi_fp_2.yaml",
     "revenue/roi_sp_2.yaml",
     "revenue/rosb_fp_2.yaml",
     "revenue/rosb_sp_2.yaml",
+    # 3 agents
     "revenue/ql_fp_3.yaml",
     "revenue/ql_sp_3.yaml",
     "revenue/roi_fp_3.yaml",
     "revenue/roi_sp_3.yaml",
+    "revenue/rosb_fp_3.yaml",
+    "revenue/rosb_sp_3.yaml",
 ]
 
 games_gaussian = [
+    # 2 agents
     "revenue/gaus_ql_fp_2.yaml",
     "revenue/gaus_ql_sp_2.yaml",
     "revenue/gaus_roi_fp_2.yaml",
     "revenue/gaus_roi_sp_2.yaml",
     "revenue/gaus_rosb_fp_2.yaml",
     "revenue/gaus_rosb_sp_2.yaml",
+    # 3 agents
+    "revenue/gaus_ql_fp_3.yaml",
+    "revenue/gaus_ql_sp_3.yaml",
+    "revenue/gaus_roi_fp_3.yaml",
+    "revenue/gaus_roi_sp_3.yaml",
+    "revenue/gaus_rosb_fp_3.yaml",
+    "revenue/gaus_rosb_sp_3.yaml",
 ]
 
 learner = [

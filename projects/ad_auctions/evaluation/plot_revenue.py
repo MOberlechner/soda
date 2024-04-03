@@ -80,7 +80,7 @@ def plot_revenue(
 
     fig, ax = set_axis("Utility Model", "Revenue")
     ax.set_xlim(0, 1)
-    ax.set_ylim(0, 0.55)
+    ax.set_ylim(0, 0.61)
     # plot revenue
     x = np.linspace(0.2, 0.8, 3)
     ax.bar(x - 0.055, revenue["fp"], width=0.1, color=COLORS)
@@ -127,6 +127,9 @@ if __name__ == "__main__":
     n_bidder = 2
     plot_revenue(n_bidder, PATH_TO_CONFIGS, PATH_TO_EXPERIMENTS, path_save)
 
+    n_bidder = 3
+    plot_revenue(n_bidder, PATH_TO_CONFIGS, PATH_TO_EXPERIMENTS, path_save)
+
     # 2 agents gaussian (truncated) prior
     for payment_rule in ["fp", "sp"]:
         config_learner = "soda1_revenue.yaml"
@@ -146,4 +149,7 @@ if __name__ == "__main__":
             tag="gaus_",
         )
     n_bidder = 2
+    plot_revenue(n_bidder, PATH_TO_CONFIGS, PATH_TO_EXPERIMENTS, path_save, tag="gaus_")
+
+    n_bidder = 3
     plot_revenue(n_bidder, PATH_TO_CONFIGS, PATH_TO_EXPERIMENTS, path_save, tag="gaus_")

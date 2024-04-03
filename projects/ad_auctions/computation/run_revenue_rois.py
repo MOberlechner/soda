@@ -24,31 +24,22 @@ games_uniform = [
     "revenue_rois/rois3_fp_2_b1.yaml",
     "revenue_rois/rois4_fp_2_b1.yaml",
     "revenue_rois/rois5_fp_2_b1.yaml",
-    "revenue_rois/rois6_fp_2_b1.yaml",
     "revenue_rois/rois1_sp_2_b1.yaml",
     "revenue_rois/rois2_sp_2_b1.yaml",
     "revenue_rois/rois3_sp_2_b1.yaml",
     "revenue_rois/rois4_sp_2_b1.yaml",
     "revenue_rois/rois5_sp_2_b1.yaml",
-    "revenue_rois/rois6_sp_2_b1.yaml",
-    # fix budget up to 0.8
+    # fix budget up to 0.6
     "revenue_rois/rois1_fp_2_b2.yaml",
     "revenue_rois/rois2_fp_2_b2.yaml",
     "revenue_rois/rois3_fp_2_b2.yaml",
     "revenue_rois/rois4_fp_2_b2.yaml",
     "revenue_rois/rois5_fp_2_b2.yaml",
-    "revenue_rois/rois6_fp_2_b2.yaml",
     "revenue_rois/rois1_sp_2_b2.yaml",
     "revenue_rois/rois2_sp_2_b2.yaml",
     "revenue_rois/rois3_sp_2_b2.yaml",
     "revenue_rois/rois4_sp_2_b2.yaml",
     "revenue_rois/rois5_sp_2_b2.yaml",
-    "revenue_rois/rois6_sp_2_b2.yaml",
-    # quasilinear
-    "revenue_rois/ql_fp_2_b1.yaml",
-    "revenue_rois/ql_fp_2_b2.yaml",
-    "revenue_rois/ql_sp_2_b1.yaml",
-    "revenue_rois/ql_sp_2_b2.yaml",
 ]
 
 learner = [
