@@ -125,26 +125,30 @@ def test_get_payoff(get_mechanism):
 
 
 testdata = [
-    ("QL", "lose"),
-    ("QL", "random"),
-    ("ROI", "lose"),
-    ("ROI", "random"),
-    ("ROS", "lose"),
-    ("ROS", "random"),
-    ("ROSB", "lose"),
-    ("ROSB", "random"),
-    ("CRRA", "lose"),
-    ("CRRA", "random"),
+    ("QL", "lose", "first_price"),
+    ("QL", "random", "first_price"),
+    ("ROI", "lose", "first_price"),
+    ("ROI", "random", "first_price"),
+    ("ROS", "lose", "first_price"),
+    ("ROS", "random", "first_price"),
+    ("CRRA", "lose", "first_price"),
+    ("CRRA", "random", "first_price"),
+    ("QL", "lose", "second_price"),
+    ("ROI", "lose", "second_price"),
+    ("ROS", "lose", "second_price"),
+    ("ROSB", "lose", "second_price"),
+    ("CRRA", "lose", "second_price"),
 ]
 
 
-@pytest.mark.parametrize("utility_type, tie_breaking", testdata)
-def test_own_gradient(get_mechanism, utility_type, tie_breaking):
+@pytest.mark.parametrize("utility_type, tie_breaking, payment_rule", testdata)
+def test_own_gradient(get_mechanism, utility_type, tie_breaking, payment_rule):
     """
     Function to compare gradient computation of mechanism (fast) and gradient class (slow)
     """
     # setup setting
-    mechanism = get_mechanism(2)
+    mechanism = get_mechanism(3)
+    mechanism.payment_rule = payment_rule
     mechanism.tie_breaking = tie_breaking
     mechanism.utility_type = utility_type
     mechanism.reserve_price = 0.1
@@ -168,4 +172,4 @@ def test_own_gradient(get_mechanism, utility_type, tie_breaking):
 
         assert np.allclose(
             util_gradient, own_gradient
-        ), f"equality gradient, setting: {tie_breaking}, {utility_type}"
+        ), f"equality gradient, setting: {tie_breaking}, {utility_type}, {payment_rule}"
