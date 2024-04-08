@@ -4,7 +4,11 @@ import numpy as np
 
 from soda.game import Game
 from soda.mechanism.mechanism import Mechanism
-from soda.mechanism.util import compute_probability_winning, get_allocation_single_item
+from soda.mechanism.util import (
+    compute_probability_order,
+    compute_probability_winning,
+    get_allocation_single_item,
+)
 from soda.strategy import Strategy
 
 # -------------------------------------------------------------------------------------------------------------------- #
@@ -451,7 +455,7 @@ class SingleItemAuction(Mechanism):
     def compute_gradient(
         self, game: Game, strategies: Dict[str, Strategy], agent: str
     ) -> np.ndarray:
-        """faster computation of gradient for symmetric iid bidders
+        """faster computation of gradient, ONLY FOR SYMMETRIC IID BIDDERS
 
         Args:
             game (Game): approximation game
@@ -461,32 +465,52 @@ class SingleItemAuction(Mechanism):
         Returns:
             np.ndarray: gradient for agent
         """
-        prob_win = compute_probability_winning(game, strategies, agent)
-
-        # utility type
-        obs_grid = (
+        value_grid = (
             np.ones((strategies[agent].m, strategies[agent].n))
             * strategies[agent].o_discr
         ).T
-        # first-price (including reserve price)
-        bid_grid = np.clip(
+
+        payment_grid = np.clip(
             np.ones((strategies[agent].n, strategies[agent].m))
             * strategies[agent].a_discr,
             self.reserve_price,
             None,
         )
-        payoff = self.get_payoff(
-            np.ones_like(bid_grid), obs_grid, bid_grid, index_agent=0
-        )
-        return prob_win * payoff
+        allocation_grid = np.ones_like(payment_grid)
+
+        if self.payment_rule == "first_price":
+            prob_win = compute_probability_winning(game, strategies, agent)
+            payoff = self.get_payoff(allocation_grid, value_grid, payment_grid)
+            return prob_win * payoff
+
+        elif self.payment_rule == "second_price":
+            pdf_order = compute_probability_order(game, strategies, agent)
+            payoff = game.mechanism.get_payoff(
+                allocation_grid, value_grid, payment_grid
+            )
+            prob_grid = np.ones((strategies[agent].n, strategies[agent].m)) * pdf_order
+            return np.hstack([np.zeros((strategies[agent].n, 1)), payoff * prob_grid])[
+                :, :-1
+            ].cumsum(axis=1)
+
+        else:
+            raise ValueError(
+                f"own gradient not available for payment_rule {self.payment_rule}"
+            )
 
     def check_own_gradient(self):
         """check if we can use gradient computation of mechanism"""
-        if (len(self.set_bidder) == 1) and (self.payment_rule == "first_price") & (
-            self.prior not in ["affiliated_values", "common_value"]
-        ) & ("corr" not in self.param_prior):
-            self.own_gradient = True
-            # print("- gradient computation via mechanism -")
+        if (len(self.set_bidder) == 1) and (
+            self.payment_rule in ["first_price", "second_price"]
+        ) & (self.prior not in ["affiliated_values", "common_value"]) & (
+            "corr" not in self.param_prior
+        ):
+            if self.payment_rule == "first_price":
+                self.own_gradient = True
+            elif (self.payment_rule == "second_price") & (self.tie_breaking == "lose"):
+                self.own_gradient = True
+            else:
+                self.own_gradient = False
 
     # -------------------------------------- helper methods --------------------------------------------- #
 

@@ -9,4 +9,5 @@ black
 isort
 pathlib
 pytest
+pytest-cov
 ipykernel

@@ -1,17 +1,15 @@
 # SODA - Computing BNE in Auctions & Contests
-If you find this code helpful and use this code in your research, please cite the following paper[^1]:
+If you find this code helpful and use this code in your research, please cite the following paper. Note that this code is provided for academic research purposes only. This code is not licensed for commercial use.
 
 >**Computing Bayes Nash Equilibrium Strategies in Auction Games via Simultaneous Online Dual Averaging.**<br>
 Martin Bichler, Maximilian Fichtl, Matthias Oberlechner<br>
 *Operations Research, 2023 (Forthcoming)*
 
-[^1] This code is provided for academic research purposes only. This code is not licensed for commercial use.
-
 <details>
 <summary> BibTex for citation </summary>
 
 ```
-@misc{Bichler2023soda,
+@article{Bichler2023soda,
   author = {Bichler, Martin and Fichtl, Maximilian and Oberlechner, Matthias},
   title = {Computing Bayes Nash Equilibrium Strategies in Auction Games via Simultaneous Online Dual Averaging},
   year = {2023},
@@ -19,7 +17,6 @@ Martin Bichler, Maximilian Fichtl, Matthias Oberlechner<br>
 }
 ```
 </details>
-
 
 
 ## Projects
@@ -55,10 +52,11 @@ By discretizing the type and action space, and using distributional strategies, 
 - Frank-Wolfe Algorithm
 - Fictitious Play
 
-## Intro
-A short explanation of the code can be found in the jupyter notebooks.
+----
+## How can I use the code
+After setting up the repository (see Installation) you can either run experiments using the method in [main.py](./main.py) or you can checkout the [notebooks](./notebooks/) for a more detailed introduction.
 
-## Setup
+<details> <summary> Installation </summary>
 
 Note: These setup instructions assume a Linux-based OS and uses python 3.8.10 (or higher).
 
@@ -107,3 +105,6 @@ pre-commit run --all-files
 ```
 
 For more information see https://pre-commit.com/.
+
+</details>
+

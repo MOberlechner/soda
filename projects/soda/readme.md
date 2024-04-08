@@ -6,7 +6,7 @@ Operations Research, 2023 (Forthcoming)
 
 To reproduce the numerical experiments from the paper:
 1. run the scripts in [projects/soda/computation](./computation) to compute the strategies and respective metrics. 
-2. create the plots and tables from the paper by running the scripts in  [projects/soda/computation](./evaluation).
+2. create the plots and tables from the paper by running the scripts in  [projects/soda/evaluation](./evaluation).
 
 All parameters for the specific experiments can be found in [projects/soda/configs](./configs). More general parameters for the experiments and visualizations can be found in [projects/soda/config_exp](./config_exp.py).
 

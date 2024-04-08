@@ -57,7 +57,7 @@ def compute_probability_winning(
         zero_wins (bool): possible to win with zero bids (only for random tie-breaking). Defaults to False.
 
     Raises:
-        ValueError: wront tie breaking rule
+        ValueError: wrong tie breaking rule
 
     Returns:
         np.ndarray: probability of winning
@@ -86,3 +86,32 @@ def compute_probability_winning(
         prob_win[0] = 0.0
 
     return prob_win
+
+
+def compute_probability_order(
+    game: Game,
+    strategies: Dict[str, Strategy],
+    agent: str,
+) -> np.ndarray:
+    """Compute probability that highest bid of opponents has value i
+
+    Args:
+        game (Game): approximation game
+        strategies (Dict[str, Strategy]): strategy profile
+        agent (str): bidder
+
+    Returns:
+        np.ndarray: probability of winning
+    """
+    pdf = strategies[agent].x.sum(axis=0)
+    cdf = np.insert(pdf, 0, 0.0).cumsum()[:-1]
+
+    if game.mechanism.tie_breaking == "lose":
+        return (pdf + cdf) ** (game.n_bidder - 1) - cdf ** (game.n_bidder - 1)
+
+    elif game.mechanism.tie_breaking == "random":
+        raise NotImplementedError(
+            "order probablity (for own gradient) not implemented for second-price with random tie-breaking"
+        )
+    else:
+        raise ValueError(f"Tie-breaking rule {game.mechanism.tie_breaking} unknown")

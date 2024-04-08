@@ -20,7 +20,9 @@ class Gradient:
         self.path = {}
         self.indices = {}
 
-    def compute(self, game: Game, strategies: Dict[str, Strategy], agent: str) -> None:
+    def compute(
+        self, game: Game, strategies: Dict[str, Strategy], agent: str
+    ) -> np.ndarray:
         """Computes gradient for agent given a strategyprofile, utilities (and weights)
 
         Args:
