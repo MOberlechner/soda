@@ -1,19 +1,23 @@
 # SODA - Computing BNE in Auctions & Contests
 If you find this code helpful and use this code in your research, please cite the following paper. Note that this code is provided for academic research purposes only. This code is not licensed for commercial use.
 
->**Computing Bayes Nash Equilibrium Strategies in Auction Games via Simultaneous Online Dual Averaging.**<br>
+>**Computing Bayes-Nash Equilibrium Strategies in Auction Games via Simultaneous Online Dual Averaging**<br>
 Martin Bichler, Maximilian Fichtl, Matthias Oberlechner<br>
-*Operations Research, 2023 (Forthcoming)*
+*Operations Research, 2023*
 
 <details>
 <summary> BibTex for citation </summary>
 
 ```
 @article{Bichler2023soda,
-  author = {Bichler, Martin and Fichtl, Maximilian and Oberlechner, Matthias},
-  title = {Computing Bayes Nash Equilibrium Strategies in Auction Games via Simultaneous Online Dual Averaging},
+  author = {Bichler, Martin and Fichtl, Max and Oberlechner, Matthias},
+  title = {Computing Bayes–Nash Equilibrium Strategies in Auction Games via Simultaneous Online Dual Averaging},
+  journal = {Operations Research},
+  volume = {0},
+  number = {0},
+  pages = {null},
   year = {2023},
-  journal = {Operations Research (Forthcoming)},
+  doi = {10.1287/opre.2022.0287},
 }
 ```
 </details>
@@ -24,7 +28,7 @@ The code contains different projects and can be used to reproduce the respective
 
 | Project | Publication |
 | ------- | ----------- |
-| [**soda**](./projects/soda/)<br> [Readme](./projects/soda/readme.md) |  **Computing Bayes Nash Equilibrium Strategies in Auction Games via Simultaneous Online Dual Averaging.** <br> *Martin Bichler, Maximilian Fichtl, Matthias Oberlechner*<br> Operations Research, 2023 (Forthcoming) |
+| [**soda**](./projects/soda/)<br> [Readme](./projects/soda/readme.md) |  **Computing Bayes-Nash Equilibrium Strategies in Auction Games via Simultaneous Online Dual Averaging** <br> *Martin Bichler, Maximilian Fichtl, Matthias Oberlechner*<br> Operations Research, 2023|
 | [**contests**](./projects/contests/) <br> `tbd` | **Computing Bayes Nash Equilibrium Strategies in Crowdsourcing Contests** <br> Martin Bichler, Markus Ewert, Matthias Oberlechner <br> *In 32nd Workshop on Information Technologies and Systems (WITS-22), 2022*
 
 
