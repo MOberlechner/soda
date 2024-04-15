@@ -16,44 +16,22 @@ LEARNING = True
 SIMULATION = True
 
 EXPERIMENT_TAG = "revenue"
+
 games_uniform = [
-    # 2 agents
-    "revenue/ql_fp_2.yaml",
-    "revenue/ql_sp_2.yaml",
-    "revenue/roi_fp_2.yaml",
-    "revenue/roi_sp_2.yaml",
-    "revenue/rosb_fp_2.yaml",
-    "revenue/rosb_sp_2.yaml",
-    # 3 agents
-    "revenue/ql_fp_3.yaml",
-    "revenue/ql_sp_3.yaml",
-    "revenue/roi_fp_3.yaml",
-    "revenue/roi_sp_3.yaml",
-    "revenue/rosb_fp_3.yaml",
-    "revenue/rosb_sp_3.yaml",
+    f"revenue/{util_type}_{payment_rule}_{n_bidder}.yaml"
+    for n_bidder in [2, 3, 5, 10]
+    for payment_rule in ["fp", "sp"]
+    for util_type in ["ql", "roi", "rosb"]
 ]
-
 games_gaussian = [
-    # 2 agents
-    "revenue/gaus_ql_fp_2.yaml",
-    "revenue/gaus_ql_sp_2.yaml",
-    "revenue/gaus_roi_fp_2.yaml",
-    "revenue/gaus_roi_sp_2.yaml",
-    "revenue/gaus_rosb_fp_2.yaml",
-    "revenue/gaus_rosb_sp_2.yaml",
-    # 3 agents
-    "revenue/gaus_ql_fp_3.yaml",
-    "revenue/gaus_ql_sp_3.yaml",
-    "revenue/gaus_roi_fp_3.yaml",
-    "revenue/gaus_roi_sp_3.yaml",
-    "revenue/gaus_rosb_fp_3.yaml",
-    "revenue/gaus_rosb_sp_3.yaml",
+    f"revenue/gaus_{util_type}_{payment_rule}_{n_bidder}.yaml"
+    for n_bidder in [2, 3, 5, 10]
+    for payment_rule in ["fp", "sp"]
+    for util_type in ["ql", "roi", "rosb"]
 ]
-
 learner = [
     "soda1_revenue.yaml",
 ]
-
 experiment_list = list(product(games_uniform + games_gaussian, learner))
 
 if __name__ == "__main__":
