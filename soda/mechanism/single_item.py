@@ -487,7 +487,7 @@ class SingleItemAuction(Mechanism):
 
         elif self.payment_rule == "second_price":
             pdf_order = compute_probability_order(game, strategies, agent)
-            payoff = game.mechanism.get_payoff(
+            payoff = self.get_payoff(
                 allocation_grid, value_grid, payment_grid, index_agent=0
             )
             prob_grid = np.ones((strategies[agent].n, strategies[agent].m)) * pdf_order
