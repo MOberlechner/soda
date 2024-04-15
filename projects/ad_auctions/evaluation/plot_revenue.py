@@ -101,6 +101,92 @@ def plot_revenue(
     fig.savefig(f"{path_save}/revenue_{tag}{n_bidder}.pdf", bbox_inches="tight")
 
 
+def plot_revenue_n_bidders(n_bidders, path_to_configs, path_to_experiments, path_save):
+
+    labels = ["QL", "ROI", "ROSB"]
+    learner = "soda1_revenue"
+
+    df = get_revenue(path_to_experiments, "revenue")
+    revenue_uniform, revenue_gaussian = {}, {}
+    for payment_rule in ["fp", "sp"]:
+        for util_type in ["ql", "roi", "rosb"]:
+            # uniform prior
+            revenue_uniform[(payment_rule, util_type)] = [
+                df.loc[
+                    (df.setting == f"{util_type}_{payment_rule}_{n_bidder}")
+                    & (df.learner == learner),
+                    "mean",
+                ].item()
+                for n_bidder in n_bidders
+            ]
+            # gaussian prior
+            revenue_gaussian[(payment_rule, util_type)] = [
+                df.loc[
+                    (df.setting == f"gaus_{util_type}_{payment_rule}_{n_bidder}")
+                    & (df.learner == learner),
+                    "mean",
+                ].item()
+                for n_bidder in n_bidders
+            ]
+
+    fig, ax = set_axis("Number Bidders", "Relative Difference in Revenue [%]")
+    ax.set_xlim(1.5, 10.5)
+    ax.set_xticks(n_bidders)
+    ax.set_ylim(0, 50)
+    for j, util_type in enumerate(["ql", "roi", "rosb"]):
+        # uniform
+        ax.plot(
+            n_bidders,
+            100
+            * (
+                1
+                - np.array(revenue_uniform[("fp", util_type)])
+                / np.array(revenue_uniform[("sp", util_type)])
+            ),
+            color=COLORS[j],
+            linestyle="-",
+            linewidth=2.5,
+            marker="o",
+            zorder=3 if util_type == "roi" else 1,
+        )
+        # gaussian
+        ax.plot(
+            n_bidders,
+            100
+            * (
+                1
+                - np.array(revenue_gaussian[("fp", util_type)])
+                / np.array(revenue_gaussian[("sp", util_type)])
+            ),
+            color=COLORS[j],
+            linestyle="--",
+            linewidth=2.5,
+            marker="s",
+            zorder=3 if util_type == "roi" else 1,
+        )
+
+    # legend
+    for j, util_type in enumerate(["QL", "ROI", "ROSB"]):
+        ax.plot(
+            [-1], [1], label=util_type, linewidth=2.5, linestyle="-", color=COLORS[j]
+        )
+    ax.plot(
+        [-1], [1], label="Uniform", linewidth=2.5, linestyle="-", marker="o", color="k"
+    )
+    ax.plot(
+        [-1],
+        [1],
+        label="Gaussian",
+        linewidth=2.5,
+        linestyle="--",
+        marker="s",
+        color="k",
+    )
+    ax.legend(fontsize=PARAM["fontsize_legend"], loc=1, ncol=2)
+
+    fig.savefig(f"{path_save}/revenue_n.pdf", bbox_inches="tight")
+
+
 if __name__ == "__main__":
 
     EXPERIMENT_TAG = "revenue"
@@ -127,9 +213,6 @@ if __name__ == "__main__":
     n_bidder = 2
     plot_revenue(n_bidder, PATH_TO_CONFIGS, PATH_TO_EXPERIMENTS, path_save)
 
-    n_bidder = 3
-    plot_revenue(n_bidder, PATH_TO_CONFIGS, PATH_TO_EXPERIMENTS, path_save)
-
     # 2 agents gaussian (truncated) prior
     for payment_rule in ["fp", "sp"]:
         config_learner = "soda1_revenue.yaml"
@@ -151,5 +234,5 @@ if __name__ == "__main__":
     n_bidder = 2
     plot_revenue(n_bidder, PATH_TO_CONFIGS, PATH_TO_EXPERIMENTS, path_save, tag="gaus_")
 
-    n_bidder = 3
-    plot_revenue(n_bidder, PATH_TO_CONFIGS, PATH_TO_EXPERIMENTS, path_save, tag="gaus_")
+    n_bidders = [2, 3, 5, 10]
+    plot_revenue_n_bidders(n_bidders, PATH_TO_CONFIGS, PATH_TO_EXPERIMENTS, path_save)
