@@ -81,7 +81,7 @@ def plot_revenue(
 
     fig, ax = set_axis("Utility Model", "Revenue")
     ax.set_xlim(0, 1)
-    ax.set_ylim(0, 0.76)
+    ax.set_ylim(0, 0.61)
     # plot revenue
     x = np.linspace(0.2, 0.8, 3)
     ax.bar(x - 0.055, revenue["fp"], width=0.1, color=COLORS)
@@ -118,7 +118,6 @@ if __name__ == "__main__":
             plot_revenue(
                 budget, n_bidder, PATH_TO_CONFIGS, PATH_TO_EXPERIMENTS, path_save
             )
-
             # plot strategies
             for payment_rule in ["fp", "sp"]:
                 plot_strategies_revenue(
