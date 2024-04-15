@@ -4,46 +4,78 @@ These are the numerical experiments (with SODA) for:
 >**Low Revenue in Display Ad Auctions: Algorithmic Collusion vs. Non-Quasilinear Preferences**<br>
 *Martin Bichler, Alok Gupta, Laura Mathews, Matthias Oberlechner<br> 2023, Working Paper*
 
----
+To reproduce the results (with SODA) from the paper above, run the scripts as described below:
 
-## Computation
+---
+The parameters for the experiments can be found in [config_exp](config_exp.py):
 - the results will be stored in<br> `PATH_TO_EXPERIMENTS = "experiments/ad_auctions/"` 
 - the config files can be found in<br> `PATH_TO_CONFIGS = "projects/ad_auction/configs/"`
+- plots will be stored in<br> `PATH_SAVE = "projects/ad_auctions/results/"`
 
-To compute the strategies (learning) and evaluate them (simulation) run the following scripts (from the main directory of the repo).
-
-**Exp 1 - FPSB and SPSB for different utility models (large)**<br>
-*Number of settings: 16 (10 runs each), Runtime: 23 min*  <br>
+## Exp 1 - Revenue for FPSB and SPSB with QL, ROI, and ROSB
+*Number of settings: 48 (10 runs each), Runtime: 80 min*  <br>
+**Computation**<br>
 Experiments to compute BNE for different utility models and compare expected revenue.
-This settings uniform prior (2-3 agents) and a truncated gaussian prior (2 agents).
+We vary the number of agents (2, 3, 5, and 10) and the prior (uniform and truncated gaussian).
 ```bash
-python projects/soda/computation/run_revenue.py
+python projects/ad_auctions/computation/run_revenue.py
+```
+**Evaluation**<br>
+We create 3 figures (Figure 3) where we compare the difference in revenue between first- and second-price auctions, and one table (Table 2) in which we report metrics where we compare the computed strategies to known analytical BNE.
+Additional plots that visualize the computed strategies are also created.
+```bash
+python projects/ad_auctions/evaluation/plot_revenue.py
+python projects/ad_auctions/evaluation/table_revenue.py
 ```
 
-**Exp 2 - FPSB and SPSB for different utility models (baseline)**<br>
-*Number of settings: 6, Runtime: 20s*  <br>
+## Exp 2 - ROIS: Convex Combination of ROI and ROS
+*Number of settings: 10 (10 runs each), Runtime: 4 min*
+
+**Compuation**<br>
+In this experiments we consider an extension of the ROI and ROS utility functions, by considering convex combinations thereof. We compute the equilibrium strategies for different combinations.
+```bash
+python projects/ad_auctions/computation/run_revenue_rois.py
+```
+
+**Evaluation**<br>
+We create on one plot (Figure 4 a) that shows the expected revenue for the first- and second-price auctions in equilibrium given the utility functions.
+```bash
+python projects/ad_auctions/evaluation/plot_revenue_rois.py
+```
+
+## Exp 3 - Budget Constraints
+*Number of settings: 12 (10 runs each), Runtime: 5 min* 
+
+**Computation**<br>
+For better comparison, we consider budget constraints via log-barrier function for QL, ROI, and ROS. 
+```bash
+python projects/ad_auctions/computation/run_revenue_budget.py
+```
+
+**Evaluation**<br>
+Given the computed strategies, we compare the expected revenue of first- and second-price auctions for these budget constraints.
+```bash
+python projects/ad_auctions/evaluation/plot_revenue_budget.py
+```
+
+## Exp 4 - Baseline for Bandits
+*Number of settings: 6 ((1 run each)), Runtime: 20s*
+
+**Computation**<br>
 Experiments with a low discretization (n=21) as a baseline to compare to results using bandit algorithms. Here we only compute the strategies.
 ```bash
-python projects/soda/computation/run_baseline.py
-```
-
-## Evaluation
-After the strategies are computed and saved (together with log files) in the `PATH_TO_EXPERIMENT` directory, we can evaluate our results.
-
-**Exp 1 - FPSB and SPSB for different utility models (large)**<br>
-To create a plot with the BNE strategies and the expected revenue run
-```bash
-python projects/soda/evaluation/plot_revenue.py
-```
-The table in the appendix (and more) where we compare the computed BNE to the analytical ones is created with
-```bash
-python projects/soda/evaluation/table_revenue.py
-```
-
-**Exp 2 - FPSB and SPSB for different utility models (baseline)**<br>
-We compute the expected revenue in the discretized setting to serve as a baseline for the bandit learner.
-```bash
-python projects/soda/evaluation/table_baseline.py
+python projects/ad_auctions/computation/run_baseline.py
 ```
 ---
-*contact: matthias.oberlechner@tum.de*
+## Run all experiments:<br>
+
+**Computation - create data (~1.5h)**
+```
+python projects/ad_auctions/computation/run_revenue.py | python projects/ad_auctions/computation/run_revenue_rois.py | python projects/ad_auctions/computation/run_revenue_budet.py | python projects/ad_auctions/computation/run_baseline.py
+```
+**Evaluation - create plots and tables**
+```
+python projects/ad_auctions/evaluation/plot_revenue.py | python projects/ad_auctions/evaluation/table_revenue.py | python projects/ad_auctions/evaluation/plot_revenue_rois.py | python projects/ad_auctions/evaluation/plot_revenue_budget.py
+```
+---
+*For questions, please contact: matthias.oberlechner@tum.de.*
