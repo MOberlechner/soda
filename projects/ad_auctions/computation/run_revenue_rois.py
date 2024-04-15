@@ -39,7 +39,7 @@ experiment_list = list(product(games_uniform, learner))
 if __name__ == "__main__":
     print(f"\nRunning {len(experiment_list)} Experiments".ljust(100, "."), "\n")
     t0 = time()
-
+    successfull = 0
     for config_game, config_learner in experiment_list:
 
         exp_handler = Experiment(
@@ -56,5 +56,11 @@ if __name__ == "__main__":
             EXPERIMENT_TAG,
         )
         exp_handler.run()
+        successfull += 1 - exp_handler.error
     t1 = time()
-    print(f"\nExperiments finished ({(t1-t0)/60:.1f} min)".ljust(100, "."), "\n")
+    print(
+        f"\n{successfull} out of {len(experiment_list)} experiments successfull ({(t1-t0)/60:.1f} min)".ljust(
+            100, "."
+        ),
+        "\n",
+    )
