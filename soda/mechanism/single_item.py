@@ -480,13 +480,15 @@ class SingleItemAuction(Mechanism):
 
         if self.payment_rule == "first_price":
             prob_win = compute_probability_winning(game, strategies, agent)
-            payoff = self.get_payoff(allocation_grid, value_grid, payment_grid)
+            payoff = self.get_payoff(
+                allocation_grid, value_grid, payment_grid, index_agent=0
+            )
             return prob_win * payoff
 
         elif self.payment_rule == "second_price":
             pdf_order = compute_probability_order(game, strategies, agent)
             payoff = game.mechanism.get_payoff(
-                allocation_grid, value_grid, payment_grid
+                allocation_grid, value_grid, payment_grid, index_agent=0
             )
             prob_grid = np.ones((strategies[agent].n, strategies[agent].m)) * pdf_order
             return np.hstack([np.zeros((strategies[agent].n, 1)), payoff * prob_grid])[
