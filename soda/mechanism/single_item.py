@@ -316,6 +316,7 @@ class SingleItemAuction(Mechanism):
             & (self.prior == "uniform")
             & self.check_bidder_symmetric()
             & (self.value_model == "private")
+            & (self.budget is None)
         ):
 
             obs_clipped = np.clip(obs, self.reserve_price, None)
@@ -341,6 +342,7 @@ class SingleItemAuction(Mechanism):
             & self.check_bidder_symmetric([0, 2])
             & (self.value_model == "common_affiliated")
             & (self.n_bidder == 2)
+            & (self.budget is None)
         ):
             bne = 2 / 3 * obs
         else:
@@ -356,6 +358,7 @@ class SingleItemAuction(Mechanism):
             & (self.prior == "uniform")
             & (self.value_model == "private")
             & (self.n_bidder >= 3)
+            & (self.budget is None)
         ):
             bne = obs + 1 / (self.n_bidder - 2) * obs
         else:
@@ -369,6 +372,7 @@ class SingleItemAuction(Mechanism):
             & (self.payment_rule == "second_price")
             & self.check_bidder_symmetric()
             & (self.value_model == "private")
+            & (self.budget is None)
         ):
             bne = np.where(obs >= self.reserve_price, obs, 0)
         else:
@@ -383,6 +387,7 @@ class SingleItemAuction(Mechanism):
             & self.check_bidder_symmetric([0, 2])
             & (self.value_model == "common_independent")
             & (self.n_bidder == 3)
+            & (self.budget is None)
         ):
             bne = 2 * obs / (2 + obs)
         else:
@@ -398,6 +403,7 @@ class SingleItemAuction(Mechanism):
             & (self.value_model == "private")
             & (self.prior == "uniform")
             & (self.reserve_price > 0)
+            & (self.budget is None)
         ):
             obs_clipped = np.clip(obs, self.reserve_price, None)
             if self.n_bidder == 2:
@@ -429,6 +435,7 @@ class SingleItemAuction(Mechanism):
             & self.check_bidder_symmetric([0, 1])
             & (self.value_model == "private")
             & (self.prior == "uniform")
+            & (self.budget is None)
         ):
             rho = self.param_util["risk_parameter"]
             bne = obs * (self.n_bidder - 1) / (self.n_bidder - 1 + rho)
@@ -444,6 +451,7 @@ class SingleItemAuction(Mechanism):
             & self.check_bidder_symmetric([0, 1])
             & (self.value_model == "private")
             & (self.prior == "uniform")
+            & (self.budget is None)
         ):
             bne = obs + 1 / (self.n_bidder - 2) * obs
         else:
