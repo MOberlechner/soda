@@ -3,7 +3,7 @@ bidder: ['1', '1']
 o_space:
   '1': [0.0 ,1.0]
 a_space:
-  '1': [0.0 ,1.0]
+  '1': [0.0 ,0.8]
 param_prior:
   distribution: 'uniform'
 param_util:
@@ -11,8 +11,8 @@ param_util:
   tie_breaking: 'lose'
   utility_type: 'QL'
   reserve_price: 0.05
-  budget: 1.01
-  budget_parameter: 0.5
+  budget: 0.81
+  budget_parameter: 1.0
 n: 64
 m: 64
 bne_known: False
