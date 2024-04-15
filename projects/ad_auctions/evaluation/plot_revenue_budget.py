@@ -109,6 +109,7 @@ if __name__ == "__main__":
     EXPERIMENT_TAG = "revenue_budget"
     path_save = f"{PATH_SAVE}revenue_budget/"
     os.makedirs(path_save, exist_ok=True)
+    plot_strategies = False
 
     config_learner = "soda1_revenue.yaml"
 
@@ -119,12 +120,13 @@ if __name__ == "__main__":
                 budget, n_bidder, PATH_TO_CONFIGS, PATH_TO_EXPERIMENTS, path_save
             )
             # plot strategies
-            for payment_rule in ["fp", "sp"]:
-                plot_strategies_revenue(
-                    budget,
-                    n_bidder,
-                    payment_rule,
-                    PATH_TO_CONFIGS,
-                    PATH_TO_EXPERIMENTS,
-                    path_save,
-                )
+            if plot_strategies:
+                for payment_rule in ["fp", "sp"]:
+                    plot_strategies_revenue(
+                        budget,
+                        n_bidder,
+                        payment_rule,
+                        PATH_TO_CONFIGS,
+                        PATH_TO_EXPERIMENTS,
+                        path_save,
+                    )

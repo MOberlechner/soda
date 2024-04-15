@@ -192,47 +192,49 @@ if __name__ == "__main__":
     EXPERIMENT_TAG = "revenue"
     path_save = f"{PATH_SAVE}/{EXPERIMENT_TAG}"
     os.makedirs(PATH_SAVE, exist_ok=True)
+    plot_strategies = False
 
-    # 2 agents uniform prior
-    for payment_rule in ["fp", "sp"]:
-        config_learner = "soda1_revenue.yaml"
-        config_games = [
-            f"revenue/ql_{payment_rule}_2.yaml",
-            f"revenue/roi_{payment_rule}_2.yaml",
-            f"revenue/rosb_{payment_rule}_2.yaml",
-        ]
-        labels = ["QL", "ROI", "ROSB"]
-        plot_strategies_revenue(
-            config_games,
-            labels,
-            payment_rule,
-            PATH_TO_CONFIGS,
-            PATH_TO_EXPERIMENTS,
-            path_save,
-        )
+    # plot revenue
     n_bidder = 2
     plot_revenue(n_bidder, PATH_TO_CONFIGS, PATH_TO_EXPERIMENTS, path_save)
-
-    # 2 agents gaussian (truncated) prior
-    for payment_rule in ["fp", "sp"]:
-        config_learner = "soda1_revenue.yaml"
-        config_games = [
-            f"revenue/gaus_ql_{payment_rule}_2.yaml",
-            f"revenue/gaus_roi_{payment_rule}_2.yaml",
-            f"revenue/gaus_rosb_{payment_rule}_2.yaml",
-        ]
-        labels = ["QL", "ROI", "ROSB"]
-        plot_strategies_revenue(
-            config_games,
-            labels,
-            payment_rule,
-            PATH_TO_CONFIGS,
-            PATH_TO_EXPERIMENTS,
-            path_save,
-            tag="gaus_",
-        )
-    n_bidder = 2
     plot_revenue(n_bidder, PATH_TO_CONFIGS, PATH_TO_EXPERIMENTS, path_save, tag="gaus_")
-
     n_bidders = [2, 3, 5, 10]
     plot_revenue_n_bidders(n_bidders, PATH_TO_CONFIGS, PATH_TO_EXPERIMENTS, path_save)
+
+    if plot_strategies:
+        # 2 agents uniform prior
+        for payment_rule in ["fp", "sp"]:
+            config_learner = "soda1_revenue.yaml"
+            config_games = [
+                f"revenue/ql_{payment_rule}_2.yaml",
+                f"revenue/roi_{payment_rule}_2.yaml",
+                f"revenue/rosb_{payment_rule}_2.yaml",
+            ]
+            labels = ["QL", "ROI", "ROSB"]
+            plot_strategies_revenue(
+                config_games,
+                labels,
+                payment_rule,
+                PATH_TO_CONFIGS,
+                PATH_TO_EXPERIMENTS,
+                path_save,
+            )
+
+        # 2 agents gaussian (truncated) prior
+        for payment_rule in ["fp", "sp"]:
+            config_learner = "soda1_revenue.yaml"
+            config_games = [
+                f"revenue/gaus_ql_{payment_rule}_2.yaml",
+                f"revenue/gaus_roi_{payment_rule}_2.yaml",
+                f"revenue/gaus_rosb_{payment_rule}_2.yaml",
+            ]
+            labels = ["QL", "ROI", "ROSB"]
+            plot_strategies_revenue(
+                config_games,
+                labels,
+                payment_rule,
+                PATH_TO_CONFIGS,
+                PATH_TO_EXPERIMENTS,
+                path_save,
+                tag="gaus_",
+            )
