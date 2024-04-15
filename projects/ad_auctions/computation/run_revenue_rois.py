@@ -16,32 +16,20 @@ LEARNING = True
 SIMULATION = True
 
 EXPERIMENT_TAG = "revenue_rois"
-# {rois_parameter}_{payment_rule}_{n_agents}_{budget}
 games_uniform = [
-    # fix budget up to 1.0
-    "revenue_rois/rois1_fp_2_b1.yaml",
-    "revenue_rois/rois2_fp_2_b1.yaml",
-    "revenue_rois/rois3_fp_2_b1.yaml",
-    "revenue_rois/rois4_fp_2_b1.yaml",
-    "revenue_rois/rois5_fp_2_b1.yaml",
-    "revenue_rois/rois1_sp_2_b1.yaml",
-    "revenue_rois/rois2_sp_2_b1.yaml",
-    "revenue_rois/rois3_sp_2_b1.yaml",
-    "revenue_rois/rois4_sp_2_b1.yaml",
-    "revenue_rois/rois5_sp_2_b1.yaml",
-    # fix budget up to 0.6
-    "revenue_rois/rois1_fp_2_b2.yaml",
-    "revenue_rois/rois2_fp_2_b2.yaml",
-    "revenue_rois/rois3_fp_2_b2.yaml",
-    "revenue_rois/rois4_fp_2_b2.yaml",
-    "revenue_rois/rois5_fp_2_b2.yaml",
-    "revenue_rois/rois1_sp_2_b2.yaml",
-    "revenue_rois/rois2_sp_2_b2.yaml",
-    "revenue_rois/rois3_sp_2_b2.yaml",
-    "revenue_rois/rois4_sp_2_b2.yaml",
-    "revenue_rois/rois5_sp_2_b2.yaml",
+    # first price
+    "revenue_rois/rois1_fp_2.yaml",
+    "revenue_rois/rois2_fp_2.yaml",
+    "revenue_rois/rois3_fp_2.yaml",
+    "revenue_rois/rois4_fp_2.yaml",
+    "revenue_rois/rois5_fp_2.yaml",
+    # second price
+    "revenue_rois/rois1_sp_2.yaml",
+    "revenue_rois/rois2_sp_2.yaml",
+    "revenue_rois/rois3_sp_2.yaml",
+    "revenue_rois/rois4_sp_2.yaml",
+    "revenue_rois/rois5_sp_2.yaml",
 ]
-
 learner = [
     "soda1_revenue.yaml",
 ]
