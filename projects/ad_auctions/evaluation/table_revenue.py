@@ -17,7 +17,7 @@ def create_table_sim(experiment_tag: str, round_dec: int) -> pd.DataFrame:
     )
     index_cols = ["setting", "mechanism", "learner", "agent"]
     metric_cols_learn = ["utility_loss"]
-    metric_cols_sim = ["l2_norm", "util_loss"]
+    metric_cols_sim = ["util_loss", "l2_norm"]
 
     # Learning
     df1 = pd.read_csv(file_learn)
