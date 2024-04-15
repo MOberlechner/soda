@@ -17,63 +17,16 @@ parameter = np.array([0.0, 0.25, 0.50, 0.75, 1.0])
 COLORS_ROIS = [cmap(p) for p in parameter]
 
 
-def plot_strategies_revenue(
-    budget,
-    payment_rule,
-    path_to_configs,
-    path_to_experiments,
-    path_save,
-    tag: str = "",
-):
+def plot_revenue(path_to_configs, path_to_experiments, path_save):
 
-    config_games = [
-        f"revenue_budget/{util}_{payment_rule}_{n_bidder}_b{budget}.yaml"
-        for util in ["ql", "roi", "ros"]
-    ]
-    labels = ["QL", "ROI", "ROSB"]
-
-    fig, ax = set_axis("Valuation v", "Bid b")
-    for i in range(3):
-        config_game = config_games[i]
-        label = labels[i]
-        color = COLORS[i]
-
-        # get data from computed strategies
-        game, _, strategies = get_results(
-            config_game,
-            config_learner,
-            path_to_configs,
-            path_to_experiments,
-            experiment_tag="revenue_budget",
-            run=0,
-        )
-        x, bids_mean, bids_std, bne = get_bids(game, strategies, agent="1")
-
-        # plot results
-        ax.plot(x, bids_mean, color=color, linestyle="-", label=label, linewidth=2)
-        ax.fill_between(
-            x, bids_mean - bids_std, bids_mean + bids_std, alpha=0.4, color=color
-        )
-
-    ax.legend(fontsize=PARAM["fontsize_legend"], loc=2)
-    ax.set_ylim(0, 1.0)
-    ax.set_xlim(0, 1)
-    fig.savefig(
-        f"{path_save}/revenue_budget{budget}_strat_{tag}{payment_rule}_{game.n_bidder}.pdf",
-        bbox_inches="tight",
-    )
-
-
-def plot_revenue(budget: int, path_to_configs, path_to_experiments, path_save):
-
-    labels = ["0.0\nROI", "1/4", "1/2", "3/4", "1.0\nROS"]
+    labels = ["0 (ROI)", "1/4", "1/2", "3/4", "1 (ROS)"]
     learner = "soda1_revenue"
     n_bidder = 2
 
     df = get_revenue(path_to_experiments, "revenue_rois")
     revenue = {}
     for payment_rule in ["fp", "sp"]:
-        settings = [f"rois{k+1}_{payment_rule}_2_b{budget}" for k in range(5)]
+        settings = [f"rois{k+1}_{payment_rule}_{n_bidder}" for k in range(5)]
         revenue[payment_rule] = [
             df.loc[(df.setting == s) & (df.learner == learner), "mean"].item()
             for s in settings
@@ -98,7 +51,7 @@ def plot_revenue(budget: int, path_to_configs, path_to_experiments, path_save):
     ax.bar([-1], [1], label="First-Price", facecolor="white", edgecolor="k")
     ax.bar([-1], [1], label="Second-Price", hatch="//", color="white", edgecolor="k")
     ax.legend(fontsize=PARAM["fontsize_legend"], loc=2)
-    fig.savefig(f"{path_save}/revenue_rois_b{budget}.pdf", bbox_inches="tight")
+    fig.savefig(f"{path_save}/revenue_rois.pdf", bbox_inches="tight")
 
 
 if __name__ == "__main__":
@@ -110,17 +63,5 @@ if __name__ == "__main__":
     config_learner = "soda1_revenue.yaml"
     n_bidder = 2
 
-    for budget in [1, 2]:
-
-        # plot revenue
-        plot_revenue(budget, PATH_TO_CONFIGS, PATH_TO_EXPERIMENTS, path_save)
-
-        # plot strategies
-        # for payment_rule in ["fp", "sp"]:
-        #    plot_strategies_revenue(
-        #        budget,
-        #        payment_rule,
-        #        PATH_TO_CONFIGS,
-        #        PATH_TO_EXPERIMENTS,
-        #        path_save,
-        #    )
+    # plot revenue
+    plot_revenue(PATH_TO_CONFIGS, PATH_TO_EXPERIMENTS, path_save)
