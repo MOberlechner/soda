@@ -59,7 +59,7 @@ python projects/ad_auctions/evaluation/plot_revenue_budget.py
 ```
 
 ## Exp 4 - Baseline for Bandits
-*Number of settings: 6 ((1 run each)), Runtime: 20s*
+*Number of settings: 6 (1 run each), Runtime: 20s*
 
 **Computation**<br>
 Experiments with a low discretization (n=21) as a baseline to compare to results using bandit algorithms. Here we only compute the strategies.
@@ -71,7 +71,7 @@ python projects/ad_auctions/computation/run_baseline.py
 
 **Computation - create data (~1.5h)**
 ```
-python projects/ad_auctions/computation/run_revenue.py | python projects/ad_auctions/computation/run_revenue_rois.py | python projects/ad_auctions/computation/run_revenue_budet.py | python projects/ad_auctions/computation/run_baseline.py
+python projects/ad_auctions/computation/run_revenue.py | python projects/ad_auctions/computation/run_revenue_rois.py | python projects/ad_auctions/computation/run_revenue_budget.py | python projects/ad_auctions/computation/run_baseline.py
 ```
 **Evaluation - create plots and tables**
 ```
