@@ -66,6 +66,13 @@ Experiments with a low discretization (n=21) as a baseline to compare to results
 ```bash
 python projects/ad_auctions/computation/run_baseline.py
 ```
+
+**Evaluation**<br>
+Compute the expected revenue in the discretized setting.
+```bash
+python projects/ad_auctions/evaluation/table_baseline.py 
+```
+
 ---
 ## Run all experiments:<br>
 
