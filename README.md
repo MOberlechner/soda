@@ -24,7 +24,8 @@ The code contains different projects and can be used to reproduce the respective
 
 | Project | Publication |
 | ------- | ----------- |
-| [**soda**](./projects/soda/)<br> [Readme](./projects/soda/readme.md) |  **Computing Bayes Nash Equilibrium Strategies in Auction Games via Simultaneous Online Dual Averaging.** <br> *Martin Bichler, Maximilian Fichtl, Matthias Oberlechner*<br> Operations Research, 2023 (Forthcoming) |
+| [**soda**](./projects/soda/) |  **Computing Bayes Nash Equilibrium Strategies in Auction Games via Simultaneous Online Dual Averaging.** <br> *Martin Bichler, Maximilian Fichtl, Matthias Oberlechner*<br> Operations Research, 2023 |
+| [**ad_auctions**](./projects/ad_auctions/)<br>|  **Low Revenue in Display Ad Auctions: Algorithmic Collusion vs. Non-Quasilinear Preferences.** <br> *Martin Bichler, Alok Gupta, Laura Mathews, Matthias Oberlechner*<br> Working Paper, 2024 |
 | [**contests**](./projects/contests/) <br> `tbd` | **Computing Bayes Nash Equilibrium Strategies in Crowdsourcing Contests** <br> Martin Bichler, Markus Ewert, Matthias Oberlechner <br> *In 32nd Workshop on Information Technologies and Systems (WITS-22), 2022*
 
 
