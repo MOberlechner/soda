@@ -57,7 +57,7 @@ def plot_revenue(path_to_configs, path_to_experiments, path_save):
 if __name__ == "__main__":
 
     EXPERIMENT_TAG = "revenue_rois"
-    path_save = f"{PATH_SAVE}revenue_rois/"
+    path_save = os.path.join(PATH_SAVE, EXPERIMENT_TAG)
     os.makedirs(path_save, exist_ok=True)
 
     config_learner = "soda1_revenue.yaml"
