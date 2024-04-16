@@ -107,26 +107,24 @@ def plot_revenue(
 if __name__ == "__main__":
 
     EXPERIMENT_TAG = "revenue_budget"
-    path_save = f"{PATH_SAVE}revenue_budget/"
+    path_save = os.path.join(PATH_SAVE, EXPERIMENT_TAG)
     os.makedirs(path_save, exist_ok=True)
     plot_strategies = False
 
     config_learner = "soda1_revenue.yaml"
 
-    for n_bidder in [2, 3]:
-        for budget in [1, 2]:
-            # plot revenue
-            plot_revenue(
-                budget, n_bidder, PATH_TO_CONFIGS, PATH_TO_EXPERIMENTS, path_save
-            )
-            # plot strategies
-            if plot_strategies:
-                for payment_rule in ["fp", "sp"]:
-                    plot_strategies_revenue(
-                        budget,
-                        n_bidder,
-                        payment_rule,
-                        PATH_TO_CONFIGS,
-                        PATH_TO_EXPERIMENTS,
-                        path_save,
-                    )
+    n_bidder = 2
+    for budget in [1, 2]:
+        # plot revenue
+        plot_revenue(budget, n_bidder, PATH_TO_CONFIGS, PATH_TO_EXPERIMENTS, path_save)
+        # plot strategies
+        if plot_strategies:
+            for payment_rule in ["fp", "sp"]:
+                plot_strategies_revenue(
+                    budget,
+                    n_bidder,
+                    payment_rule,
+                    PATH_TO_CONFIGS,
+                    PATH_TO_EXPERIMENTS,
+                    path_save,
+                )
