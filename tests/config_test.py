@@ -16,6 +16,7 @@ from soda.util.config import Config
 path_to_config_dir = [
     "configs/",
     "projects/soda/configs",
+    "projects/ad_auctions/configs",
 ]
 
 
@@ -47,13 +48,16 @@ def get_all_configs(dir_config: str) -> tuple:
     return list_settings, list_learner
 
 
+# create list with all config files
+test_data = []
 for dir_config in path_to_config_dir:
     list_settings, list_learner = get_all_configs(dir_config=dir_config)
-    test_data = product(list_settings, list_learner)
+    test_data += list(product(list_settings, list_learner))
 
-    @pytest.mark.parametrize("config_game, config_learner", test_data)
-    def test_config(config_game, config_learner):
-        config = Config(config_game, config_learner)
-        game, learner = config.create_setting()
-        assert isinstance(game, Game)
-        assert isinstance(learner, Learner)
+
+@pytest.mark.parametrize("config_game, config_learner", test_data)
+def test_config(config_game, config_learner):
+    config = Config(config_game, config_learner)
+    game, learner = config.create_setting()
+    assert isinstance(game, Game)
+    assert isinstance(learner, Learner)
