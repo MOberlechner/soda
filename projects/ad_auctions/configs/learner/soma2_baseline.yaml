@@ -1,0 +1,10 @@
+learner: soda.learner.mirror_descent.SOMA
+max_iter: 2000
+tol: 1e-3
+stop_criterion: 'util_loss'
+parameter:
+  mirror_map: 'euclidean'
+  steprule_bool: True
+  eta: 0.025
+  beta: 0.05
+init_method: 'equal'
