@@ -4,7 +4,11 @@ import numpy as np
 
 from soda.game import Game
 from soda.mechanism.mechanism import Mechanism
-from soda.mechanism.util import compute_probability_winning, get_allocation_single_item
+from soda.mechanism.util import (
+    compute_probability_order,
+    compute_probability_winning,
+    get_allocation_single_item,
+)
 from soda.strategy import Strategy
 
 # -------------------------------------------------------------------------------------------------------------------- #
@@ -82,7 +86,10 @@ class SingleItemAuction(Mechanism):
         allocation = self.get_allocation(bids_profile, index_agent)
         payment = self.get_payment(bids_profile, allocation, index_agent)
         payoff = self.get_payoff(
-            allocation=allocation, valuation=valuation, payment=payment
+            allocation=allocation,
+            valuation=valuation,
+            payment=payment,
+            index_agent=index_agent,
         )
         return payoff
 
@@ -108,7 +115,11 @@ class SingleItemAuction(Mechanism):
         return revenue
 
     def get_payoff(
-        self, allocation: np.ndarray, valuation: np.ndarray, payment: np.ndarray
+        self,
+        allocation: np.ndarray,
+        valuation: np.ndarray,
+        payment: np.ndarray,
+        index_agent: int,
     ) -> np.ndarray:
         """compute payoff given allocation and payment vector for different utility types:
         QL: quasi-linear, ROI: return of investement, ROS: return on spend, ROSB: return on spend with budget
@@ -117,6 +128,7 @@ class SingleItemAuction(Mechanism):
             allocation (np.ndarray): allocation vector for agent
             valuation (np.ndarray) : valuation of bidder (idx), equal to observation in private value model
             payment (np.ndarray): payment vector for agent ()
+            index_agent (int): index of agent
 
         Returns:
             np.ndarray: payoff
@@ -139,13 +151,16 @@ class SingleItemAuction(Mechanism):
                 out=np.zeros_like((valuation - payment)),
                 where=payment != 0,
             )
-        elif self.utility_type == "ROSB":
+        elif self.utility_type == "ROIS":
+            # mixture of ROI (lamb=0) and ROS (lambd=1)
+            # we allow for individual parameter
+            lambd = self.param_util["rois_parameter"][index_agent]
             payoff = np.divide(
-                valuation,
+                valuation - (1 - lambd) * payment,
                 payment,
                 out=np.zeros_like((valuation - payment)),
                 where=payment != 0,
-            ) + np.log(self.param_util["budget"] - payment)
+            )
 
         elif self.utility_type == "CRRA":
             rho = self.param_util["risk_parameter"]
@@ -153,6 +168,11 @@ class SingleItemAuction(Mechanism):
 
         else:
             raise ValueError(f"utility type {self.utility_type} not available")
+
+        # log barrier function for budget
+        if self.budget is not None:
+            payoff += self.budget_parameter * np.log(self.budget - payment)
+
         return allocation * payoff
 
     def get_payment(
@@ -235,6 +255,7 @@ class SingleItemAuction(Mechanism):
 
     def compute_expected_revenue(self, bid_profile: np.ndarray) -> float:
         """Computed expected revenue of single-item auction
+        In this setting we ignore other tie-breaking rules and always pick random
 
         Args:
             bid_profile (np.ndarray): bid profile
@@ -243,7 +264,10 @@ class SingleItemAuction(Mechanism):
             float: approximated expected revenue
         """
         allocations = np.array(
-            [self.get_allocation(bid_profile, i) for i in range(self.n_bidder)]
+            [
+                get_allocation_single_item(bid_profile, i, "random")
+                for i in range(self.n_bidder)
+            ]
         )
         payments = np.array(
             [
@@ -292,6 +316,7 @@ class SingleItemAuction(Mechanism):
             & (self.prior == "uniform")
             & self.check_bidder_symmetric()
             & (self.value_model == "private")
+            & (self.budget is None)
         ):
 
             obs_clipped = np.clip(obs, self.reserve_price, None)
@@ -317,6 +342,7 @@ class SingleItemAuction(Mechanism):
             & self.check_bidder_symmetric([0, 2])
             & (self.value_model == "common_affiliated")
             & (self.n_bidder == 2)
+            & (self.budget is None)
         ):
             bne = 2 / 3 * obs
         else:
@@ -332,6 +358,7 @@ class SingleItemAuction(Mechanism):
             & (self.prior == "uniform")
             & (self.value_model == "private")
             & (self.n_bidder >= 3)
+            & (self.budget is None)
         ):
             bne = obs + 1 / (self.n_bidder - 2) * obs
         else:
@@ -345,6 +372,7 @@ class SingleItemAuction(Mechanism):
             & (self.payment_rule == "second_price")
             & self.check_bidder_symmetric()
             & (self.value_model == "private")
+            & (self.budget is None)
         ):
             bne = np.where(obs >= self.reserve_price, obs, 0)
         else:
@@ -359,6 +387,7 @@ class SingleItemAuction(Mechanism):
             & self.check_bidder_symmetric([0, 2])
             & (self.value_model == "common_independent")
             & (self.n_bidder == 3)
+            & (self.budget is None)
         ):
             bne = 2 * obs / (2 + obs)
         else:
@@ -374,6 +403,7 @@ class SingleItemAuction(Mechanism):
             & (self.value_model == "private")
             & (self.prior == "uniform")
             & (self.reserve_price > 0)
+            & (self.budget is None)
         ):
             obs_clipped = np.clip(obs, self.reserve_price, None)
             if self.n_bidder == 2:
@@ -405,6 +435,7 @@ class SingleItemAuction(Mechanism):
             & self.check_bidder_symmetric([0, 1])
             & (self.value_model == "private")
             & (self.prior == "uniform")
+            & (self.budget is None)
         ):
             rho = self.param_util["risk_parameter"]
             bne = obs * (self.n_bidder - 1) / (self.n_bidder - 1 + rho)
@@ -420,6 +451,7 @@ class SingleItemAuction(Mechanism):
             & self.check_bidder_symmetric([0, 1])
             & (self.value_model == "private")
             & (self.prior == "uniform")
+            & (self.budget is None)
         ):
             bne = obs + 1 / (self.n_bidder - 2) * obs
         else:
@@ -431,7 +463,7 @@ class SingleItemAuction(Mechanism):
     def compute_gradient(
         self, game: Game, strategies: Dict[str, Strategy], agent: str
     ) -> np.ndarray:
-        """faster computation of gradient for symmetric iid bidders
+        """faster computation of gradient, ONLY FOR SYMMETRIC IID BIDDERS
 
         Args:
             game (Game): approximation game
@@ -441,30 +473,54 @@ class SingleItemAuction(Mechanism):
         Returns:
             np.ndarray: gradient for agent
         """
-        prob_win = compute_probability_winning(game, strategies, agent)
-
-        # utility type
-        obs_grid = (
+        value_grid = (
             np.ones((strategies[agent].m, strategies[agent].n))
             * strategies[agent].o_discr
         ).T
-        # first-price (including reserve price)
-        bid_grid = np.clip(
+
+        payment_grid = np.clip(
             np.ones((strategies[agent].n, strategies[agent].m))
             * strategies[agent].a_discr,
             self.reserve_price,
             None,
         )
-        payoff = self.get_payoff(np.ones_like(bid_grid), obs_grid, bid_grid)
-        return prob_win * payoff
+        allocation_grid = np.ones_like(payment_grid)
+
+        if self.payment_rule == "first_price":
+            prob_win = compute_probability_winning(game, strategies, agent)
+            payoff = self.get_payoff(
+                allocation_grid, value_grid, payment_grid, index_agent=0
+            )
+            return prob_win * payoff
+
+        elif self.payment_rule == "second_price":
+            pdf_order = compute_probability_order(game, strategies, agent)
+            payoff = self.get_payoff(
+                allocation_grid, value_grid, payment_grid, index_agent=0
+            )
+            prob_grid = np.ones((strategies[agent].n, strategies[agent].m)) * pdf_order
+            return np.hstack([np.zeros((strategies[agent].n, 1)), payoff * prob_grid])[
+                :, :-1
+            ].cumsum(axis=1)
+
+        else:
+            raise ValueError(
+                f"own gradient not available for payment_rule {self.payment_rule}"
+            )
 
     def check_own_gradient(self):
         """check if we can use gradient computation of mechanism"""
-        if (len(self.set_bidder) == 1) and (self.payment_rule == "first_price") & (
-            self.prior not in ["affiliated_values", "common_value"]
-        ) & ("corr" not in self.param_prior):
-            self.own_gradient = True
-            # print("- gradient computation via mechanism -")
+        if (len(self.set_bidder) == 1) and (
+            self.payment_rule in ["first_price", "second_price"]
+        ) & (self.prior not in ["affiliated_values", "common_value"]) & (
+            "corr" not in self.param_prior
+        ):
+            if self.payment_rule == "first_price":
+                self.own_gradient = True
+            elif (self.payment_rule == "second_price") & (self.tie_breaking == "lose"):
+                self.own_gradient = True
+            else:
+                self.own_gradient = False
 
     # -------------------------------------- helper methods --------------------------------------------- #
 
@@ -492,3 +548,30 @@ class SingleItemAuction(Mechanism):
                     )
         if "reserve_price" not in self.param_util:
             self.param_util["reserve_price"] = 0.0
+
+        if "budget" in self.param_util:
+            self.budget = self.param_util["budget"]
+            assert np.all(
+                [self.budget > self.a_space[i][-1] for i in self.set_bidder]
+            ), "budget must be higher than maximal bid"
+            if "budget_parameter" in self.param_util:
+                self.budget_parameter = self.param_util["budget_parameter"]
+            else:
+                raise ValueError("budget active, but budget_parameter is not given")
+        else:
+            self.budget = None
+
+        if self.param_util["utility_type"] == "ROIS":
+            if "rois_parameter" not in self.param_util:
+                raise ValueError(
+                    "Specify rois_parameter (tuple or float) if using utility_type: ROIS"
+                )
+            else:
+                if isinstance(self.param_util["rois_parameter"], tuple):
+                    assert len(self.param_util["rois_parameter"]) == self.n_bidder
+                elif isinstance(self.param_util["rois_parameter"], float):
+                    self.param_util["rois_parameter"] = (
+                        self.param_util["rois_parameter"],
+                    ) * self.n_bidder
+                else:
+                    raise ValueError("rois_parameter should be tuple or float")

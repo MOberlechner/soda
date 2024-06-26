@@ -16,7 +16,7 @@ def get_mechanism():
     Function to create mechanism
     """
 
-    def _mechanism(n_bidder: int):
+    def _mechanism(n_bidder: int, budget: bool = False):
         bidder = ["1"] * n_bidder
         o_space = {i: [0, 1] for i in bidder}
         a_space = {i: [0, 1] for i in bidder}
@@ -26,8 +26,14 @@ def get_mechanism():
             "tie_breaking": "random",
             "utility_type": "QL",
             "risk_parameter": 0.5,
-            "budget": 1.01,
         }
+        if budget:
+            param_util.update(
+                {
+                    "budget": 1.01,
+                    "budget_parameter": 1.0,
+                }
+            )
         return SingleItemAuction(bidder, o_space, a_space, param_prior, param_util)
 
     return _mechanism
@@ -102,49 +108,52 @@ def test_get_payoff(get_mechanism):
     payment = np.array([1, 2, 0, 0, 0.5])
 
     mechanism.utility_type = "QL"
-    payoff = mechanism.get_payoff(allocation, valuation_sim, payment)
+    payoff = mechanism.get_payoff(allocation, valuation_sim, payment, index_agent=0)
     assert np.allclose(
         payoff, np.array([0, -1, 0, 0, 1.5])
     ), "quasi-lineare (QL) utility-type, dim val = dim bids"
-    payoff = mechanism.get_payoff(allocation, valuation_util, payment)
+    payoff = mechanism.get_payoff(allocation, valuation_util, payment, index_agent=0)
     assert np.allclose(
         payoff, np.array([[0, -1, 0, 1, 0.5], [-1, -2, 0, 0, -0.5]])
     ), "quasi-lineare utility-type, dim val != dim bids"
 
     mechanism.utility_type = "ROI"
-    payoff = mechanism.get_payoff(allocation, valuation_sim, payment)
+    payoff = mechanism.get_payoff(allocation, valuation_sim, payment, index_agent=0)
     assert np.allclose(
         payoff, np.array([0, -0.5, 0, 0, 3])
     ), "return-of-investment (ROI) utility type"
 
     mechanism.utility_type = "ROS"
-    payoff = mechanism.get_payoff(allocation, valuation_sim, payment)
+    payoff = mechanism.get_payoff(allocation, valuation_sim, payment, index_agent=0)
     assert np.allclose(
         payoff, np.array([1, 0.5, 0, 0, 4])
     ), "return-of-spent (ROS) utility type"
 
 
 testdata = [
-    ("QL", "lose"),
-    ("QL", "random"),
-    ("ROI", "lose"),
-    ("ROI", "random"),
-    ("ROS", "lose"),
-    ("ROS", "random"),
-    ("ROSB", "lose"),
-    ("ROSB", "random"),
-    ("CRRA", "lose"),
-    ("CRRA", "random"),
+    ("QL", "lose", "first_price"),
+    ("QL", "random", "first_price"),
+    ("ROI", "lose", "first_price"),
+    ("ROI", "random", "first_price"),
+    ("ROS", "lose", "first_price"),
+    ("ROS", "random", "first_price"),
+    ("CRRA", "lose", "first_price"),
+    ("CRRA", "random", "first_price"),
+    ("QL", "lose", "second_price"),
+    ("ROI", "lose", "second_price"),
+    ("ROS", "lose", "second_price"),
+    ("CRRA", "lose", "second_price"),
 ]
 
 
-@pytest.mark.parametrize("utility_type, tie_breaking", testdata)
-def test_own_gradient(get_mechanism, utility_type, tie_breaking):
+@pytest.mark.parametrize("utility_type, tie_breaking, payment_rule", testdata)
+def test_own_gradient(get_mechanism, utility_type, tie_breaking, payment_rule):
     """
     Function to compare gradient computation of mechanism (fast) and gradient class (slow)
     """
     # setup setting
-    mechanism = get_mechanism(2)
+    mechanism = get_mechanism(3, budget=True)
+    mechanism.payment_rule = payment_rule
     mechanism.tie_breaking = tie_breaking
     mechanism.utility_type = utility_type
     mechanism.reserve_price = 0.1
@@ -168,4 +177,4 @@ def test_own_gradient(get_mechanism, utility_type, tie_breaking):
 
         assert np.allclose(
             util_gradient, own_gradient
-        ), f"equality gradient, setting: {tie_breaking}, {utility_type}"
+        ), f"equality gradient, setting: {tie_breaking}, {utility_type}, {payment_rule}"

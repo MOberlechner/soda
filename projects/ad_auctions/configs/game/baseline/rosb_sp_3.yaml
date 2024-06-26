@@ -1,0 +1,23 @@
+mechanism: soda.mechanism.single_item.SingleItemAuction
+bidder: ['0', '1', '2']
+o_space:
+  '0': [0.0 ,1.0]
+  '1': [0.0 ,1.0]
+  '2': [0.0 ,1.0]
+a_space:
+  '0': [0.0 ,1.0]
+  '1': [0.0 ,1.0]
+  '2': [0.0 ,1.0]
+param_prior:
+  distribution: 'uniform'
+  midpoint: False
+param_util:
+  payment_rule: 'second_price'
+  tie_breaking: 'random'
+  utility_type: 'ROS'
+  reserve_price: 0.05
+  budget: 1.01
+  budget_parameter: 1.0
+n: 21
+m: 21
+bne_known: False

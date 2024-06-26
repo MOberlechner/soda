@@ -55,6 +55,8 @@ class Experiment:
         self.save_strat = save_strat
         self.logging = logging
 
+        self.error = False
+
         print(f"Experiment started".ljust(100, "."))
         print(f" - game:    {self.config_game}\n - learner: {self.config_learner}")
 
@@ -95,6 +97,7 @@ class Experiment:
         except Exception as e:
             print(e)
             print(f" - Error: setting not created")
+            self.error = True
             self.learning, self.simulation = False, False
 
     def run(self) -> None:
@@ -106,6 +109,7 @@ class Experiment:
             except Exception as e:
                 print(e)
                 print(" - Error in Learning ")
+                self.error = True
 
         # run simulation
         if self.simulation:
@@ -114,6 +118,7 @@ class Experiment:
             except Exception as e:
                 print(e)
                 print("- Error in Simulation")
+                self.error = True
         print(f"Done ".ljust(100, ".") + "\n")
 
     def run_learning(self) -> None:
