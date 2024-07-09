@@ -166,6 +166,11 @@ class SingleItemAuction(Mechanism):
             rho = self.param_util["risk_parameter"]
             payoff = np.sign(valuation - payment) * np.abs(valuation - payment) ** rho
 
+        elif self.utility_type == "CARA":
+            rho = self.param_util["risk_parameter"]
+            cara = lambda x: 1 / rho * (1 - np.exp(-rho * x))
+            payoff = cara(valuation - payment)
+
         else:
             raise ValueError(f"utility type {self.utility_type} not available")
 
