@@ -546,10 +546,10 @@ class SingleItemAuction(Mechanism):
             self.param_util["utility_type"] = "QL"
             print("utility_type not specified, quasi-linear (QL) chosen by default.")
         else:
-            if self.param_util["utility_type"] == "CRRA":
+            if self.param_util["utility_type"] in ["CRRA", "CARA"]:
                 if "risk_parameter" not in self.param_util:
                     raise ValueError(
-                        "Specify risk_parameter if using utility_type: CRRA"
+                        "Specify risk_parameter if using utility_type: CRRA/CARA"
                     )
         if "reserve_price" not in self.param_util:
             self.param_util["reserve_price"] = 0.0
