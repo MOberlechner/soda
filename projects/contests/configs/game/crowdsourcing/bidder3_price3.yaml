@@ -1,0 +1,15 @@
+mechanism: soda.mechanism.crowdsourcing.Crowdsourcing 
+bidder: ['1', '1', '1']
+o_space:
+    '1': [0.0, 1.0]
+a_space:
+    '1': [0.0, 1.0]
+param_prior:
+    distribution: 'uniform'
+param_util:
+    prices: [0.6, 0.4]
+    payment_rule: 'first_price'
+    tie_breaking: 'lose'
+    type: value 
+n: 128
+m: 128
