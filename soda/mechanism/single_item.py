@@ -69,7 +69,7 @@ class SingleItemAuction(Mechanism):
 
     def utility(
         self, obs_profile: np.ndarray, bids_profile: np.ndarray, index_agent: int
-    ) -> None:
+    ) -> np.ndarray:
         """Compute utility for agent in single_item auction
 
         Args:
