@@ -3,7 +3,7 @@ If you find this code helpful and use this code in your research, please cite th
 
 >**Computing Bayes Nash Equilibrium Strategies in Auction Games via Simultaneous Online Dual Averaging.**<br>
 Martin Bichler, Maximilian Fichtl, Matthias Oberlechner<br>
-*Operations Research, 2023 (Forthcoming)*
+*Operations Research, 2023*
 
 <details>
 <summary> BibTex for citation </summary>
@@ -13,7 +13,7 @@ Martin Bichler, Maximilian Fichtl, Matthias Oberlechner<br>
   author = {Bichler, Martin and Fichtl, Maximilian and Oberlechner, Matthias},
   title = {Computing Bayes Nash Equilibrium Strategies in Auction Games via Simultaneous Online Dual Averaging},
   year = {2023},
-  journal = {Operations Research (Forthcoming)},
+  journal = {Operations Research},
 }
 ```
 </details>
@@ -24,9 +24,9 @@ The code contains different projects and can be used to reproduce the respective
 
 | Project | Publication |
 | ------- | ----------- |
-| [**soda**](./projects/soda/) |  **Computing Bayes Nash Equilibrium Strategies in Auction Games via Simultaneous Online Dual Averaging.** <br> *Martin Bichler, Maximilian Fichtl, Matthias Oberlechner*<br> Operations Research, 2023 |
+| [**soda**](./projects/soda/) |  **Computing Bayes Nash Equilibrium Strategies in Auction Games via Simultaneous Online Dual Averaging.** <br> *Martin Bichler, Maximilian Fichtl, Matthias Oberlechner*<br> Operations Research, 2023 <br> Also presented at the 24th ACM Conference on Economics and Computation, 2023  |
 | [**ad_auctions**](./projects/ad_auctions/)<br>|  **Low Revenue in Display Ad Auctions: Algorithmic Collusion vs. Non-Quasilinear Preferences.** <br> *Martin Bichler, Alok Gupta, Laura Mathews, Matthias Oberlechner*<br> Working Paper, 2024 |
-| [**contests**](./projects/contests/) <br> `tbd` | **Computing Bayes Nash Equilibrium Strategies in Crowdsourcing Contests** <br> Martin Bichler, Markus Ewert, Matthias Oberlechner <br> *In 32nd Workshop on Information Technologies and Systems (WITS-22), 2022*
+| [**contests**](./projects/contests/) <br> | **Computing Bayes Nash Equilibrium Strategies in Crowdsourcing Contests** <br> Martin Bichler, Markus Ewert, Matthias Oberlechner <br> *In 32nd Workshop on Information Technologies and Systems (WITS'22), 2022*
 
 
 
@@ -45,6 +45,7 @@ By discretizing the type and action space, and using distributional strategies, 
 - Split-Award Auction <br> 
  *procurement auction with 2 agents and (dis-)economies of scale*
 - Tullock Contests <br> *different discrimination parameters*
+- Crowdsourcing Contests <br> *similar to allpay auction but with several prizes*
 
 #### Learning Algorithms
 
