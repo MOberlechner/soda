@@ -37,22 +37,27 @@ class Crowdsourcing(Mechanism):
 
         self.check_own_gradient()
 
-    def utility(self, obs: np.ndarray, bids: np.ndarray, idx: int):
+    def utility(
+        self, obs_profile: np.ndarray, bids_profile: np.ndarray, index_agent: int
+    ) -> np.ndarray:
         """utility for crowdsourcing contest with prices (decreasing, sum to 1)
 
         Args:
-            obs (np.ndarray): _description_
-            bids (np.ndarray): _description_
-            idx (int): _description_
+            obs_profile (np.ndarray): observation of all agents (can be related to values or cost)
+            bids_profile (np.ndarray): bids of all agents
+            index_agent (int): index of agent
 
         Returns:
-            _type_: _description_
+            np.ndarry: utilities of agent (with index index_agent)
         """
-        self.test_input_utility(obs, bids, idx)
-        valuation = self.get_valuation(obs, bids, idx)
-        allocation = self.get_allocation(bids, idx)
-        payment = self.get_payment(bids, allocation, idx)
-        payoff = self.get_payoff(allocation, valuation, payment)
+        self.test_input_utility(obs_profile, bids_profile, index_agent)
+        type = self.get_valuation(
+            obs_profile, index_agent
+        )  # type can either be valuation or cost
+
+        allocation = self.get_allocation(bids_profile, index_agent)
+        payment = self.get_payment(bids_profile, allocation, index_agent)
+        payoff = self.get_payoff(allocation, type, payment)
 
         return payoff
 
@@ -64,7 +69,7 @@ class Crowdsourcing(Mechanism):
         Args:
             allocation (np.ndarray): allocation matrix for agent
             valuation (np.ndarray): valuation
-            payment (np.ndarray): _description_
+            payment (np.ndarray):
 
         Returns:
             np.ndarray: payoff
@@ -77,7 +82,11 @@ class Crowdsourcing(Mechanism):
             raise ValueError(f"chose type between value and cost")
 
     def get_allocation(self, bids: np.ndarray, idx: int) -> np.ndarray:
-        """compute allocation given action profiles for agent i
+        """compute allocation given action profiles for agent i.
+        We consider different tie-breaking rules:
+        - random: in ties, agents get the prices with equal probability
+        - lose: all agents in ties get the worst prize, i.e., two highest bids are tied -> both agent get 2nd price
+        - win: all agents in ties get the best prize, i.e., two highest bids are tied -> both agent get 1st price
 
         Args:
             bids (np.ndarray): action profiles
@@ -116,6 +125,8 @@ class Crowdsourcing(Mechanism):
 
         else:
             raise ValueError(f"tie_breaking rule {self.tie_breaking} unknown")
+
+        return probs
 
     def get_payment(
         self, bids: np.ndarray, allocation: np.ndarray, idx: int
