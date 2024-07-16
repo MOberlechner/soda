@@ -17,6 +17,7 @@ path_to_config_dir = [
     "configs/",
     "projects/soda/configs",
     "projects/ad_auctions/configs",
+    "projects/contests/configs",
 ]
 
 

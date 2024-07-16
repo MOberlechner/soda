@@ -592,21 +592,7 @@ class Strategy:
             raise NotImplementedError(
                 "Visualization only implemented for dim_a = 1,2 and dim_o = 1"
             )
-
-        if self.dim_a == 1:
-            param_extent = (
-                self.o_discr[0],
-                self.o_discr[-1],
-                self.a_discr[0],
-                self.a_discr[-1],
-            )
-        else:
-            param_extent = (
-                self.o_discr[0],
-                self.o_discr[-1],
-                self.a_discr[axis_a][0],
-                self.a_discr[axis_a][-1],
-            )
+        param_extent = self._get_imshow_extent(axis_a)
         ax.imshow(
             strategy.T / self.margin(),
             extent=param_extent,
@@ -726,23 +712,8 @@ class Strategy:
             iter (int, optional): show intermediate gradient. Defaults to None.
             axis_a (int, optional): Which axis to visualize, if multidimensional action space Defaults to 0.
         """
-
-        if self.dim_a == 1:
-            gradient_plot = gradient
-            param_extent = (
-                self.o_discr[0],
-                self.o_discr[-1],
-                self.a_discr[0],
-                self.a_discr[-1],
-            )
-        else:
-            gradient_plot = gradient.sum(axis=2 - axis_a)
-            param_extent = (
-                self.o_discr[0],
-                self.o_discr[-1],
-                self.a_discr[axis_a][0],
-                self.a_discr[axis_a][-1],
-            )
+        gradient_plot = gradient if self.dim_a == 1 else gradient.sum(axis=2 - axis_a)
+        param_extent = self._get_imshow_extent(axis_a)
 
         # plot gradient
         ax.imshow(
@@ -757,10 +728,17 @@ class Strategy:
         # plot best response
         best_response = self.best_response(gradient)
 
+        # best_respone: matrix, best_response_y: vector
         if self.dim_a == 1:
+            best_response_y = [
+                self.a_discr[a_idx] for a_idx in best_response.argmax(axis=1)
+            ]
             best_response[best_response == 0] = np.nan
         elif self.dim_a == 2:
             best_response = best_response.sum(axis=2 - axis_a)
+            best_response_y = [
+                self.a_discr[axis_a][a_idx] for a_idx in best_response.argmax(axis=1)
+            ]
             best_response[best_response == 0] = np.nan
 
         ax.imshow(
@@ -768,12 +746,17 @@ class Strategy:
             cmap="Wistia",
             vmin=0,
             vmax=1.1,
+            alpha=0.7,
             extent=param_extent,
             origin="lower",
             aspect="auto",
         )
         ax.plot(
-            [], [], color="tab:orange", linewidth=0, marker="s", label="best\nresponse"
+            self.o_discr,
+            best_response_y,
+            color="tab:orange",
+            linewidth=2,
+            label="best\nresponse",
         )
 
         # labels
@@ -886,6 +869,27 @@ class Strategy:
         ax.set_ylim(top=1)
         ax.grid(axis="y", linestyle="-", linewidth=0.5, color=".25", zorder=-10)
         ax.legend(loc="upper right", fontsize=param["fontsize_legend"])
+
+    def _get_imshow_extent(self, axis_a: int) -> tuple:
+        """determine extent for imshow for strategie and gradient plot"""
+        delta_o = self.o_discr[1] - self.o_discr[0]
+        if self.dim_a == 1:
+            delta_a = self.a_discr[1] - self.a_discr[0]
+            param_extent = (
+                self.o_discr[0] - delta_o / 2,
+                self.o_discr[-1] + delta_o / 2,
+                self.a_discr[0] - delta_a / 2,
+                self.a_discr[-1] + delta_a / 2,
+            )
+        else:
+            delta_a = self.a_discr[axis_a][1] - self.a_discr[axis_a][0]
+            param_extent = (
+                self.o_discr[0] - delta_o / 2,
+                self.o_discr[-1] + delta_o / 2,
+                self.a_discr[axis_a][0] - delta_a / 2,
+                self.a_discr[axis_a][-1] + delta_a / 2,
+            )
+        return param_extent
 
     # -------------------------------------- METHODS USED TO SAVE AND LOAD --------------------------------------- #
 

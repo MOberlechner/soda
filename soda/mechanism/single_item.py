@@ -34,6 +34,7 @@ class SingleItemAuction(Mechanism):
         utility_type    str:    QL (quasi-linear (corresponds to Auction, Default),
                                 ROI (return of investment),
                                 ROS (return of spent)
+                                CARA, CRRA (risk aversion)
         reserve_price   float: specifies minimal payment if agent wins. Defaults to 0.
                         Note that we reserve_price only affect the pricing rule, not the allocation (i.e., you can still win with lower bids)
 
@@ -69,7 +70,7 @@ class SingleItemAuction(Mechanism):
 
     def utility(
         self, obs_profile: np.ndarray, bids_profile: np.ndarray, index_agent: int
-    ) -> None:
+    ) -> np.ndarray:
         """Compute utility for agent in single_item auction
 
         Args:
@@ -167,7 +168,7 @@ class SingleItemAuction(Mechanism):
             payoff = np.sign(valuation - payment) * np.abs(valuation - payment) ** rho
 
         elif self.utility_type == "CARA":
-            rho = self.param_util["risk_parameter"]
+            rho = self.param_util["risk_parameter"][index_agent]
             cara = lambda x: 1 / rho * (1 - np.exp(-rho * x))
             payoff = cara(valuation - payment)
 
@@ -580,3 +581,18 @@ class SingleItemAuction(Mechanism):
                     ) * self.n_bidder
                 else:
                     raise ValueError("rois_parameter should be tuple or float")
+
+        if self.param_util["utility_type"] == "CARA":
+            if "risk_parameter" not in self.param_util:
+                raise ValueError(
+                    "Specify risk_parameter (tuple or float) if using utility_type: CARA"
+                )
+            else:
+                if isinstance(self.param_util["risk_parameter"], tuple):
+                    assert len(self.param_util["risk_parameter"]) == self.n_bidder
+                elif isinstance(self.param_util["risk_parameter"], float):
+                    self.param_util["risk_parameter"] = (
+                        self.param_util["risk_parameter"],
+                    ) * self.n_bidder
+                else:
+                    raise ValueError("risk_parameter should be tuple or float")
