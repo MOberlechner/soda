@@ -28,3 +28,10 @@ Experiments to compute BNE for Tullock contests with different impact parameter.
 python projects/soda/simulation/run_tullock.py
 ```
 Note that we changed the discretization to 64 x 64 for all settings.
+
+### Evaluation
+To create the plots and tables (for SODA) run the following scripts
+```bash
+python projects/soda/evaluation/create_table.py
+python projects/soda/evaluation/create_plots.py
+```
