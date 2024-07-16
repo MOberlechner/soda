@@ -166,6 +166,11 @@ class SingleItemAuction(Mechanism):
             rho = self.param_util["risk_parameter"]
             payoff = np.sign(valuation - payment) * np.abs(valuation - payment) ** rho
 
+        elif self.utility_type == "CARA":
+            rho = self.param_util["risk_parameter"]
+            cara = lambda x: 1 / rho * (1 - np.exp(-rho * x))
+            payoff = cara(valuation - payment)
+
         else:
             raise ValueError(f"utility type {self.utility_type} not available")
 
@@ -541,10 +546,10 @@ class SingleItemAuction(Mechanism):
             self.param_util["utility_type"] = "QL"
             print("utility_type not specified, quasi-linear (QL) chosen by default.")
         else:
-            if self.param_util["utility_type"] == "CRRA":
+            if self.param_util["utility_type"] in ["CRRA", "CARA"]:
                 if "risk_parameter" not in self.param_util:
                     raise ValueError(
-                        "Specify risk_parameter if using utility_type: CRRA"
+                        "Specify risk_parameter if using utility_type: CRRA/CARA"
                     )
         if "reserve_price" not in self.param_util:
             self.param_util["reserve_price"] = 0.0

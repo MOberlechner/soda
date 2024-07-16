@@ -54,7 +54,6 @@ class Learner:
 
     def __str__(self) -> str:
         general_info = f"Learner({self.name})\n- max_iter: {self.max_iter}\n- stop_criterion: {self.stop_criterion} < {self.tol}\n"
-        print(self.param)
         if self.param != {}:
             str_parameter = f"- parameter:\n"
             for key, value in self.param.items():
