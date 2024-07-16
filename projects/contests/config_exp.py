@@ -19,10 +19,8 @@ ROUND_DECIMALS_TABLE = 3
 # Parameter plots
 DPI = 600
 FORMAT = "pdf"
-SAMPLES = 150
-MARKER = ["o", "s", "v"]
-MARKER_SIZE = 30
-COLORS = ["#003f5c", "#bc5090", "#ffa600"]
+SAMPLES = 500
+COLORS = ["#0096c4", "#f8766d", "#ffd782", "#9678aa"]
 FONTSIZE_LABEL = 14
 FONTSIZE_LEGEND = 15
 FONTSIZE_TITLE = 16

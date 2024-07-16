@@ -11,5 +11,5 @@ param_util:
     payment_rule: 'first_price'
     tie_breaking: 'lose'
     type: value 
-n: 128
-m: 128
+n: 64
+m: 64

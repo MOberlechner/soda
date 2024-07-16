@@ -11,6 +11,6 @@ param_prior:
 param_util:
   type: 'value'
   csf: 'ratio_form'
-  csf_parameter: 0.5
-n: 128
-m: 128
+  csf_parameter: 1.
+n: 64
+m: 64
