@@ -20,85 +20,113 @@ class Experiment:
         config_game: str,
         config_learner: str,
         number_runs: int,
-        learning: bool,
-        simulation: bool,
-        logging: bool,
-        save_strat: bool,
-        number_samples: int,
-        path_exp: str,
-        round_decimal: int = 5,
-        experiment_tag: str = "",
-    ) -> None:
-        """Initialize Experiment
+        param_learning: dict = {"active": False},
+        param_simulation: dict = {"active": False},
+        param_evaluation: dict = {"active": False},
+        param_logging: dict = {},
+    ):
+        """Initiliaze Experiment
 
         Args:
             config_game (str): config file for game/mechanism
             config_learner (str): config file for learner
             number_runs (int): number of repetitions of experiment
-            learning (bool): run learning to learn strategies
-            simulation (bool): run simulation to get metrics
-            logging (bool): log results
-            save_strat (bool): save strategies
-            path_exp (str, optional): path to directory to save results.
-            round_decimal (int, optional): accuracy of metric in logger. Defaults to 5.
-            experiment_tag (str, optional): name for a group of different settings. Allows us to structure our results in different experiments. If not specified, we group the results by mechanism.
+            param_learning (dict):
+                - active (bool): if learning is active
+                - save_strat (bool): save strategies
+                - save_plots (bool): save plots of strategies
+            param_simulation (dict): parameter for simulation
+                - active (bool): if simulation is active
+                - number_samples (int): number of samples used for simulations
+            param_evaluation (dict): parameter for evaluation
+                - active (bool): if evaluation is active
+            param_logging (dict):
+                - active (bool): if logging not active, nothing is saved
+                - path_exp (str): path to directory to save results.
+                - experiment_tag (str, optional): name for a group of different settings. Allows us to structure our results in different experiments.
+                    If not specified, we group the results by mechanism.
+                - round_decimal (int, optional): accuracy of metric in logger. Defaults to 5.
         """
-
         self.config_game = config_game
         self.config_learner = config_learner
-
         self.number_runs = number_runs
-        self.learning = learning
-        self.simulation = simulation
-        self.number_samples = number_samples
 
-        self.save_strat = save_strat
-        self.logging = logging
+        self.param_learning = param_learning
+        self.param_simulation = _param_simulation
+        self.param_evaluation = param_evaluation
+        self.param_logging = param_logging
 
+        self.learning = param_learning["active"]
+        self.simulation = param_simulation["active"]
+        self.evaluation = param_evaluation["active"]
         self.error = False
 
         print(f"Experiment started".ljust(100, "."))
         print(f" - game:    {self.config_game}\n - learner: {self.config_learner}")
-
         try:
-            # setup game and learner using config
-            self.config = Config(self.config_game, self.config_learner)
-            self.game, self.learner = self.config.create_setting()
-
-            self.label_mechanism = self.game.name
-            self.experiment_tag = (
-                experiment_tag if experiment_tag != "" else self.label_mechanism
-            )
-            self.label_setting = Path(self.config_game).stem
-            self.label_learner = Path(self.config_learner).stem
-
-            # create directories (if necessary)
-            self.path_log = os.path.join(path_exp, "log", self.experiment_tag)
-            self.path_strat = os.path.join(path_exp, "strategies", self.experiment_tag)
-
-            if self.logging:
-                Path(self.path_log).mkdir(parents=True, exist_ok=True)
-
-            if self.save_strat:
-                Path(self.path_strat).mkdir(parents=True, exist_ok=True)
-
-            # initialize logger
-            self.logger = Logger(
-                self.path_log,
-                self.experiment_tag,
-                self.label_mechanism,
-                self.label_setting,
-                self.label_learner,
-                logging,
-                round_decimal,
-            )
+            self.prepare_experiment()
             print(f" - Setting created ")
-
         except Exception as e:
             print(e)
             print(f" - Error: setting not created")
             self.error = True
             self.learning, self.simulation = False, False
+
+    def prepare_experiment():
+        """create setting and initialize logger"""
+        # create setting (game and learner)
+        self.config = Config(self.config_game, self.config_learner)
+        self.game, self.learner = self.config.create_setting()
+
+        # prepare logging
+        self.param_logging_set_defaults()
+        self.create_directories()
+
+        self.label_mechanism = self.game.name
+        self.label_setting = Path(self.config_game).stem
+        self.label_learner = Path(self.config_learner).stem
+
+        # initialize logger
+        self.logger = Logger(
+            self.param_logging["active"],
+            self.label_mechanism,
+            self.label_setting,
+            self.label_learner,
+        )
+
+    def param_logging_set_defaults(self):
+        """If values are missing in param_loggin we set default values
+        - path_experiment: default is experiments/test/
+        - tag_experiment: default is mechanism name
+        - round_deicmal: default is 5
+        """
+        keys = ["active", "path_experiment", "tag_experiment" "round_decimal"]
+        values = [True, "experiments/test", self.game.name, 5]
+        for k, v in zip(keys, values):
+            if k not in self.param_loggin:
+                self.param_logging[k] = v
+
+    def create_directories(self):
+        """create directories necessary for logging and saving strategies
+        path_experiment / tag_experiment / log
+                                         / strat
+                                         / plots
+        """
+        if self.param_logging["active"]:
+            self.path_log = os.path.join(path_exp, "log", self.experiment_tag)
+            Path(self.path_log).mkdir(parents=True, exist_ok=True)
+
+            if self.param_learning["active"]:
+                if self.param_learning["save_strat"]:
+                    self.path_strat = os.path.join(
+                        path_exp, "strategies", self.experiment_tag
+                    )
+                    Path(self.path_strat).mkdir(parents=True, exist_ok=True)
+                if self.param_learning["save_plot"]:
+                    self.path_plot = os.path.join(
+                        path_exp, "plots", self.experiment_tag
+                    )
+                    Path(self.path_plot).mkdir(parents=True, exist_ok=True)
 
     def run(self) -> None:
         """run experiment, i.e., learning and simulation"""
@@ -119,6 +147,16 @@ class Experiment:
                 print(e)
                 print("- Error in Simulation")
                 self.error = True
+
+        # run evaluation
+        if self.simulation:
+            try:
+                self.run_evaluation()
+            except Exception as e:
+                print(e)
+                print("- Error in Evaluation")
+                self.error = True
+
         print(f"Done ".ljust(100, ".") + "\n")
 
     def run_learning(self) -> None:
@@ -200,20 +238,25 @@ class Experiment:
         self.logger.log_simulation()
         print(" - run_simulation finished")
 
+    def run_evaluation(self) -> None:
+        raise NotImplementedError
+
     def save_strategies(self, run: int) -> None:
         """Save strategies for current experiment
 
         Args:
             run (int): current repetition of experiment
         """
-        if self.save_strat:
-            name = f"{self.label_learner}_{self.label_setting}_run_{run}"
+        name = f"{self.label_learner}_{self.label_setting}_run_{run}"
+        if self.param_learning["save_strat"]:
             for i in self.strategies:
                 self.strategies[i].save(
                     name=name,
                     path=self.path_strat,
                     save_init=True,
                 )
+        if self.param_learning["save_plot"]:
+            raise NotImplementedError
 
     def load_strategies(self, run: int) -> None:
         """Load strategies for current experiment

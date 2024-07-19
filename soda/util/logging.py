@@ -16,13 +16,10 @@ class Logger:
 
     def __init__(
         self,
-        path_log: str,
-        experiment_tag: str,
+        param_logging: dict,
         mechanism: str,
         setting: str,
         learn_alg: str,
-        logging: bool,
-        round_decimal: int = 4,
     ):
         """Initialize Logger
 
