@@ -16,40 +16,40 @@ class Logger:
 
     def __init__(
         self,
+        label_mechanism: str,
+        label_setting: str,
+        label_learner: str,
+        label_experiment: str,
         param_logging: dict,
-        mechanism: str,
-        setting: str,
-        learn_alg: str,
     ):
         """Initialize Logger
 
         Args:
-            path_log (str): path to csv file which gets created
-            experiment_tag (str): setting can denote a group of experiments. If None, we group experiments by mechanism
-            mechanism (str): mechanism for experiment
-            setting (str): setting (specific instance of mechanism)
-            learn_alg (str): used learning algorithm
-            logging (bool): store results in csv
+            label_mechanism (str): mechanism for experiment
+            label_setting (str): setting (specific instance of mechanism)
+            label_learner (str): used learning algorithm
+            label_experiment (str): used to structure experiments
+            param_logging (dict): parameter for logging
+                - save_strategy
+                - save_strategy_init
         """
-        #  we group experiments by setting or mechanism if setting is not defined
-        self.path = path_log
-        self.experiment_tag = experiment_tag
-        self.mechanism = mechanism
-        self.setting = setting
-        self.learn_alg = learn_alg
-        self.logging = logging
-        self.round_decimal = round_decimal
 
-        # log run learning
-        self.filename_log_learning = os.path.join(self.path, "log_learn.csv")
-        self.filename_log_learning_agg = os.path.join(self.path, "log_learn_agg.csv")
-        self.file_log_learning = pd.DataFrame(
-            columns=[
-                "setting",
-                "mechanism",
-                "learner",
-                "run",
-                "agent",
+        self.label_mechanism = label_mechanism
+        self.label_setting = label_setting
+        self.learn_learner = learn_learner
+
+        # create directories
+        self.path = os.path.join(param_logging["path_experiment"], label_experiment)
+
+        # create empty dataframes for logs
+        self.data = self.init_data()
+
+    # -------------------- method to save logs from experiment --------------
+    def init_data(self) -> None:
+        """create data frames to save logs"""
+        self.columns = {
+            "default": ["setting", "mechanism", "learner", "run", "agent", "timestamp"],
+            "learn": [
                 "utility",
                 "utility_loss",
                 "dist_prev_iter",
@@ -58,46 +58,40 @@ class Logger:
                 "iter/sec",
                 "time_init",
                 "time_run",
-                "timestamp",
-            ]
-        )
+            ],
+            "sim": ["tag", "value"],
+            "eval": ["utility", "utility_loss"],
+        }
+        return {
+            sub_exp: pd.DataFrame(columns=self.columns["default"] + columns[sub_exp])
+            for sub_exp in ["learn", "sim", "eval"]
+        }
 
-        # log run simulation
-        self.filename_log_simulation = os.path.join(self.path, "log_sim.csv")
-        self.filename_log_simulation_agg = os.path.join(self.path, "log_sim_agg.csv")
-        self.file_log_simulation = pd.DataFrame(
-            columns=[
-                "setting",
-                "mechanism",
-                "learner",
-                "run",
-                "agent",
-                "tag",
-                "value",
-                "timestamp",
-            ]
-        )
+    def get_log_path(self, sub_exp: str, aggregate: bool = False) -> Path:
+        """Path to log files for different subexperiments"""
+        assert sub_exp in ["learn", "sim", "eval"]
+        file_name = f"log_{sub_exp}" + ("_agg" if aggregate else "")
+        return os.path.join(self.path, f"{file_name}.csv")
+
+    def get_log_file(self, sub_exp: str, aggregate: bool = False) -> pd.DataFrame:
+        """Get data frame with logs for different subexperiments"""
+        assert sub_exp in ["learn", "sim", "eval"]
+        log_name = f"log_{sub_exp}" + ("_agg" if aggregate else "")
+        return self.data[log_name]
+
+    def save_sub_experiment(self, sub_exp) -> None:
+        """Save logging to csv file (append if file already exists)"""
+        for aggregate in [False, True]:
+            path_file = self.get_log_path(sub_exp, aggregate)
+            log_file = self.get_log_file(sub_exp, aggregate)
+            if os.path.exists(path_file):
+                log = pd.read_csv(path_file)
+                log = pd.concat([log, log_file])
+            else:
+                log = log_file
+            log.to_csv(path_file, index=False)
 
     # -------------------- methods to log results from computation --------------------
-
-    def log_learning(self) -> None:
-        """Main function to save logs from learning experiment.
-        Should be called for each experiment after all runs.
-        """
-        if self.logging:
-            self.save_learning_run()
-            self.save_learning_aggr()
-        else:
-            print("Results not logged.")
-
-    def save_learning_run(self) -> None:
-        """Save csv from learning experiment"""
-        if os.path.exists(self.filename_log_learning):
-            log = pd.read_csv(self.filename_log_learning)
-            log = pd.concat([log, self.file_log_learning])
-        else:
-            log = self.file_log_learning
-        log.to_csv(self.filename_log_learning, index=False)
 
     def log_learning_run(
         self,
@@ -121,9 +115,9 @@ class Logger:
         # entries
         rows = [
             {
-                "setting": self.setting,
-                "mechanism": self.mechanism,
-                "learner": self.learn_alg,
+                "setting": self.label_settingsetting,
+                "mechanism": self.label_mechanismmechanism,
+                "learner": self.label_learner,
                 "run": run,
                 "agent": agent,
                 "utility": strategies[agent].utility[iteration],
@@ -189,6 +183,17 @@ class Logger:
             )
         else:
             return None
+
+    def save_strategies(self, strategies: Dict[Strategy], run: int) -> None:
+        """save computed strategies from computation result"""
+        name = f"{self.label_learner}_{self.label_setting}_run_{run}"
+        if self.param_logging["save_strategy"]:
+            for i in self.strategies:
+                self.strategies[i].save(
+                    name=name,
+                    path=self.path_strat,
+                    save_init=self.param_logging["save_strategy_init"],
+                )
 
     # -------------------- methods to log results from simulation --------------------
 
@@ -277,3 +282,24 @@ class Logger:
             )
         else:
             return None
+
+    # -------------------- methods to log results from evaluation --------------------
+
+    def log_evaluation(self) -> None:
+        """Main function to save logs from evaluation experiment.
+        Should be called for each experiment after all runs.
+        """
+        if self.logging:
+            self.save_evaluation_run()
+            self.save_evaluation_aggr()
+        else:
+            print("Results not logged.")
+
+    def save_evaluation_run(self) -> None:
+        """Save csv from learning experiment"""
+        if os.path.exists(self.filename_log_simulation):
+            log = pd.read_csv(self.filename_log_simulation)
+            log = pd.concat([log, self.file_log_simulation])
+        else:
+            log = self.file_log_simulation
+        log.to_csv(self.filename_log_simulation, index=False)

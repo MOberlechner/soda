@@ -5,6 +5,7 @@ from time import time
 import numpy as np
 from tqdm import tqdm
 
+from soda.learner.gradient import Gradient
 from soda.util.config import Config
 from soda.util.logging import Logger
 
@@ -13,6 +14,16 @@ class Experiment:
     """
     Config class to run experiments
 
+    Each experiment can consist of three parts:
+    - learning:
+        apply learning algorithm to discretized game to approximate the BNE using discrete distributional strategies
+    - simulation:
+        simulate continuous auctions and bid according to the computed strategies
+        against other computed strategies or the analytical BNE
+    - evaluation:
+        evaluate computed strategies in a different discretized game, e.g., with a higher discretization.
+        This is particularly useful, if we don't have an analytical BNE to compare with in the 'simulation'
+
     """
 
     def __init__(
@@ -20,6 +31,7 @@ class Experiment:
         config_game: str,
         config_learner: str,
         number_runs: int,
+        expermient_tag: str = None,
         param_learning: dict = {"active": False},
         param_simulation: dict = {"active": False},
         param_evaluation: dict = {"active": False},
@@ -31,21 +43,22 @@ class Experiment:
             config_game (str): config file for game/mechanism
             config_learner (str): config file for learner
             number_runs (int): number of repetitions of experiment
+            experiment_tag (str, optional): name for a group of different settings.
+                Allows us to structure our results in different experiments. If not specified, we group the results by mechanism.
             param_learning (dict):
                 - active (bool): if learning is active
-                - save_strat (bool): save strategies
-                - save_plots (bool): save plots of strategies
+                - init_strategies (str): method to initialize learning algorithm
             param_simulation (dict): parameter for simulation
                 - active (bool): if simulation is active
                 - number_samples (int): number of samples used for simulations
             param_evaluation (dict): parameter for evaluation
                 - active (bool): if evaluation is active
+                - config_game (dict): containts a config with changes for the evaluation game (i.e., higher discretization)
             param_logging (dict):
-                - active (bool): if logging not active, nothing is saved
                 - path_exp (str): path to directory to save results.
-                - experiment_tag (str, optional): name for a group of different settings. Allows us to structure our results in different experiments.
-                    If not specified, we group the results by mechanism.
                 - round_decimal (int, optional): accuracy of metric in logger. Defaults to 5.
+                - save_strat (bool): save strategies
+                - save_plots (bool): save plots of strategies
         """
         self.config_game = config_game
         self.config_learner = config_learner
@@ -128,6 +141,8 @@ class Experiment:
                     )
                     Path(self.path_plot).mkdir(parents=True, exist_ok=True)
 
+    # ------------------------------------ run sub-experiments ------------------------------------
+
     def run(self) -> None:
         """run experiment, i.e., learning and simulation"""
         # run learning
@@ -149,7 +164,7 @@ class Experiment:
                 self.error = True
 
         # run evaluation
-        if self.simulation:
+        if self.evaluation:
             try:
                 self.run_evaluation()
             except Exception as e:
@@ -176,15 +191,17 @@ class Experiment:
             colour="green",
             desc="    Progress",
         ):
-
             # init strategies
-            self.strategies = self.config.create_strategies(self.game)
-
+            init_param = (
+                {}
+                if "init_param" not in self.param_learning
+                else self.param_learning["init_param"]
+            )
+            self.strategies = self.config.create_strategies(self.game, init_param)
             # run learning algorithm
             t0 = time()
             self.learner.run(self.game, self.strategies)
             time_run = time() - t0
-
             # log and save
             self.logger.log_learning_run(
                 self.strategies,
@@ -239,7 +256,47 @@ class Experiment:
         print(" - run_simulation finished")
 
     def run_evaluation(self) -> None:
-        raise NotImplementedError
+        """run evaluation for computed strategies"""
+        print(" - Evaluation:")
+
+        # repeat experiment
+        for run in tqdm(
+            range(self.number_runs),
+            unit_scale=True,
+            bar_format="{l_bar}{bar:20}{r_bar}{bar:-10b}",
+            colour="red",
+            desc="    Progress",
+        ):
+            # create game for evaluation
+            self.config_game_eval = self.get_config_game_eval()
+            self.config_eval = Config(self.config_game_eval, self.config_learner)
+            self.game_eval, _ = self.config_eval.create_setting()
+
+            # load computed strategies
+            self.load_strategies(run)
+            self.rescale_strategies()
+
+            # create gradient for evaluation
+            gradient = Gradient()
+            gradient.prepare(self.game_eval, self.strategies)
+
+            # compute metrics
+            for i in self.game_eval.set_bidder:
+                grad = gradient.compute(
+                    self.game_eval,
+                )
+                metrics, values = None, None
+                for tag, val in zip(metrics, values):
+                    self.logger.log_evaluation_run(run, i, tag, val)
+
+    # ------------------------------------ helper methods for different subexperiments ------------------------------------
+
+    def get_config_game_eval(self):
+        """config game for evaluation game is identical to the original game, except for keys specified in
+        the config in param_evaluation"""
+        self.config_game_eval = self.config_game.copy()
+        for key, val in self.param_evaluation["config"]:
+            self.config_game_eval[key] = val
 
     def save_strategies(self, run: int) -> None:
         """Save strategies for current experiment
@@ -247,7 +304,7 @@ class Experiment:
         Args:
             run (int): current repetition of experiment
         """
-        name = f"{self.label_learner}_{self.label_setting}_run_{run}"
+
         if self.param_learning["save_strat"]:
             for i in self.strategies:
                 self.strategies[i].save(
@@ -265,10 +322,15 @@ class Experiment:
             run (int): current repetition of experiment
         """
         # init strategies
-        self.strategies = self.config.create_strategies(self.game)
+        self.strategies = self.config.create_strategies(self.game, init_method="nan")
         name = f"{self.label_learner}_{self.label_setting}_run_{run}"
         for i in self.strategies:
             self.strategies[i].load(
                 name=name,
                 path=self.path_strat,
             )
+
+    def rescale_strategies(self, run: int) -> None:
+        """If the loaded strategy does not fit the dimensions of the discrete game,
+        we translate the strategies to the corresponding discretization"""
+        raise NotImplementedError
