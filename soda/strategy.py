@@ -98,6 +98,9 @@ class Strategy:
         if init_method == "random":
             sigma = np.random.uniform(0, 1, size=self.x.shape)
 
+        elif init_method == "nan":
+            sigme = np.nan * np.ones(self.x.shape)
+
         elif init_method == "random_no_overbid":
             if self.dim_o == self.dim_a == 1:
                 aa, oo = np.meshgrid(self.a_discr, self.o_discr)
@@ -928,7 +931,7 @@ class Strategy:
             name (str): name of saved strategy
             path (str): path to experiment directory
             n_scaled (int): discretization (type) in the larger setting
-            m_scaled (_type_): discretization (action) in the larger setting
+            m_scaled (int): discretization (action) in the larger setting
 
         Raises:
             ValueError: _description_
