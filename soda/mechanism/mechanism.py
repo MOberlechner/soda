@@ -220,13 +220,19 @@ class Mechanism:
 
         idx = self.bidder.index(agent)
         l2_norm = self.compute_l2_norm(agent, obs_profile[idx], bid_profile[idx])
-        util_loss, util_vs_bne, util_in_bne = self.compute_utility_vs_bne(
+        util_vs_bne, util_in_bne, util_loss, util = self.compute_utility_vs_bne(
             agent, obs_profile, bid_profile[idx]
         )
 
-        metrics = ["l2_norm", "util_loss", "util_vs_bne", "util_in_bne"]
-        values = [l2_norm, util_loss, util_vs_bne, util_in_bne]
-        return metrics, values
+        metrics = [
+            "l2_norm",
+            "utility_vs_bne",
+            "utility_in_bne",
+            "utility_loss_vs_bne",
+            "utility",
+        ]
+        values = [l2_norm, util_vs_bne, util_in_bne, util_loss, util]
+        return dict(zip(metrics, values))
 
     def get_bne(self, agent: str, obs: np.ndarray) -> np.ndarray:
         """Returns BNE for the respective setting
@@ -279,9 +285,11 @@ class Mechanism:
             return np.nan, np.nan, np.nan
 
         else:
+            # all agents play bne
             bid_profile = np.array(bid_profile)
             util_in_bne = self.utility(obs_profile, bid_profile, idx).mean()
 
+            # replace bne of agent idf with computed strategies
             bid_profile[idx] = bids
             util_vs_bne = self.utility(obs_profile, bid_profile, idx).mean()
 
@@ -290,7 +298,10 @@ class Mechanism:
             else:
                 util_loss = 1 - util_vs_bne / util_in_bne
 
-            return util_loss, util_vs_bne, util_in_bne
+            # all agents play computed strategy
+            util = self.utility(obs_profile, bids, idx).mean()
+
+            return util_vs_bne, util_in_bne, util_loss, util
 
     # ---------------------------------- methods for sampling of types ---------------------------------------- #
 
