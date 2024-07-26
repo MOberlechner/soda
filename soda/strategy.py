@@ -456,6 +456,7 @@ class Strategy:
         beta: np.ndarray = None,
         iter: int = None,
         save: bool = False,
+        save_path: str = "strategy",
     ):
         """Visualize Strategy
 
@@ -465,6 +466,7 @@ class Strategy:
             beta (np.ndarray, optional): plot function over strategy. Defaults to None.
             iter (int, optional): show intermediate strategy. Defaults to None.
             save (bool, optional): save plot. Defaults to False.
+            save_path (bool, optional): path to save_plot. Defaults to
 
         Raises:
             NotImplementedError: plot not available for multi-dim strategies
@@ -532,10 +534,10 @@ class Strategy:
         # save figure
         if save:
             plt.savefig(
-                f"plot_strategy_{self.agent}.png",
+                f"{save_path}.png",
                 facecolor="white",
                 transparent=False,
-                dpi=150,
+                dpi=75,
             )
 
     def _get_elements_from_history(self, iter: int, grad: bool) -> tuple:
@@ -896,30 +898,30 @@ class Strategy:
 
     # -------------------------------------- METHODS USED TO SAVE AND LOAD --------------------------------------- #
 
-    def save(self, name: str, path: str, save_init: bool = False):
+    def save(self, filename: str, save_init: bool = False):
         """Save strategy
 
         Args:
-            name (str): name of strategy
-            path (str): path to strategy-directory
+            filename (str): filename (incl. path) of strategy
             save_init (bool, optional): Save initial strategy. Defaults to False.
         """
-        filename = os.path.join(path, name + f"_agent_{self.agent}")
-        np.save(filename + ".npy", self.x)
+        np.save(f"{filename}_agent_{self.agent}.npy", self.x)
         if save_init:
-            np.save(filename + "_init.npy", self.history[0])
+            np.save(f"{filename}_init.npy", self.history[0])
 
-    def load(self, name: str, path: str, load_init: bool = False) -> None:
+    def load(self, filename: str, load_init: bool = False) -> None:
         """Load saved strategy
 
         Args:
-            name (str): name of strategy
+            filename (str): filename of strategy
             path (str): path to experiment directory
         """
-        filename = os.path.join(path, name + f"_agent_{self.agent}")
         try:
             if not load_init:
-                self.x = np.load(filename + ("_init.npy" if load_init else ".npy"))
+                self.x = np.load(
+                    f"{filename}_agent_{self.agent}"
+                    + ("_init.npy" if load_init else ".npy")
+                )
         except:
             print(f"File {filename} not found.")
             self.x = None
