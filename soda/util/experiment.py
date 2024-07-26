@@ -31,8 +31,8 @@ class Experiment:
         config_game: str,
         config_learner: str,
         number_runs: int,
-        expermient_tag: str = None,
-        param_learning: dict = {"active": False},
+        label_experiment: str = None,
+        param_computation: dict = {"active": False},
         param_simulation: dict = {"active": False},
         param_evaluation: dict = {"active": False},
         param_logging: dict = {},
@@ -43,9 +43,9 @@ class Experiment:
             config_game (str): config file for game/mechanism
             config_learner (str): config file for learner
             number_runs (int): number of repetitions of experiment
-            experiment_tag (str, optional): name for a group of different settings.
+            label_experiment (str, optional): name for a group of different settings.
                 Allows us to structure our results in different experiments. If not specified, we group the results by mechanism.
-            param_learning (dict):
+            param_computation (dict):
                 - active (bool): if learning is active
                 - init_strategies (str): method to initialize learning algorithm
             param_simulation (dict): parameter for simulation
@@ -63,19 +63,21 @@ class Experiment:
         self.config_game = config_game
         self.config_learner = config_learner
         self.number_runs = number_runs
+        self.label_experiment = label_experiment
 
-        self.param_learning = param_learning
-        self.param_simulation = _param_simulation
+        self.param_computation = param_computation
+        self.param_simulation = param_simulation
         self.param_evaluation = param_evaluation
         self.param_logging = param_logging
 
-        self.learning = param_learning["active"]
+        self.computation = param_computation["active"]
         self.simulation = param_simulation["active"]
         self.evaluation = param_evaluation["active"]
         self.error = False
 
         print(f"Experiment started".ljust(100, "."))
         print(f" - game:    {self.config_game}\n - learner: {self.config_learner}")
+
         try:
             self.prepare_experiment()
             print(f" - Setting created ")
@@ -83,100 +85,68 @@ class Experiment:
             print(e)
             print(f" - Error: setting not created")
             self.error = True
-            self.learning, self.simulation = False, False
+            self.computation, self.simulation, self.evaluation = False, False, False
 
-    def prepare_experiment():
+    def prepare_experiment(self):
         """create setting and initialize logger"""
         # create setting (game and learner)
         self.config = Config(self.config_game, self.config_learner)
         self.game, self.learner = self.config.create_setting()
 
-        # prepare logging
-        self.param_logging_set_defaults()
-        self.create_directories()
-
         self.label_mechanism = self.game.name
         self.label_setting = Path(self.config_game).stem
         self.label_learner = Path(self.config_learner).stem
+        if self.label_experiment is None:
+            self.label_experiment = self.label_mechanism
 
         # initialize logger
         self.logger = Logger(
-            self.param_logging["active"],
             self.label_mechanism,
             self.label_setting,
             self.label_learner,
+            self.label_experiment,
+            self.param_logging,
         )
-
-    def param_logging_set_defaults(self):
-        """If values are missing in param_loggin we set default values
-        - path_experiment: default is experiments/test/
-        - tag_experiment: default is mechanism name
-        - round_deicmal: default is 5
-        """
-        keys = ["active", "path_experiment", "tag_experiment" "round_decimal"]
-        values = [True, "experiments/test", self.game.name, 5]
-        for k, v in zip(keys, values):
-            if k not in self.param_loggin:
-                self.param_logging[k] = v
-
-    def create_directories(self):
-        """create directories necessary for logging and saving strategies
-        path_experiment / tag_experiment / log
-                                         / strat
-                                         / plots
-        """
-        if self.param_logging["active"]:
-            self.path_log = os.path.join(path_exp, "log", self.experiment_tag)
-            Path(self.path_log).mkdir(parents=True, exist_ok=True)
-
-            if self.param_learning["active"]:
-                if self.param_learning["save_strat"]:
-                    self.path_strat = os.path.join(
-                        path_exp, "strategies", self.experiment_tag
-                    )
-                    Path(self.path_strat).mkdir(parents=True, exist_ok=True)
-                if self.param_learning["save_plot"]:
-                    self.path_plot = os.path.join(
-                        path_exp, "plots", self.experiment_tag
-                    )
-                    Path(self.path_plot).mkdir(parents=True, exist_ok=True)
 
     # ------------------------------------ run sub-experiments ------------------------------------
 
     def run(self) -> None:
-        """run experiment, i.e., learning and simulation"""
+        """run experiment, i.e., computation, simulation, and evaluation"""
         # run learning
-        if self.learning:
+        if self.computation:
             try:
-                self.run_learning()
+                self.run_compuation()
+                self.logger.save("computation")
             except Exception as e:
                 print(e)
-                print(" - Error in Learning ")
+                print("    Error in Computation!")
                 self.error = True
 
         # run simulation
         if self.simulation:
             try:
                 self.run_simulation()
+                self.logger.save("simulation")
             except Exception as e:
                 print(e)
-                print("- Error in Simulation")
+                print("   Error in Simulation!")
                 self.error = True
 
         # run evaluation
         if self.evaluation:
             try:
                 self.run_evaluation()
+                self.logger.save("evaluation")
             except Exception as e:
                 print(e)
-                print("- Error in Evaluation")
+                print("   Error in Evaluation!")
                 self.error = True
 
         print(f"Done ".ljust(100, ".") + "\n")
 
-    def run_learning(self) -> None:
-        """run learning of strategies"""
-        print(" - Learning:")
+    def run_compuation(self) -> None:
+        """run computation of strategies"""
+        print(" - Computation:")
         t0 = time()
         if not self.game.mechanism.own_gradient:
             self.game.get_utility()
@@ -194,26 +164,26 @@ class Experiment:
             # init strategies
             init_param = (
                 {}
-                if "init_param" not in self.param_learning
+                if "init_param" not in self.param_computation
                 else self.param_learning["init_param"]
             )
-            self.strategies = self.config.create_strategies(self.game, init_param)
+            self.strategies = self.config.create_strategies(
+                self.game, self.param_computation["init_method"], init_param
+            )
+
             # run learning algorithm
             t0 = time()
             self.learner.run(self.game, self.strategies)
             time_run = time() - t0
-            # log and save
-            self.logger.log_learning_run(
-                self.strategies,
-                run,
-                self.learner.convergence,
-                self.learner.iter,
-                time_init,
-                time_run,
-            )
-            self.save_strategies(run)
 
-        self.logger.log_learning()
+            # log result
+            self.logger.log_computation(
+                strategies=self.strategies,
+                learner=self.learner,
+                run=run,
+                time_init=time_init,
+                time_run=time_run,
+            )
 
     def run_simulation(self) -> None:
         """run simulation for computed strategies"""
@@ -244,11 +214,10 @@ class Experiment:
 
                 # compute metrics
                 for i in self.game.set_bidder:
-                    metrics, values = self.game.mechanism.get_metrics(
+                    metrics = self.game.mechanism.get_metrics(
                         i, obs_profile, bid_profile
                     )
-                    for tag, val in zip(metrics, values):
-                        self.logger.log_simulation_run(run, i, tag, val)
+                    self.logger.log_simulation(run=run, agent=i, data=metrics)
             else:
                 break
 
@@ -297,23 +266,6 @@ class Experiment:
         self.config_game_eval = self.config_game.copy()
         for key, val in self.param_evaluation["config"]:
             self.config_game_eval[key] = val
-
-    def save_strategies(self, run: int) -> None:
-        """Save strategies for current experiment
-
-        Args:
-            run (int): current repetition of experiment
-        """
-
-        if self.param_learning["save_strat"]:
-            for i in self.strategies:
-                self.strategies[i].save(
-                    name=name,
-                    path=self.path_strat,
-                    save_init=True,
-                )
-        if self.param_learning["save_plot"]:
-            raise NotImplementedError
 
     def load_strategies(self, run: int) -> None:
         """Load strategies for current experiment
