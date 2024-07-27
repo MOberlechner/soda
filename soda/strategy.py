@@ -99,7 +99,7 @@ class Strategy:
             sigma = np.random.uniform(0, 1, size=self.x.shape)
 
         elif init_method == "nan":
-            sigme = np.nan * np.ones(self.x.shape)
+            sigma = np.nan * np.ones(self.x.shape)
 
         elif init_method == "random_no_overbid":
             if self.dim_o == self.dim_a == 1:
