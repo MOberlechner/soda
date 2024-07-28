@@ -222,19 +222,19 @@ class Mechanism:
     ) -> tuple:
 
         idx = self.bidder.index(agent)
-        l2_norm = self.compute_l2_norm(agent, obs_profile[idx], bid_profile[idx])
-        util_vs_bne, util_in_bne, util_loss, util = self.compute_utility_vs_bne(
+        util, util_in_bne, util_vs_bne, util_loss = self.compute_utility_vs_bne(
             agent, obs_profile, bid_profile
         )
+        l2_norm = self.compute_l2_norm(agent, obs_profile[idx], bid_profile[idx])
 
         metrics = [
-            "agent" "l2_norm",
-            "utility_vs_bne",
-            "utility_in_bne",
-            "utility_loss_vs_bne",
             "utility",
+            "utility_in_bne",
+            "utility_vs_bne",
+            "utility_loss_vs_bne",
+            "l2_norm",
         ]
-        values = [agent, l2_norm, util_vs_bne, util_in_bne, util_loss, util]
+        values = [l2_norm, util_vs_bne, util_in_bne, util_loss, util]
         return dict(zip(metrics, values))
 
     def get_bne(self, agent: str, obs: np.ndarray) -> np.ndarray:
@@ -304,7 +304,7 @@ class Mechanism:
             else:
                 util_loss = 1 - util_vs_bne / util_in_bne
 
-        return util_vs_bne, util_in_bne, util_loss, util
+        return util, util_in_bne, util_vs_bne, util_loss
 
     # ---------------------------------- methods for sampling of types ---------------------------------------- #
 
