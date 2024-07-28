@@ -199,29 +199,41 @@ class Experiment:
         ):
 
             # load computed strategies
-            self.load_strategies(run)
+            self.strategies = self.config.create_strategies(
+                self.game, init_method="nan"
+            )
+            for agent in self.strategies:
+                self.logger.load_strategies(strategy=self.strategies[agent], run=run)
 
             if all(self.strategies[i].x is not None for i in self.game.set_bidder):
 
                 # sample observation and bids
-                obs_profile = self.game.mechanism.sample_types(self.number_samples)
+                obs_profile = self.game.mechanism.sample_types(
+                    self.param_simulation["number_samples"]
+                )
                 bid_profile = np.array(
                     [
                         self.strategies[self.game.bidder[i]].sample_bids(obs_profile[i])
                         for i in range(self.game.n_bidder)
                     ]
                 )
-
-                # compute metrics
-                for i in self.game.set_bidder:
-                    metrics = self.game.mechanism.get_metrics(
-                        i, obs_profile, bid_profile
+                print("o/b sampled")
+                # compute metrics for agents
+                for agent in self.game.set_bidder:
+                    data = self.game.mechanism.get_metrics_agents(
+                        agent, obs_profile, bid_profile
                     )
-                    self.logger.log_simulation(run=run, agent=i, data=metrics)
+                    self.logger.log_simulation(run=run, agent=agent, data=data)
+                print("metrics agents computed")
+                # compute metrics for mechanism
+                data = self.game.mechanism.get_metrics_mechanism(
+                    obs_profile, bid_profile
+                )
+                self.logger.log_simulation(run=run, agent="mechanism", data=data)
+
             else:
                 break
 
-        self.logger.log_simulation()
         print(" - run_simulation finished")
 
     def run_evaluation(self) -> None:
@@ -266,21 +278,6 @@ class Experiment:
         self.config_game_eval = self.config_game.copy()
         for key, val in self.param_evaluation["config"]:
             self.config_game_eval[key] = val
-
-    def load_strategies(self, run: int) -> None:
-        """Load strategies for current experiment
-
-        Args:
-            run (int): current repetition of experiment
-        """
-        # init strategies
-        self.strategies = self.config.create_strategies(self.game, init_method="nan")
-        name = f"{self.label_learner}_{self.label_setting}_run_{run}"
-        for i in self.strategies:
-            self.strategies[i].load(
-                name=name,
-                path=self.path_strat,
-            )
 
     def rescale_strategies(self, run: int) -> None:
         """If the loaded strategy does not fit the dimensions of the discrete game,
