@@ -234,7 +234,7 @@ class Mechanism:
             "utility_loss_vs_bne",
             "l2_norm",
         ]
-        values = [l2_norm, util_vs_bne, util_in_bne, util_loss, util]
+        values = [util, util_in_bne, util_vs_bne, util_loss, l2_norm]
         return dict(zip(metrics, values))
 
     def get_bne(self, agent: str, obs: np.ndarray) -> np.ndarray:
