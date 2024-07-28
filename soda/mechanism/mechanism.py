@@ -205,13 +205,16 @@ class Mechanism:
 
     # ---------------------------------- methods to compute metrics --------------------------------------- #
 
-    def get_metrics(
+    def get_metrics_mechanism(
+        self, obs_profile: np.ndarray, bid_profile: np.ndarray
+    ) -> Dict[str, float]:
+        """method to compute metrics regarding mechanism (e.g. revenue)"""
+        return {}
+
+    def get_metrics_agents(
         self, agent: str, obs_profile: np.ndarray, bid_profile: np.ndarray
-    ) -> tuple:
-        """Method for each mechanism to compute the metrics we are interest in.
-        Some methods use additional metrics (e.g. revenue in single-item auctions). In that case,
-        the specific mechanism should overwrite this method
-        """
+    ) -> Dict[str, float]:
+        """method to compute metrics regarding agents (e.g., utility, distance to BNE)"""
         return self.get_standard_metrics(agent, obs_profile, bid_profile)
 
     def get_standard_metrics(
@@ -221,17 +224,17 @@ class Mechanism:
         idx = self.bidder.index(agent)
         l2_norm = self.compute_l2_norm(agent, obs_profile[idx], bid_profile[idx])
         util_vs_bne, util_in_bne, util_loss, util = self.compute_utility_vs_bne(
-            agent, obs_profile, bid_profile[idx]
+            agent, obs_profile, bid_profile
         )
 
         metrics = [
-            "l2_norm",
+            "agent" "l2_norm",
             "utility_vs_bne",
             "utility_in_bne",
             "utility_loss_vs_bne",
             "utility",
         ]
-        values = [l2_norm, util_vs_bne, util_in_bne, util_loss, util]
+        values = [agent, l2_norm, util_vs_bne, util_in_bne, util_loss, util]
         return dict(zip(metrics, values))
 
     def get_bne(self, agent: str, obs: np.ndarray) -> np.ndarray:
@@ -264,44 +267,44 @@ class Mechanism:
             return np.sqrt(1 / len(obs) * ((bids - bne) ** 2).sum())
 
     def compute_utility_vs_bne(
-        self, agent: str, obs_profile: np.ndarray, bids: np.ndarray
+        self, agent: str, obs_profile: np.ndarray, bid_profile: np.ndarray
     ) -> tuple:
         """compute metrics regarding utility
 
         Args:
             agent (str): agent
             obs_profile (np.ndarray): observation profile
-            bids (np.ndarray): bids for agent (other agents play according to BNE)
+            bid_profile (np.ndarray): bids for agent (other agents play according to BNE)
 
         Returns:
             Tuple[float, float, float]: relative utility loss, utility, utility in BNE
         """
         idx = self.bidder.index(agent)
 
-        bid_profile = [
+        # all agents play computed strategy
+        util = self.utility(obs_profile, bid_profile, idx).mean()
+
+        bne_profile = [
             self.get_bne(self.bidder[i], obs_profile[i]) for i in range(self.n_bidder)
         ]
         if any(bne is None for bne in bid_profile):
-            return np.nan, np.nan, np.nan
+            util_vs_bne, util_in_bne, util_loss = np.nan, np.nan, np.nan
 
         else:
             # all agents play bne
-            bid_profile = np.array(bid_profile)
-            util_in_bne = self.utility(obs_profile, bid_profile, idx).mean()
+            bne_profile = np.array(bne_profile)
+            util_in_bne = self.utility(obs_profile, bne_profile, idx).mean()
 
             # replace bne of agent idf with computed strategies
-            bid_profile[idx] = bids
-            util_vs_bne = self.utility(obs_profile, bid_profile, idx).mean()
+            bne_profile[idx] = bid_profile[idx]
+            util_vs_bne = self.utility(obs_profile, bne_profile, idx).mean()
 
             if np.isclose(util_in_bne, 0.0):
                 util_loss = np.nan
             else:
                 util_loss = 1 - util_vs_bne / util_in_bne
 
-            # all agents play computed strategy
-            util = self.utility(obs_profile, bids, idx).mean()
-
-            return util_vs_bne, util_in_bne, util_loss, util
+        return util_vs_bne, util_in_bne, util_loss, util
 
     # ---------------------------------- methods for sampling of types ---------------------------------------- #
 

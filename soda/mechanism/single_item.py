@@ -247,17 +247,12 @@ class SingleItemAuction(Mechanism):
 
     # --------------------------------- methods to compute metrics --------------------------------- #
 
-    def get_metrics(
+    def get_metrics_mechanism(
         self, agent: str, obs_profile: np.ndarray, bid_profile: np.ndarray
     ) -> tuple:
-        """compute all metrics relevant for single-item auction
-        this includes standard metrics (l2, util_loss) + revenue
-        """
-        metrics, values = self.get_standard_metrics(agent, obs_profile, bid_profile)
-        metrics += ["revenue"]
-        values += [self.compute_expected_revenue(bid_profile)]
-
-        return metrics, values
+        """metric regarding mechanism (overwrites method from mechanism class)"""
+        rev = self.compute_expected_revenue(bid_profile)
+        return {"revenue": rev}
 
     def compute_expected_revenue(self, bid_profile: np.ndarray) -> float:
         """Computed expected revenue of single-item auction
