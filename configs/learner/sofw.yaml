@@ -5,4 +5,3 @@ stop_criterion: 'util_loss'
 parameter:
   method: 'standard'
   steprule_bool: False
-init_method: 'random'
