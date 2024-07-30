@@ -539,6 +539,7 @@ class Strategy:
                 transparent=False,
                 dpi=75,
             )
+            plt.close(fig)
 
     def _get_elements_from_history(self, iter: int, grad: bool) -> tuple:
         """Get Strategy and Gradient (opt.) from history to plot
