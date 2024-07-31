@@ -151,6 +151,8 @@ class Experiment:
         if not self.game.mechanism.own_gradient:
             self.game.get_utility()
             print("    utilities of approximation game computed")
+        else:
+            print("    own gradient computation is used")
         time_init = time() - t0
 
         # repeat experiment
@@ -217,14 +219,14 @@ class Experiment:
                         for i in range(self.game.n_bidder)
                     ]
                 )
-                print("o/b sampled")
+
                 # compute metrics for agents
                 for agent in self.game.set_bidder:
                     data = self.game.mechanism.get_metrics_agents(
                         agent, obs_profile, bid_profile
                     )
                     self.logger.log_simulation(run=run, agent=agent, data=data)
-                print("metrics agents computed")
+
                 # compute metrics for mechanism
                 data = self.game.mechanism.get_metrics_mechanism(
                     obs_profile, bid_profile
