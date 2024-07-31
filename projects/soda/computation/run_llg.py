@@ -40,47 +40,28 @@ if __name__ == "__main__":
         "\n",
     )
     t0 = time()
-
+    successfull = 0
     for config_game, config_learner in experiment_list:
         exp_handler = Experiment(
             PATH_TO_CONFIGS + "game/" + config_game,
             PATH_TO_CONFIGS + "learner/" + config_learner,
-            NUMBER_RUNS,
-            LEARNING,
-            SIMULATION,
-            LOGGING,
-            SAVE_STRAT,
-            NUMBER_SAMPLES,
-            PATH_TO_EXPERIMENTS,
-            ROUND_DECIMALS,
-            experiment_tag="llg",
+            number_runs=NUMBER_RUNS,
+            label_experiment="llg",
+            param_computation=PARAM_COMPUTATION,
+            param_simulation=PARAM_SIMULATION,
+            param_logging=PARAM_LOGGING,
         )
         exp_handler.run()
-
-    # No BNE for first-price setting, i.e., no simulation and 1 run
-    NUMBER_RUNS = 1
-    SIMULATION = False
+        successfull += 1 - exp_handler.error
 
     for config_game, config_learner in experiment_list_fp:
         exp_handler = Experiment(
             PATH_TO_CONFIGS + "game/" + config_game,
             PATH_TO_CONFIGS + "learner/" + config_learner,
-            NUMBER_RUNS,
-            LEARNING,
-            SIMULATION,
-            LOGGING,
-            SAVE_STRAT,
-            NUMBER_SAMPLES,
-            PATH_TO_EXPERIMENTS,
-            ROUND_DECIMALS,
-            experiment_tag="llg",
+            number_runs=1,
+            label_experiment="llg",
+            param_computation=PARAM_COMPUTATION,
+            param_logging=PARAM_LOGGING,
         )
         exp_handler.run()
-
-    t1 = time()
-    print(
-        f"\n {len(experiment_list)} Experiments finished in {(t1-t0)/60:.1f} min".ljust(
-            100, "."
-        ),
-        "\n",
-    )
+        successfull += 1 - exp_handler.error

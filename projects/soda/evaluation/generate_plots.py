@@ -83,7 +83,7 @@ def generate_plots_example():
     learner_name = os.path.basename(config_learner).replace(".yaml", "")
     game_name = os.path.basename(config_game).replace(".yaml", "")
     name = f"{learner_name}_{game_name}_run_0"
-    path = os.path.join(PATH_TO_EXPERIMENTS, "strategies", "example")
+    path = os.path.join(PATH_TO_RESULTS, "strategies", "example")
 
     # initial strategy
     strategies["1"].load(name, path, load_init=True)
@@ -96,7 +96,7 @@ def generate_plots_example():
         cmap="Greys",
         zorder=2,
     )
-    path_save = os.path.join(PATH_TO_EXPERIMENTS, "plots", f"figure_1_1")
+    path_save = os.path.join(PATH_TO_RESULTS, "plots", f"figure_1_1")
     fig.savefig(f"{path_save}.{FORMAT}", bbox_inches="tight")
 
     # computed strategy
@@ -110,7 +110,7 @@ def generate_plots_example():
         cmap="Greys",
         zorder=2,
     )
-    path_save = os.path.join(PATH_TO_EXPERIMENTS, "plots", f"figure_1_2")
+    path_save = os.path.join(PATH_TO_RESULTS, "plots", f"figure_1_2")
     fig.savefig(f"{path_save}.{FORMAT}", bbox_inches="tight")
 
     # sampled bids
@@ -120,7 +120,7 @@ def generate_plots_example():
     plot_scatter(ax, obs, bids_bne, 1, label_legend="analyt. BNE")
     plot_scatter(ax, obs, bids, 0, label_legend=r"$SODA_1$")
     ax.legend(fontsize=FONTSIZE_LEGEND, loc=2)
-    path_save = os.path.join(PATH_TO_EXPERIMENTS, "plots", f"figure_1_3")
+    path_save = os.path.join(PATH_TO_RESULTS, "plots", f"figure_1_3")
     fig.savefig(f"{path_save}.{FORMAT}", bbox_inches="tight")
 
 
@@ -148,7 +148,7 @@ def generate_plots_interdependent():
             [], [], label="analyt. BNE", color=COLORS[0], linestyle="-", linewidth=2
         )
         ax.legend(fontsize=FONTSIZE_LEGEND, loc=2)
-        path_save = os.path.join(PATH_TO_EXPERIMENTS, "plots", f"figure_2_{i+1}")
+        path_save = os.path.join(PATH_TO_RESULTS, "plots", f"figure_2_{i+1}")
         fig.savefig(f"{path_save}.{FORMAT}", bbox_inches="tight")
 
 
@@ -180,7 +180,7 @@ def generate_plots_llg():
                 label=f"$\gamma={gammas[i]}$",
             )
         ax.legend(fontsize=FONTSIZE_LEGEND, loc=2)
-        path_save = os.path.join(PATH_TO_EXPERIMENTS, "plots", f"figure_3_{j+1}")
+        path_save = os.path.join(PATH_TO_RESULTS, "plots", f"figure_3_{j+1}")
         fig.savefig(f"{path_save}.{FORMAT}", bbox_inches="tight")
 
 
@@ -203,7 +203,7 @@ def generate_plots_llg_fp():
             ax = plot_scatter(ax, obs, bids, i, label_legend)
 
         ax.legend(fontsize=FONTSIZE_LEGEND, loc=2)
-        path_save = os.path.join(PATH_TO_EXPERIMENTS, "plots", f"figure_4_{j+1}")
+        path_save = os.path.join(PATH_TO_RESULTS, "plots", f"figure_4_{j+1}")
         fig.savefig(f"{path_save}.{FORMAT}", bbox_inches="tight")
 
 
@@ -250,7 +250,7 @@ def generate_plots_split_award():
         )
         ax.legend(fontsize=FONTSIZE_LEGEND, loc=2)
 
-        path_save = os.path.join(PATH_TO_EXPERIMENTS, "plots", f"figure_5_{i+1}")
+        path_save = os.path.join(PATH_TO_RESULTS, "plots", f"figure_5_{i+1}")
         fig.savefig(f"{path_save}.{FORMAT}", bbox_inches="tight")
 
 
@@ -272,7 +272,7 @@ def generate_plots_risk():
         ax.plot(x, bne, color=COLORS[i], linestyle="-", zorder=1)
     ax.plot(x, 0.5 * x, color="k", linestyle="--", label="risk-neutral")
     ax.legend(fontsize=FONTSIZE_LEGEND, loc=2)
-    path_save = os.path.join(PATH_TO_EXPERIMENTS, "plots", f"figure_6_1")
+    path_save = os.path.join(PATH_TO_RESULTS, "plots", f"figure_6_1")
     fig.savefig(f"{path_save}.{FORMAT}", bbox_inches="tight")
 
     # All-Pay
@@ -289,12 +289,12 @@ def generate_plots_risk():
         ax = plot_scatter(ax, obs, bids, i, r"$\rho$" + f" = {r}")
     ax.plot(x, 0.5 * x**2, color="k", linestyle="--", label="risk-neutral")
     ax.legend(fontsize=FONTSIZE_LEGEND, loc=2)
-    path_save = os.path.join(PATH_TO_EXPERIMENTS, "plots", f"figure_6_2")
+    path_save = os.path.join(PATH_TO_RESULTS, "plots", f"figure_6_2")
     fig.savefig(f"{path_save}.{FORMAT}", bbox_inches="tight")
 
     # Revenue
     risk = [0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
-    _, df_sim = get_log_files(PATH_TO_EXPERIMENTS, "risk")
+    _, df_sim = get_log_files(PATH_TO_RESULTS, "risk")
     cols_index = ["mechanism", "setting", "learner", "agent"]
     df = aggregate_metrics_over_runs(df_sim, cols_index, ["revenue"])
     df = df.sort_values(["mechanism", "setting"]).reset_index(drop=True)
@@ -332,7 +332,7 @@ def generate_plots_risk():
         label="All-Pay",
     )
     ax.legend(fontsize=FONTSIZE_LEGEND, loc=2)
-    path_save = os.path.join(PATH_TO_EXPERIMENTS, "plots", f"figure_6_3")
+    path_save = os.path.join(PATH_TO_RESULTS, "plots", f"figure_6_3")
     fig.savefig(f"{path_save}.{FORMAT}", bbox_inches="tight")
 
 
@@ -355,7 +355,7 @@ def generate_plots_contests():
         ax = plot_scatter(ax, obs, bids, i, f"r = {r}")
 
     ax.legend(fontsize=FONTSIZE_LEGEND, loc=2)
-    path_save = os.path.join(PATH_TO_EXPERIMENTS, "plots", f"figure_7_1")
+    path_save = os.path.join(PATH_TO_RESULTS, "plots", f"figure_7_1")
     fig.savefig(f"{path_save}.{FORMAT}", bbox_inches="tight")
 
     # asymmetric
@@ -374,16 +374,16 @@ def generate_plots_contests():
             ax = plot_scatter(ax, obs, bids, i, f"r = {r}")
 
         ax.legend(fontsize=FONTSIZE_LEGEND, loc=2)
-        path_save = os.path.join(PATH_TO_EXPERIMENTS, "plots", f"figure_7_{j+2}")
+        path_save = os.path.join(PATH_TO_RESULTS, "plots", f"figure_7_{j+2}")
         fig.savefig(f"{path_save}.{FORMAT}", bbox_inches="tight")
 
 
 if __name__ == "__main__":
-    os.makedirs(os.path.join(PATH_TO_EXPERIMENTS, "plots"), exist_ok=True)
-    generate_plots_example()
-    generate_plots_interdependent()
-    generate_plots_llg()
-    generate_plots_llg_fp()
-    generate_plots_split_award()
-    generate_plots_risk()
+    os.makedirs(os.path.join(PATH_TO_RESULTS, "plots"), exist_ok=True)
+    # generate_plots_example()
+    # generate_plots_interdependent()
+    # generate_plots_llg()
+    # generate_plots_llg_fp()
+    # generate_plots_split_award()
+    # generate_plots_risk()
     generate_plots_contests()

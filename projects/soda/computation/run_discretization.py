@@ -30,31 +30,27 @@ learner = [
 experiment_list = list(product(game_discretization, learner))
 
 if __name__ == "__main__":
-
     print(f"\nRunning {len(experiment_list)} Experiments".ljust(100, "."), "\n")
     t0 = time()
-
+    successfull = 0
     for config_game, config_learner in experiment_list:
-
-        SIMULATION = True if "fast_2_" in config_game else False
-
         exp_handler = Experiment(
             PATH_TO_CONFIGS + "game/" + config_game,
             PATH_TO_CONFIGS + "learner/" + config_learner,
-            NUMBER_RUNS,
-            LEARNING,
-            SIMULATION,
-            LOGGING,
-            SAVE_STRAT,
-            NUMBER_SAMPLES,
-            PATH_TO_EXPERIMENTS,
-            ROUND_DECIMALS,
-            experiment_tag="discretization",
+            number_runs=NUMBER_RUNS,
+            label_experiment="discretization",
+            param_computation=PARAM_COMPUTATION,
+            param_simulation={
+                "active": True if "fast_2_" in config_game else False,
+                "number_samples": int(2**22),
+            },
+            param_logging=PARAM_LOGGING,
         )
         exp_handler.run()
+        successfull += 1 - exp_handler.error
     t1 = time()
     print(
-        f"\n {len(experiment_list)} Experiments finished in {(t1-t0)/60:.1f} min".ljust(
+        f"\n{successfull} out of {len(experiment_list)} experiments successfull ({(t1-t0)/60:.1f} min)".ljust(
             100, "."
         ),
         "\n",
