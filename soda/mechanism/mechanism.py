@@ -288,7 +288,6 @@ class Mechanism:
             self.get_bne(self.bidder[i], obs_profile[i]) for i in range(self.n_bidder)
         ]
         if any(bne is None for bne in bne_profile):
-            print("if True")
             util_vs_bne, util_in_bne, util_loss = np.nan, np.nan, np.nan
 
         else:
