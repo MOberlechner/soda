@@ -248,7 +248,7 @@ class SingleItemAuction(Mechanism):
     # --------------------------------- methods to compute metrics --------------------------------- #
 
     def get_metrics_mechanism(
-        self, agent: str, obs_profile: np.ndarray, bid_profile: np.ndarray
+        self, obs_profile: np.ndarray, bid_profile: np.ndarray
     ) -> tuple:
         """metric regarding mechanism (overwrites method from mechanism class)"""
         rev = self.compute_expected_revenue(bid_profile)
