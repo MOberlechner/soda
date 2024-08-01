@@ -19,9 +19,6 @@ PARAM_SIMULATION = {
     "active": True,
     "number_samples": int(2**22),
 }
-PARAM_EVALUATION = {
-    "active": False,
-}
 NUMBER_RUNS = 10
 
 # parameter for evaluations and visualizations
