@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from time import time
+from typing import List
 
 import numpy as np
 from tqdm import tqdm
@@ -8,6 +9,43 @@ from tqdm import tqdm
 from soda.learner.gradient import Gradient
 from soda.util.config import Config
 from soda.util.logging import Logger
+
+
+def run_experiments(
+    experiment_list: List[tuple],
+    path_to_configs: str,
+    number_runs: int,
+    label_experiment: str,
+    param_computation: dict,
+    param_simulation: dict,
+    param_evaluation: dict,
+    param_logging: dict,
+):
+    """Method to run several experiments using the Experiment class"""
+
+    print(f"\nRunning {len(experiment_list)} Experiments".ljust(100, "."), "\n")
+    t0 = time()
+    successfull = 0
+    for config_game, config_learner in experiment_list:
+        exp_handler = Experiment(
+            path_to_configs + "game/" + config_game,
+            path_to_configs + "learner/" + config_learner,
+            number_runs=number_runs,
+            label_experiment=label_experiment,
+            param_computation=param_computation,
+            param_simulation=param_simulation,
+            param_evaluation=param_evaluation,
+            param_logging=param_logging,
+        )
+        exp_handler.run()
+        successfull += 1 - exp_handler.error
+    t1 = time()
+    print(
+        f"\n{successfull} out of {len(experiment_list)} experiments successfull ({(t1-t0)/60:.1f} min)".ljust(
+            100, "."
+        ),
+        "\n",
+    )
 
 
 class Experiment:
