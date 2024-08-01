@@ -918,11 +918,10 @@ class Strategy:
             path (str): path to experiment directory
         """
         try:
-            if not load_init:
-                self.x = np.load(
-                    f"{filename}_agent_{self.agent}"
-                    + ("_init.npy" if load_init else ".npy")
-                )
+            filename = f"{filename}_agent_{self.agent}" + (
+                "_init.npy" if load_init else ".npy"
+            )
+            self.x = np.load(filename)
         except:
             print(f"File {filename} not found.")
             self.x = None
