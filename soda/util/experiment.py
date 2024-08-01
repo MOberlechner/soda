@@ -76,7 +76,7 @@ class Experiment:
         self.error = False
 
         print(f"Experiment started".ljust(100, "."))
-        print(f" - game:    {self.config_game}\n - learner: {self.config_learner}")
+        print(f" - game   : {self.config_game}\n - learner: {self.config_learner}")
 
         try:
             self.prepare_experiment()
