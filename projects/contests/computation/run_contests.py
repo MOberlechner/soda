@@ -21,27 +21,18 @@ learner_contests = [
 ]
 experiment_list = list(product(game_contests, learner_contests))
 
-SIMULATION = False
-NUMBER_RUNS = 10
-
 if __name__ == "__main__":
     print(f"\nRunning {len(experiment_list)} Experiments".ljust(100, "."), "\n")
     t0 = time()
     successfull = 0
     for config_game, config_learner in experiment_list:
-
         exp_handler = Experiment(
             PATH_TO_CONFIGS + "game/" + config_game,
             PATH_TO_CONFIGS + "learner/" + config_learner,
-            NUMBER_RUNS,
-            LEARNING,
-            SIMULATION,
-            LOGGING,
-            SAVE_STRAT,
-            NUMBER_SAMPLES,
-            PATH_TO_EXPERIMENTS,
-            ROUND_DECIMALS,
-            experiment_tag="tullock",
+            number_runs=NUMBER_RUNS,
+            label_experiment="tullock",
+            param_computation=PARAM_COMPUTATION,
+            param_logging=PARAM_LOGGING,
         )
         exp_handler.run()
         successfull += 1 - exp_handler.error

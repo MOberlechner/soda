@@ -77,7 +77,7 @@ def plot_crowdsourcing(
 
     ax.legend(fontsize=FONTSIZE_LEGEND, loc=2)
     fig.savefig(
-        f"{PATH_SAVE}/{experiment_tag}.pdf",
+        f"{PATH_TO_RESULTS}/{experiment_tag}.pdf",
         bbox_inches="tight",
     )
 
@@ -119,7 +119,7 @@ def plot_tullock(
     ax.legend(fontsize=FONTSIZE_LEGEND, loc=2)
 
     fig.savefig(
-        f"{PATH_SAVE}/{experiment_tag}{save_tag}.pdf",
+        f"{PATH_TO_RESULTS}/{experiment_tag}{save_tag}.pdf",
         bbox_inches="tight",
     )
 
@@ -127,7 +127,7 @@ def plot_tullock(
 if __name__ == "__main__":
     # Plot Crowdsourcing
     experiment_tag = "crowdsourcing"
-    os.makedirs(PATH_SAVE, exist_ok=True)
+    os.makedirs(PATH_TO_RESULTS, exist_ok=True)
 
     config_learner = "soda2_eta10_beta05.yaml"
     config_games = [
@@ -140,7 +140,7 @@ if __name__ == "__main__":
 
     # Plot Tullock Symmetric
     experiment_tag = "tullock"
-    os.makedirs(PATH_SAVE, exist_ok=True)
+    os.makedirs(PATH_TO_RESULTS, exist_ok=True)
 
     config_learner = "soda2_eta10_beta05.yaml"
     config_games = [
@@ -166,7 +166,7 @@ if __name__ == "__main__":
 
     # Plot Tullock Asymmetric
     experiment_tag = "tullock"
-    os.makedirs(PATH_SAVE, exist_ok=True)
+    os.makedirs(PATH_TO_RESULTS, exist_ok=True)
 
     config_learner = "soda2_eta10_beta05.yaml"
     config_games = [
