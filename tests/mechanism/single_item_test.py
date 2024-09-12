@@ -25,7 +25,7 @@ def get_mechanism():
             "payment_rule": "first_price",
             "tie_breaking": "random",
             "utility_type": "QL",
-            "risk_parameter": 0.5,
+            "utility_type_parameter": 0.5,
         }
         if budget:
             param_util.update(

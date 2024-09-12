@@ -109,11 +109,11 @@ class AllPayAuction(Mechanism):
         if self.utility_type == "RN":
             return allocation * payoff_win + (1 - allocation) * payoff_los
         elif self.utility_type == "CRRA":
-            rho = self.param_util["risk_parameter"]
+            rho = self.param_util["utility_type_parameter"]
             crra = lambda x: np.sign(x) * np.abs(x) ** rho
             return allocation * crra(payoff_win) + (1 - allocation) * crra(payoff_los)
         elif self.utility_type == "CARA":
-            rho = self.param_util["risk_parameter"]
+            rho = self.param_util["utility_type_parameter"]
             cara = lambda x: 1 / rho * (1 - np.exp(-rho * x))
             return allocation * cara(payoff_win) + (1 - allocation) * cara(payoff_los)
         else:
@@ -308,8 +308,8 @@ class AllPayAuction(Mechanism):
             self.param_util["utility_type"] = "RN"
         else:
             if self.param_util["utility_type"] in ["CRRA", "CARA"]:
-                if "risk_parameter" not in self.param_util:
-                    raise ValueError("Specify risk_parameter for CRRA")
+                if "utility_type_parameter" not in self.param_util:
+                    raise ValueError("Specify utility_type_parameter for CRRA")
         if "payment_rule" not in self.param_util:
             raise ValueError(
                 "specify payment_rule in param_util - payment_rule: first_price, generalized, "

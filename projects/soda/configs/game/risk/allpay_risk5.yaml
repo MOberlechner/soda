@@ -11,6 +11,6 @@ param_util:
   payment_rule: 'first_price'
   type: 'value'
   utility_type: 'CRRA'
-  risk_parameter: 1.0
+  utility_type_parameter: 1.0
 n: 64
 m: 64
