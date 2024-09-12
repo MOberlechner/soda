@@ -60,23 +60,23 @@ class AllPayAuction(Mechanism):
     # ------------------------------- methods to compute utilities --------------------------------- #
 
     def utility(
-        self, obs_profile: np.ndarray, bids_profile: np.ndarray, index_agent: int
+        self, obs_profile: np.ndarray, bids_profile: np.ndarray, index_bidder: int
     ) -> np.ndarray:
         """Utility function for All-Pay Auction
 
         Args:
             obs_profile (np.ndarray): observations of all agents
             bids_profile (np.ndarray): bids of all agents
-            index_agent (int): index of agent
+            index_bidder (int): index of agent
 
         Returns:
-            np.ndarry: utilities of agent (with index index_agent)
+            np.ndarry: utilities of agent (with index index_bidder)
         """
-        self.test_input_utility(obs_profile, bids_profile, index_agent)
+        self.test_input_utility(obs_profile, bids_profile, index_bidder)
 
-        valuation = self.get_valuation(obs_profile, index_agent)
-        allocation = self.get_allocation(bids_profile, index_agent)
-        payment = self.get_payment(bids_profile, allocation, index_agent)
+        valuation = self.get_valuation(obs_profile, index_bidder)
+        allocation = self.get_allocation(bids_profile, index_bidder)
+        payment = self.get_payment(bids_profile, allocation, index_bidder)
         payoff = self.get_payoff(
             allocation=allocation, valuation=valuation, payment=payment
         )
@@ -120,32 +120,32 @@ class AllPayAuction(Mechanism):
             raise ValueError(f"utility_type {self.utility_typ} unknown")
 
     def get_payment(
-        self, bids: np.ndarray, allocation: np.ndarray, index_agent: int
+        self, bids: np.ndarray, allocation: np.ndarray, index_bidder: int
     ) -> np.ndarray:
         """compute payment for bidder idx
 
         Args:
             bids (np.ndarray): action profiles
             allocation (np.ndarray): allocation vector for agent i
-            index_agent (int): index of agent we consider
+            index_bidder (int): index of agent we consider
 
         Returns:
             np.ndarray: payment vector
         """
         if self.payment_rule == "first_price":
-            return bids[index_agent]
+            return bids[index_bidder]
 
         elif self.payment_rule == "second_price":
-            second_price = np.delete(bids, index_agent, 0).max(axis=0)
-            return allocation * second_price + (1 - allocation) * bids[index_agent]
+            second_price = np.delete(bids, index_bidder, 0).max(axis=0)
+            return allocation * second_price + (1 - allocation) * bids[index_bidder]
 
         elif self.payment_rule == "generalized":
             alpha = self.param_util["payment_parameter"]
-            second_price = np.delete(bids, index_agent, 0).max(axis=0)
+            second_price = np.delete(bids, index_bidder, 0).max(axis=0)
 
             return (
-                allocation * ((1 - alpha) * bids[index_agent] + alpha * second_price)
-                + (1 - allocation) * bids[index_agent]
+                allocation * ((1 - alpha) * bids[index_bidder] + alpha * second_price)
+                + (1 - allocation) * bids[index_bidder]
             )
 
         else:
