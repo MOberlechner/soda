@@ -46,24 +46,24 @@ class LLGAuction(Mechanism):
         self.gamma = param_prior["corr"]
 
     def utility(
-        self, obs_profile: np.ndarray, bids_profile: np.ndarray, index_agent: int
+        self, obs_profile: np.ndarray, bids_profile: np.ndarray, index_bidder: int
     ) -> np.ndarray:
         """Compute utility for LLG Auction
 
         Args:
             obs_profile (np.ndarray): observations of all agents
             bids_profile (np.ndarray): bids of all agents
-            index_agent (int): index of agent
+            index_bidder (int): index of agent
 
         Returns:
-            np.ndarry: utilities of agent (with index index_agent)
+            np.ndarry: utilities of agent (with index index_bidder)
         """
 
-        self.test_input_utility(obs_profile, bids_profile, index_agent)
-        valuation = self.get_valuation(obs_profile, index_agent)
+        self.test_input_utility(obs_profile, bids_profile, index_bidder)
+        valuation = self.get_valuation(obs_profile, index_bidder)
 
-        allocation = self.get_allocation(bids_profile, index_agent)
-        payment = self.get_payment(bids_profile, allocation, index_agent)
+        allocation = self.get_allocation(bids_profile, index_bidder)
+        payment = self.get_payment(bids_profile, allocation, index_bidder)
 
         return allocation * (valuation - payment)
 
