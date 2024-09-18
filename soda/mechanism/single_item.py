@@ -36,7 +36,7 @@ class SingleItemAuction(Mechanism):
                                 ROS (return of spent)
                                 CARA, CRRA (risk aversion)
         reserve_price   float: specifies minimal payment if agent wins. Defaults to 0.
-                        Note that we reserve_price only affect the pricing rule, not the allocation (i.e., you can still win with lower bids)
+                        Note that the reserve_price only affect the pricing rule, not the allocation (i.e., you can still win with lower bids)
 
     """
 
@@ -209,6 +209,7 @@ class SingleItemAuction(Mechanism):
                 self.reserve_price,
                 None,
             )
+
         else:
             raise ValueError("payment rule " + self.payment_rule + " not available")
         return payment * np.where(allocation > 0, 1, 0)
@@ -260,7 +261,8 @@ class SingleItemAuction(Mechanism):
 
     def compute_expected_revenue(self, bid_profile: np.ndarray) -> float:
         """Computed expected revenue of single-item auction
-        In this setting we ignore other tie-breaking rules and always pick random
+        In this setting we ignore other tie-breaking rules and always pick random.
+        If bidders bid below reserve-price, allocatio is set to zero (different to utilities used for learning etc.)
 
         Args:
             bid_profile (np.ndarray): bid profile
@@ -274,6 +276,7 @@ class SingleItemAuction(Mechanism):
                 for i in range(self.n_bidder)
             ]
         )
+        allocations = np.where(bid_profile < self.reserve_price, 0, allocations)
         payments = np.array(
             [
                 self.get_payment(bid_profile, allocations[i], i)
