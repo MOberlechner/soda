@@ -25,7 +25,7 @@ def plot_revenue_asym(path_to_configs, path_to_exp, path_save, tag: str = "_"):
 
     # compute rel. diff. in revenue
     util_type = ["ql", "roi", "ros"]
-    labels = [ut.upper() for ut in util_type]
+    labels = ["QL", "ROI", "ROSB"]
     payment_rule = ["fp", "sp"]
     agents = list(combinations_with_replacement(util_type, 2))
     matrix = np.nan * np.zeros((3, 3))
@@ -84,7 +84,7 @@ def plot_revenue_asym(path_to_configs, path_to_exp, path_save, tag: str = "_"):
         )
 
     # save plot
-    fig.savefig(f"{path_save}/asym_revenue{tag}.pdf", bbox_inches="tight")
+    fig.savefig(f"{path_save}/revenue_asym{tag}.pdf", bbox_inches="tight")
 
 
 if __name__ == "__main__":
