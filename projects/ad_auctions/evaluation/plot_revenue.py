@@ -14,6 +14,7 @@ from soda.util.evaluation import get_results
 
 def plot_strategies_revenue(
     config_games,
+    config_learner,
     labels,
     payment_rule,
     path_to_configs,
@@ -24,16 +25,20 @@ def plot_strategies_revenue(
     os.makedirs(path_save, exist_ok=True)
     experiment_tag = "revenue"
 
+    if not isinstance(config_learner, list):
+        config_learner = [config_learner] * len(config_games)
+
     fig, ax = set_axis("Valuation v", "Bid b")
     for i in range(3):
         config_game = config_games[i]
+        config_lear = config_learner[i]
         label = labels[i]
         color = COLORS[i]
 
         # get data from computed strategies
         game, _, strategies = get_results(
             config_game,
-            config_learner,
+            config_lear,
             path_to_configs,
             path_to_experiments,
             experiment_tag,
@@ -61,10 +66,7 @@ def plot_strategies_revenue(
 def plot_revenue(
     n_bidder: int, path_to_configs, path_to_experiments, path_save, tag: str = ""
 ):
-
     labels = ["QL", "ROI", "ROSB"]
-    learner = "soda1_revenue"
-
     df = get_revenue(path_to_experiments, "revenue")
     revenue = {}
     for payment_rule in ["fp", "sp"]:
@@ -74,8 +76,7 @@ def plot_revenue(
             f"{tag}rosb_{payment_rule}_{n_bidder}",
         ]
         revenue[payment_rule] = [
-            df.loc[(df.setting == s) & (df.learner == learner), "mean"].item()
-            for s in settings
+            df.loc[(df.setting == s), "mean"].item() for s in settings
         ]
 
     fig, ax = set_axis("Utility Model", "Revenue")
@@ -104,7 +105,6 @@ def plot_revenue(
 def plot_revenue_n_bidders(n_bidders, path_to_configs, path_to_experiments, path_save):
 
     labels = ["QL", "ROI", "ROSB"]
-    learner = "soda1_revenue"
 
     df = get_revenue(path_to_experiments, "revenue")
     revenue_uniform, revenue_gaussian = {}, {}
@@ -113,8 +113,7 @@ def plot_revenue_n_bidders(n_bidders, path_to_configs, path_to_experiments, path
             # uniform prior
             revenue_uniform[(payment_rule, util_type)] = [
                 df.loc[
-                    (df.setting == f"{util_type}_{payment_rule}_{n_bidder}")
-                    & (df.learner == learner),
+                    (df.setting == f"{util_type}_{payment_rule}_{n_bidder}"),
                     "mean",
                 ].item()
                 for n_bidder in n_bidders
@@ -122,26 +121,24 @@ def plot_revenue_n_bidders(n_bidders, path_to_configs, path_to_experiments, path
             # gaussian prior
             revenue_gaussian[(payment_rule, util_type)] = [
                 df.loc[
-                    (df.setting == f"gaus_{util_type}_{payment_rule}_{n_bidder}")
-                    & (df.learner == learner),
+                    (df.setting == f"gaus_{util_type}_{payment_rule}_{n_bidder}"),
                     "mean",
                 ].item()
                 for n_bidder in n_bidders
             ]
-
     fig, ax = set_axis("Number Bidders", "Relative Difference in Revenue [%]")
     ax.set_xlim(1.5, 10.5)
     ax.set_xticks(n_bidders)
-    ax.set_ylim(0, 50)
+    ax.set_ylim(-47, 2)
     for j, util_type in enumerate(["ql", "roi", "rosb"]):
         # uniform
         ax.plot(
             n_bidders,
             100
             * (
-                1
-                - np.array(revenue_uniform[("fp", util_type)])
+                np.array(revenue_uniform[("fp", util_type)])
                 / np.array(revenue_uniform[("sp", util_type)])
+                - 1
             ),
             color=COLORS[j],
             linestyle="-",
@@ -154,9 +151,9 @@ def plot_revenue_n_bidders(n_bidders, path_to_configs, path_to_experiments, path
             n_bidders,
             100
             * (
-                1
-                - np.array(revenue_gaussian[("fp", util_type)])
+                np.array(revenue_gaussian[("fp", util_type)])
                 / np.array(revenue_gaussian[("sp", util_type)])
+                - 1
             ),
             color=COLORS[j],
             linestyle="--",
@@ -182,7 +179,7 @@ def plot_revenue_n_bidders(n_bidders, path_to_configs, path_to_experiments, path
         marker="s",
         color="k",
     )
-    ax.legend(fontsize=PARAM["fontsize_legend"], loc=1, ncol=2)
+    ax.legend(fontsize=PARAM["fontsize_legend"], loc=4, ncol=2)
 
     fig.savefig(f"{path_save}/revenue_n.pdf", bbox_inches="tight")
 
@@ -204,7 +201,7 @@ if __name__ == "__main__":
     if plot_strategies:
         # 2 agents uniform prior
         for payment_rule in ["fp", "sp"]:
-            config_learner = "soda1_revenue.yaml"
+            config_learner = "sofw.yaml"
             config_games = [
                 f"revenue/ql_{payment_rule}_2.yaml",
                 f"revenue/roi_{payment_rule}_2.yaml",
@@ -213,6 +210,7 @@ if __name__ == "__main__":
             labels = ["QL", "ROI", "ROSB"]
             plot_strategies_revenue(
                 config_games,
+                config_learner,
                 labels,
                 payment_rule,
                 PATH_TO_CONFIGS,
@@ -222,7 +220,7 @@ if __name__ == "__main__":
 
         # 2 agents gaussian (truncated) prior
         for payment_rule in ["fp", "sp"]:
-            config_learner = "soda1_revenue.yaml"
+            config_learner = "soda1.yaml"
             config_games = [
                 f"revenue/gaus_ql_{payment_rule}_2.yaml",
                 f"revenue/gaus_roi_{payment_rule}_2.yaml",
@@ -231,6 +229,7 @@ if __name__ == "__main__":
             labels = ["QL", "ROI", "ROSB"]
             plot_strategies_revenue(
                 config_games,
+                config_learner,
                 labels,
                 payment_rule,
                 PATH_TO_CONFIGS,
