@@ -13,7 +13,7 @@ from soda.game import Game
 from soda.strategy import Strategy
 from soda.util.evaluation import get_results
 
-cmap = matplotlib.colors.LinearSegmentedColormap.from_list("", [COLORS[2], "#ffffff"])
+cmap = matplotlib.colors.LinearSegmentedColormap.from_list("", [COLORS[0], "#ffffff"])
 
 
 def plot_revenue_asym(path_to_configs, path_to_exp, path_save, tag: str = "_"):
