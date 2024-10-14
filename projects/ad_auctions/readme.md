@@ -28,20 +28,22 @@ python projects/ad_auctions/evaluation/plot_revenue.py
 python projects/ad_auctions/evaluation/table_revenue.py
 ```
 
-## Exp 2 - ROIS: Convex Combination of ROI and ROS
-*Number of settings: 10 (10 runs each), Runtime: 4 min*
-
-**Compuation**<br>
-In this experiments we consider an extension of the ROI and ROS utility functions, by considering convex combinations thereof. We compute the equilibrium strategies for different combinations.
+## Exp 2 - Asymmetric Utility Functions
+*Number of settings: 12 (10 runs each), Runtime: 12 min*  <br>
+**Computation**<br>
+Experiments to compute BNE for different utility models and compare expected revenue.
+We vary the number of agents (2, 3, 5, and 10) and the prior (uniform and truncated gaussian).
 ```bash
-python projects/ad_auctions/computation/run_revenue_rois.py
+python projects/ad_auctions/computation/run_revenue.py
 ```
-
 **Evaluation**<br>
-We create on one plot (Figure 4 a) that shows the expected revenue for the first- and second-price auctions in equilibrium given the utility functions.
+We create 3 figures (Figure 3) where we compare the difference in revenue between first- and second-price auctions, and one table (Table 2) in which we report metrics where we compare the computed strategies to known analytical BNE.
+Additional plots that visualize the computed strategies are also created.
 ```bash
-python projects/ad_auctions/evaluation/plot_revenue_rois.py
+python projects/ad_auctions/evaluation/plot_revenue.py
+python projects/ad_auctions/evaluation/table_revenue.py
 ```
+
 
 ## Exp 3 - Budget Constraints
 *Number of settings: 12 (10 runs each), Runtime: 5 min* 
@@ -58,7 +60,22 @@ Given the computed strategies, we compare the expected revenue of first- and sec
 python projects/ad_auctions/evaluation/plot_revenue_budget.py
 ```
 
-## Exp 4 - Baseline for Bandits
+## Exp 4 - ROIS: Convex Combination of ROI and ROS
+*Number of settings: 10 (10 runs each), Runtime: 4 min*
+
+**Compuation**<br>
+In this experiments we consider an extension of the ROI and ROS utility functions, by considering convex combinations thereof. We compute the equilibrium strategies for different combinations.
+```bash
+python projects/ad_auctions/computation/run_revenue_rois.py
+```
+
+**Evaluation**<br>
+We create on one plot (Figure 4 a) that shows the expected revenue for the first- and second-price auctions in equilibrium given the utility functions.
+```bash
+python projects/ad_auctions/evaluation/plot_revenue_rois.py
+```
+
+## Exp 5 - Baseline for Bandits
 *Number of settings: 6 (1 run each), Runtime: 20s*
 
 **Computation**<br>
