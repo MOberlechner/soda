@@ -94,71 +94,71 @@ class Mechanism:
     # ------------------------------- methods for computation of utilities ------------------------------------- #
 
     def utility(
-        self, obs_profile: np.ndarray, bids_profile: np.ndarray, index_agent: int
+        self, obs_profile: np.ndarray, bids_profile: np.ndarray, index_bidder: int
     ):
         """Compute utility for agent
 
         Args:
             obs_profile (np.ndarray): observations of all agents
             bids_profile (np.ndarray): bids of all agents
-            index_agent (int): index of agent
+            index_bidder (int): index of agent
 
         Returns:
-            np.ndarry: utilities of agent (with index index_agent)
+            np.ndarry: utilities of agent (with index index_bidder)
         """
         raise NotImplementedError
 
-    def get_allocation(self, bids_profile: np.ndarray, index_agent: int) -> np.ndarray:
+    def get_allocation(self, bids_profile: np.ndarray, index_bidder: int) -> np.ndarray:
         """Compute alloction vector for agent
 
         Args:
             bids_profile (np.ndarray): bids of all agents
-            index_agent (int): index of agent
+            index_bidder (int): index of agent
 
         Returns:
-            np.ndarray: allocation vector of agent (with index index_agent)
+            np.ndarray: allocation vector of agent (with index index_bidder)
         """
         raise NotImplementedError
 
     def get_payment(
-        self, bids_profile: np.ndarray, allocation_agent: np.ndarray, index_agent: int
+        self, bids_profile: np.ndarray, allocation_agent: np.ndarray, index_bidder: int
     ) -> np.ndarray:
         """Compute payments for idx-th bidder
 
         Args:
             bids_profile (np.ndarray): bids of all agents
             allocation_agent (np.ndarray): allocation of agent
-            index_agent (int): index of agent
+            index_bidder (int): index of agent
 
         Returns:
-            np.ndarray: payment vector of agent (with index index_agent)
+            np.ndarray: payment vector of agent (with index index_bidder)
         """
         raise NotImplementedError
 
     def test_input_utility(
-        self, obs_profile: np.ndarray, bids_profile: np.ndarray, index_agent: int
+        self, obs_profile: np.ndarray, bids_profile: np.ndarray, index_bidder: int
     ):
         """Test input for utility function
 
         Args:
             obs_profile (np.ndarray): observations of all agents
             bids_profile (np.ndarray): bids of all agents
-            index_agent (int): index of agent
+            index_bidder (int): index of agent
         """
         if bids_profile.shape[0] != self.n_bidder:
             raise ValueError("wrong format of bids")
-        elif index_agent >= self.n_bidder:
-            raise ValueError("bidder with index " + str(index_agent) + " not avaible")
+        elif index_bidder >= self.n_bidder:
+            raise ValueError("bidder with index " + str(index_bidder) + " not avaible")
         pass
 
-    def get_valuation(self, obs_profile: np.ndarray, index_agent: int) -> np.ndarray:
+    def get_valuation(self, obs_profile: np.ndarray, index_bidder: int) -> np.ndarray:
         """Determine valuations from observation profil.
         Depending on the types of interdependencies, we have different
         methods to get valuations.
 
         Args:
             obs_profile (np.ndarray): observation of all agents
-            index_agent (int): index of agent
+            index_bidder (int): index of agent
 
         Returns:
             np.ndarray: observations, possibly reformated
@@ -169,7 +169,7 @@ class Mechanism:
                 raise ValueError(
                     "obs_profile should contain only observations for all bidders"
                 )
-            return obs_profile[index_agent]
+            return obs_profile[index_bidder]
 
         # Common values, independent observations
         elif self.value_model == "common_independent":

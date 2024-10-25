@@ -25,7 +25,7 @@ def get_mechanism():
             "payment_rule": "first_price",
             "tie_breaking": "random",
             "utility_type": "QL",
-            "risk_parameter": 0.5,
+            "utility_type_parameter": 0.5,
         }
         if budget:
             param_util.update(
@@ -108,23 +108,23 @@ def test_get_payoff(get_mechanism):
     payment = np.array([1, 2, 0, 0, 0.5])
 
     mechanism.utility_type = "QL"
-    payoff = mechanism.get_payoff(allocation, valuation_sim, payment, index_agent=0)
+    payoff = mechanism.get_payoff(allocation, valuation_sim, payment, index_bidder=0)
     assert np.allclose(
         payoff, np.array([0, -1, 0, 0, 1.5])
     ), "quasi-lineare (QL) utility-type, dim val = dim bids"
-    payoff = mechanism.get_payoff(allocation, valuation_util, payment, index_agent=0)
+    payoff = mechanism.get_payoff(allocation, valuation_util, payment, index_bidder=0)
     assert np.allclose(
         payoff, np.array([[0, -1, 0, 1, 0.5], [-1, -2, 0, 0, -0.5]])
     ), "quasi-lineare utility-type, dim val != dim bids"
 
     mechanism.utility_type = "ROI"
-    payoff = mechanism.get_payoff(allocation, valuation_sim, payment, index_agent=0)
+    payoff = mechanism.get_payoff(allocation, valuation_sim, payment, index_bidder=0)
     assert np.allclose(
         payoff, np.array([0, -0.5, 0, 0, 3])
     ), "return-of-investment (ROI) utility type"
 
     mechanism.utility_type = "ROS"
-    payoff = mechanism.get_payoff(allocation, valuation_sim, payment, index_agent=0)
+    payoff = mechanism.get_payoff(allocation, valuation_sim, payment, index_bidder=0)
     assert np.allclose(
         payoff, np.array([1, 0.5, 0, 0, 4])
     ), "return-of-spent (ROS) utility type"

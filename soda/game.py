@@ -87,13 +87,13 @@ class Game:
         observations/valuations and bid profiles
         """
         for i in self.set_bidder:
-            index_agent = self.bidder.index(i)
+            index_bidder = self.bidder.index(i)
             bids = self.create_all_bid_profiles()
             valuations = self.get_obs_profile_reshaped()
             shape_utilities = self.get_shape_utilities()
 
             self.utility[i] = (
-                self.mechanism.utility(valuations, bids, index_agent)
+                self.mechanism.utility(valuations, bids, index_bidder)
                 .transpose()
                 .reshape(shape_utilities)
             )

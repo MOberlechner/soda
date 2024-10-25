@@ -36,7 +36,7 @@ class SingleItemAuction(Mechanism):
                                 ROS (return of spent)
                                 CARA, CRRA (risk aversion)
         reserve_price   float: specifies minimal payment if agent wins. Defaults to 0.
-                        Note that we reserve_price only affect the pricing rule, not the allocation (i.e., you can still win with lower bids)
+                        Note that the reserve_price only affect the pricing rule, not the allocation (i.e., you can still win with lower bids)
 
     """
 
@@ -52,11 +52,6 @@ class SingleItemAuction(Mechanism):
         self.name = "single_item"
 
         self.check_param()
-        self.payment_rule = self.param_util["payment_rule"]
-        self.tie_breaking = self.param_util["tie_breaking"]
-        self.utility_type = self.param_util["utility_type"]
-        self.reserve_price = self.param_util["reserve_price"]
-
         self.check_own_gradient()
 
         # prior
@@ -69,28 +64,28 @@ class SingleItemAuction(Mechanism):
     # ------------------------------- methods to compute utilities --------------------------------- #
 
     def utility(
-        self, obs_profile: np.ndarray, bids_profile: np.ndarray, index_agent: int
+        self, obs_profile: np.ndarray, bids_profile: np.ndarray, index_bidder: int
     ) -> np.ndarray:
         """Compute utility for agent in single_item auction
 
         Args:
             obs_profile (np.ndarray): observations of all agents
             bids_profile (np.ndarray): bids of all agents
-            index_agent (int): index of agent
+            index_bidder (int): index of agent
 
         Returns:
-            np.ndarry: utilities of agent (with index index_agent)
+            np.ndarry: utilities of agent (with index index_bidder)
         """
-        self.test_input_utility(obs_profile, bids_profile, index_agent)
-        valuation = self.get_valuation(obs_profile, index_agent)
+        self.test_input_utility(obs_profile, bids_profile, index_bidder)
+        valuation = self.get_valuation(obs_profile, index_bidder)
 
-        allocation = self.get_allocation(bids_profile, index_agent)
-        payment = self.get_payment(bids_profile, allocation, index_agent)
+        allocation = self.get_allocation(bids_profile, index_bidder)
+        payment = self.get_payment(bids_profile, allocation, index_bidder)
         payoff = self.get_payoff(
             allocation=allocation,
             valuation=valuation,
             payment=payment,
-            index_agent=index_agent,
+            index_bidder=index_bidder,
         )
         return payoff
 
@@ -120,16 +115,21 @@ class SingleItemAuction(Mechanism):
         allocation: np.ndarray,
         valuation: np.ndarray,
         payment: np.ndarray,
-        index_agent: int,
+        index_bidder: int,
     ) -> np.ndarray:
         """compute payoff given allocation and payment vector for different utility types:
-        QL: quasi-linear, ROI: return of investement, ROS: return on spend, ROSB: return on spend with budget
+            QL: quasi-linear,
+            ROI: return of investement,
+            ROS: return on spend
+            ROIS: convex combination of ROI and ROS
+            CARRA: constant relative risk aversion
+            CARA: constant absolute risk aversion
 
         Args:
             allocation (np.ndarray): allocation vector for agent
             valuation (np.ndarray) : valuation of bidder (idx), equal to observation in private value model
             payment (np.ndarray): payment vector for agent ()
-            index_agent (int): index of agent
+            index_bidder (int): index of agent
 
         Returns:
             np.ndarray: payoff
@@ -154,8 +154,7 @@ class SingleItemAuction(Mechanism):
             )
         elif self.utility_type == "ROIS":
             # mixture of ROI (lamb=0) and ROS (lambd=1)
-            # we allow for individual parameter
-            lambd = self.param_util["rois_parameter"][index_agent]
+            lambd = self.utility_type_parameter
             payoff = np.divide(
                 valuation - (1 - lambd) * payment,
                 payment,
@@ -164,11 +163,11 @@ class SingleItemAuction(Mechanism):
             )
 
         elif self.utility_type == "CRRA":
-            rho = self.param_util["risk_parameter"]
+            rho = self.utility_type_parameter
             payoff = np.sign(valuation - payment) * np.abs(valuation - payment) ** rho
 
         elif self.utility_type == "CARA":
-            rho = self.param_util["risk_parameter"][index_agent]
+            rho = self.utility_type_parameter
             cara = lambda x: 1 / rho * (1 - np.exp(-rho * x))
             payoff = cara(valuation - payment)
 
@@ -210,6 +209,7 @@ class SingleItemAuction(Mechanism):
                 self.reserve_price,
                 None,
             )
+
         else:
             raise ValueError("payment rule " + self.payment_rule + " not available")
         return payment * np.where(allocation > 0, 1, 0)
@@ -220,10 +220,10 @@ class SingleItemAuction(Mechanism):
 
         Args:
             bids (np.ndarray): action profiles
-            idx (int): index of agent we consider
+            idx (int): index of bidder we consider
 
         Returns:
-            np.ndarray: allocation vector for agent idx
+            np.ndarray: allocation vector for bidder
         """
         return get_allocation_single_item(bids, idx, self.tie_breaking)
 
@@ -256,7 +256,8 @@ class SingleItemAuction(Mechanism):
 
     def compute_expected_revenue(self, bid_profile: np.ndarray) -> float:
         """Computed expected revenue of single-item auction
-        In this setting we ignore other tie-breaking rules and always pick random
+        In this setting we ignore other tie-breaking rules and always pick random.
+        If bidders bid below reserve-price, allocatio is set to zero (different to utilities used for learning etc.)
 
         Args:
             bid_profile (np.ndarray): bid profile
@@ -270,6 +271,7 @@ class SingleItemAuction(Mechanism):
                 for i in range(self.n_bidder)
             ]
         )
+        allocations = np.where(bid_profile < self.reserve_price, 0, allocations)
         payments = np.array(
             [
                 self.get_payment(bid_profile, allocations[i], i)
@@ -438,7 +440,7 @@ class SingleItemAuction(Mechanism):
             & (self.prior == "uniform")
             & (self.budget is None)
         ):
-            rho = self.param_util["risk_parameter"]
+            rho = self.param_util["utility_type_parameter"]
             bne = obs * (self.n_bidder - 1) / (self.n_bidder - 1 + rho)
         else:
             bne = None
@@ -490,14 +492,14 @@ class SingleItemAuction(Mechanism):
         if self.payment_rule == "first_price":
             prob_win = compute_probability_winning(game, strategies, agent)
             payoff = self.get_payoff(
-                allocation_grid, value_grid, payment_grid, index_agent=0
+                allocation_grid, value_grid, payment_grid, index_bidder=0
             )
             return prob_win * payoff
 
         elif self.payment_rule == "second_price":
             pdf_order = compute_probability_order(game, strategies, agent)
             payoff = self.get_payoff(
-                allocation_grid, value_grid, payment_grid, index_agent=0
+                allocation_grid, value_grid, payment_grid, index_bidder=0
             )
             prob_grid = np.ones((strategies[agent].n, strategies[agent].m)) * pdf_order
             return np.hstack([np.zeros((strategies[agent].n, 1)), payoff * prob_grid])[
@@ -529,26 +531,45 @@ class SingleItemAuction(Mechanism):
         """
         Check if input paremter are sufficient to define mechanism
         """
+        # ------------------------ parameter for mechanism ------------------------ #
+
         if "tie_breaking" not in self.param_util:
             raise ValueError("specify tiebreaking rule")
+        else:
+            self.tie_breaking = self.param_util["tie_breaking"]
+
         if "payment_rule" not in self.param_util:
             raise ValueError("specify payment rule")
         else:
-            if (self.param_util["payment_rule"] == "third_price") & (self.n_bidder < 3):
+            self.payment_rule = self.param_util["payment_rule"]
+            if (self.payment_rule == "third_price") & (self.n_bidder < 3):
                 raise ValueError(
                     "Third-price payment rule only available for more than 2 agents"
                 )
-        if "utility_type" not in self.param_util:
-            self.param_util["utility_type"] = "QL"
-            print("utility_type not specified, quasi-linear (QL) chosen by default.")
-        else:
-            if self.param_util["utility_type"] in ["CRRA", "CARA"]:
-                if "risk_parameter" not in self.param_util:
-                    raise ValueError(
-                        "Specify risk_parameter if using utility_type: CRRA/CARA"
-                    )
+
         if "reserve_price" not in self.param_util:
-            self.param_util["reserve_price"] = 0.0
+            self.reserve_price = 0.0
+        else:
+            self.reserve_price = self.param_util["reserve_price"]
+
+        # ------------------------- parameter for bidders ------------------------- #
+
+        if "utility_type" not in self.param_util:
+            print("utility_type not specified")
+        else:
+            self.utility_type = self.param_util["utility_type"]
+
+            if self.utility_type not in ["QL", "ROI", "ROS", "ROIS", "CARA", "CRRA"]:
+                raise ValueError(f"Utility type unknown: {self.utility_type}")
+
+            if "utility_type_parameter" not in self.param_util:
+                self.utility_type_parameter = None
+                if self.utility_type in ["ROIS", "CARA", "CRRA"]:
+                    raise ValueError(
+                        f"Utility type {self.utility_type} requires additional paramater (utility_type_parameter)"
+                    )
+            else:
+                self.utility_type_parameter = self.param_util["utility_type_parameter"]
 
         if "budget" in self.param_util:
             self.budget = self.param_util["budget"]
@@ -562,32 +583,193 @@ class SingleItemAuction(Mechanism):
         else:
             self.budget = None
 
-        if self.param_util["utility_type"] == "ROIS":
-            if "rois_parameter" not in self.param_util:
-                raise ValueError(
-                    "Specify rois_parameter (tuple or float) if using utility_type: ROIS"
-                )
-            else:
-                if isinstance(self.param_util["rois_parameter"], tuple):
-                    assert len(self.param_util["rois_parameter"]) == self.n_bidder
-                elif isinstance(self.param_util["rois_parameter"], float):
-                    self.param_util["rois_parameter"] = (
-                        self.param_util["rois_parameter"],
-                    ) * self.n_bidder
-                else:
-                    raise ValueError("rois_parameter should be tuple or float")
 
-        if self.param_util["utility_type"] == "CARA":
-            if "risk_parameter" not in self.param_util:
+class SingleItemAuctionAsymmetric(SingleItemAuction):
+    """Single-item auction which allows for asymmetric utility functions
+
+    The difference to the standard SingleItemAuction lies in the param_util:
+
+    Parameters for the mechanism (str, float):
+        tiebreaking     str: specifies tiebreaking rule: "random" (default), "lose"
+        payment_rule    str: choose betweem "first_price" and "second_price"
+        reserve_price   float: specifies minimal payment if agent wins. Defaults to 0.
+                        Note that we reserve_price only affect the pricing rule, not the allocation (i.e., you can still win with lower bids)
+
+    Parameters for individual bidders (List, Tuple):
+        utility_type    Tuple(str): specifies utility type (e.g., QL, ROI, ...) for each bidders
+
+    """
+
+    def __init__(
+        self,
+        bidder: List[str],
+        o_space: Dict[str, List],
+        a_space: Dict[str, List],
+        param_prior: Dict,
+        param_util: Dict,
+    ):
+        super().__init__(bidder, o_space, a_space, param_prior, param_util)
+        self.name = "single_item_asym"
+
+    def get_payoff(
+        self,
+        allocation: np.ndarray,
+        valuation: np.ndarray,
+        payment: np.ndarray,
+        index_bidder: int,
+    ) -> np.ndarray:
+        """compute payoff given allocation and payment vector for different utility types:
+            QL: quasi-linear,
+            ROI: return of investement,
+            ROS: return on spend
+            ROIS: convex combination of ROI and ROS
+            CARRA: constant relative risk aversion
+            CARA: constant absolute risk aversion
+
+        Args:
+            allocation (np.ndarray): allocation vector for agent
+            valuation (np.ndarray) : valuation of bidder (idx), equal to observation in private value model
+            payment (np.ndarray): payment vector for agent ()
+            index_bidder (int): index of agent
+
+        Returns:
+            np.ndarray: payoff
+        """
+        if self.utility_type[index_bidder] == "QL":
+            payoff = valuation - payment
+
+        elif self.utility_type[index_bidder] == "ROI":
+            # if payment is zero, payoff is set to zero
+            payoff = np.divide(
+                valuation - payment,
+                payment,
+                out=np.zeros_like((valuation - payment)),
+                where=payment != 0,
+            )
+        elif self.utility_type[index_bidder] == "ROS":
+            payoff = np.divide(
+                valuation,
+                payment,
+                out=np.zeros_like((valuation - payment)),
+                where=payment != 0,
+            )
+        elif self.utility_type[index_bidder] == "ROIS":
+            # mixture of ROI (lamb=0) and ROS (lambd=1)
+            lambd = self.utility_type_parameter[index_bidder]
+            payoff = np.divide(
+                valuation - (1 - lambd) * payment,
+                payment,
+                out=np.zeros_like((valuation - payment)),
+                where=payment != 0,
+            )
+
+        elif self.utility_type[index_bidder] == "CRRA":
+            rho = self.utility_type_parameter[index_bidder]
+            payoff = np.sign(valuation - payment) * np.abs(valuation - payment) ** rho
+
+        elif self.utility_type[index_bidder] == "CARA":
+            rho = self.utility_type_parameter[index_bidder]
+            cara = lambda x: 1 / rho * (1 - np.exp(-rho * x))
+            payoff = cara(valuation - payment)
+
+        else:
+            raise ValueError(f"utility type {self.utility_type} not available")
+
+        # log barrier function for budget
+        if self.budget[index_bidder] is not None:
+            payoff += self.budget_parameter[index_bidder] * np.log(
+                self.budget[index_bidder] - payment
+            )
+
+        return allocation * payoff
+
+    # -------------------------------------- helper methods --------------------------------------------- #
+
+    def check_param(self):
+        """
+        Check if input paremter are sufficient to define mechanism
+        """
+        # ------------------------ parameter for mechanism ------------------------ #
+
+        if "tie_breaking" not in self.param_util:
+            raise ValueError("specify tiebreaking rule")
+        else:
+            self.tie_breaking = self.param_util["tie_breaking"]
+
+        if "payment_rule" not in self.param_util:
+            raise ValueError("specify payment rule")
+        else:
+            self.payment_rule = self.param_util["payment_rule"]
+            if (self.payment_rule == "third_price") & (self.n_bidder < 3):
                 raise ValueError(
-                    "Specify risk_parameter (tuple or float) if using utility_type: CARA"
+                    "Third-price payment rule only available for more than 2 agents"
                 )
+
+        if "reserve_price" not in self.param_util:
+            self.reserve_price = 0.0
+        else:
+            self.reserve_price = self.param_util["reserve_price"]
+
+        # -------------------- parameter for individual bidders --------------------#
+
+        if "utility_type" not in self.param_util:
+            print("utility_type not specified")
+        else:
+            self.utility_type = self.param_util["utility_type"]
+            assert (
+                len(self.utility_type) == self.n_bidder
+            ), "specify utility type for all bidders (list)"
+            for index_bidder in range(self.n_bidder):
+                if self.utility_type[index_bidder] not in [
+                    "QL",
+                    "ROI",
+                    "ROS",
+                    "ROIS",
+                    "CARA",
+                    "CRRA",
+                ]:
+                    raise ValueError(
+                        f"Utility type for agent idx={index_bidder} unknown: {self.utility_type[index_bidder]}"
+                    )
+
+        if "utility_type_parameter" not in self.param_util:
+            self.utility_type_parameter = [None] * self.n_bidder
+        else:
+            self.utility_type_parameter = self.param_util["utility_type_parameter"]
+            assert (
+                len(self.utility_type_parameter) == self.n_bidder
+            ), "specify utility_type_parameter for all bidders (list)"
+        for index_bidder in range(self.n_bidder):
+            if self.utility_type[index_bidder] == "ROIS":
+                assert isinstance(self.utility_type_parameter[index_bidder], float)
+                assert 0 <= self.utility_type_parameter[index_bidder] <= 1
+            elif self.utility_type[index_bidder] == "CARA":
+                assert isinstance(self.utility_type_parameter[index_bidder], float)
+
+        if "budget" not in self.param_util:
+            self.budget = [None] * self.n_bidder
+        else:
+            self.budget = self.param_util["budget"]
+            assert (
+                len(self.utility_type) == self.n_bidder
+            ), "specify budget for all bidders (list)"
+            for index_bidder in range(self.n_bidder):
+                agent = self.bidder[index_bidder]
+                if self.budget[index_bidder] is not None:
+                    assert (
+                        self.budget[index_bidder] > self.a_space[agent][-1]
+                    ), f"budget of agent idx={index_bidder} must be higher than maximal bid"
+            if "budget_parameter" not in self.param_util:
+                self.budget_parameter = [1.0] * self.n_bidder
             else:
-                if isinstance(self.param_util["risk_parameter"], tuple):
-                    assert len(self.param_util["risk_parameter"]) == self.n_bidder
-                elif isinstance(self.param_util["risk_parameter"], float):
-                    self.param_util["risk_parameter"] = (
-                        self.param_util["risk_parameter"],
-                    ) * self.n_bidder
-                else:
-                    raise ValueError("risk_parameter should be tuple or float")
+                self.budget_parameter = self.param_util["buget_parameter"]
+                assert (
+                    len(self.budget_parameter) == self.n_bidder
+                ), "specify budget_parameter for all bidders (list)"
+
+    def check_own_gradient(self):
+        return False
+
+    def get_bne(self, agent: str, obs: np.ndarray):
+        """We don't know equilibria for asymmetric settings"""
+        return None

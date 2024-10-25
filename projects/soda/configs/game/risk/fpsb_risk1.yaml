@@ -10,6 +10,6 @@ param_util:
   payment_rule: 'first_price'
   tie_breaking: 'lose'
   utility_type: 'CRRA'
-  risk_parameter: 0.6
+  utility_type_parameter: 0.6
 n: 64
 m: 64
