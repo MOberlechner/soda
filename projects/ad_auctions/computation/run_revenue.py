@@ -19,7 +19,7 @@ games_gaussian = [
     for util_type in ["ql", "roi", "rosb"]
 ]
 learner = [
-    "soda1_revenue.yaml",
+    "soda1.yaml",
 ]
 experiment_list = list(product(games_uniform + games_gaussian, learner))
 

@@ -9,9 +9,9 @@ from soda.game import Game
 from soda.strategy import Strategy
 
 PARAM = {
-    "fontsize_title": 14,
-    "fontsize_legend": 13,
-    "fontsize_label": 13,
+    "fontsize_title": 16,
+    "fontsize_legend": 15,
+    "fontsize_label": 15,
 }
 COLORS = ["#003f5c", "#ffa600", "#bc5090"]
 
@@ -22,6 +22,8 @@ def set_axis(xlabel: str, ylabel: str, dpi=100, figsize=(5, 5)):
     ax = fig.add_subplot(111)
     ax.set_xlabel(xlabel, fontsize=PARAM["fontsize_label"])
     ax.set_ylabel(ylabel, fontsize=PARAM["fontsize_label"])
+    ax.tick_params(axis="x", labelsize=PARAM["fontsize_label"] - 1)
+    ax.tick_params(axis="y", labelsize=PARAM["fontsize_label"] - 1)
     ax.grid(
         linestyle="-",
         linewidth=0.25,

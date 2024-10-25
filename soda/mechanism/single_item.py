@@ -753,8 +753,14 @@ class SingleItemAuctionAsymmetric(SingleItemAuction):
             assert (
                 len(self.utility_type) == self.n_bidder
             ), "specify budget for all bidders (list)"
+
             for index_bidder in range(self.n_bidder):
                 agent = self.bidder[index_bidder]
+                self.budget[index_bidder] = (
+                    None
+                    if self.budget[index_bidder] == "None"
+                    else self.budget[index_bidder]
+                )
                 if self.budget[index_bidder] is not None:
                     assert (
                         self.budget[index_bidder] > self.a_space[agent][-1]
@@ -762,7 +768,7 @@ class SingleItemAuctionAsymmetric(SingleItemAuction):
             if "budget_parameter" not in self.param_util:
                 self.budget_parameter = [1.0] * self.n_bidder
             else:
-                self.budget_parameter = self.param_util["buget_parameter"]
+                self.budget_parameter = self.param_util["budget_parameter"]
                 assert (
                     len(self.budget_parameter) == self.n_bidder
                 ), "specify budget_parameter for all bidders (list)"

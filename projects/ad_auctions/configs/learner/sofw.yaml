@@ -1,0 +1,8 @@
+learner: soda.learner.frank_wolfe.FrankWolfe
+max_iter: 5_000
+tol: 1e-4
+stop_criterion: 'util_loss'
+parameter:
+  method: 'standard'
+  steprule_bool: False
+init_method: 'random'
