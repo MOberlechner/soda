@@ -47,10 +47,17 @@ def create_table_sim(experiment_tag: str, round_dec: int) -> pd.DataFrame:
 if __name__ == "__main__":
 
     experiment_tag = "revenue"
-    df = create_table_sim("revenue", round_dec=3)
+    df = create_table_sim(experiment_tag, round_dec=3)
     table = df.to_markdown(
         index=False, tablefmt="pipe", colalign=["center"] * len(df.columns)
     )
     print(f"\nTABLE REVENUE\n\n{table}\n")
 
-    df.to_csv(os.path.join(PATH_SAVE, "table_revenue.csv"), index=False)
+    # df.to_csv(os.path.join(PATH_SAVE, "table_revenue.csv"), index=False)
+
+    experiment_tag = "revenue_asym"
+    df = create_table_sim(experiment_tag, round_dec=3)
+    table = df.to_markdown(
+        index=False, tablefmt="pipe", colalign=["center"] * len(df.columns)
+    )
+    print(f"\nTABLE REVENUE\n\n{table}\n")
