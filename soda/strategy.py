@@ -908,7 +908,7 @@ class Strategy:
         """
         np.save(f"{filename}_agent_{self.agent}.npy", self.x)
         if save_init:
-            np.save(f"{filename}_init.npy", self.history[0])
+            np.save(f"{filename}_agent_{self.agent}_init.npy", self.history[0])
 
     def load(self, filename: str, load_init: bool = False) -> None:
         """Load saved strategy
