@@ -12,7 +12,7 @@ from soda.prior import compute_weights, marginal_prior_pdf
 
 
 class Game:
-    """Game represents an approximatiion of the mechanism by discretization of the spaces
+    """Game represents an approximation of the mechanism by discretization of the spaces
 
     Attributes:
         General
