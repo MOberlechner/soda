@@ -14,7 +14,7 @@ PARAM_LOGGING["save_strategy_init"] = True
 game = [
     "example/fpsb_2_discr020.yaml",
     # only used for visualization in appendix:
-    # "example/fpsb_2_discr032.yaml",
+    "example/fpsb_2_discr032.yaml",
 ]
 learner = [
     "soda1_eta20_beta05.yaml",
