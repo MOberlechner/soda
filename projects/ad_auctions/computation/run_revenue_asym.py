@@ -1,68 +1,35 @@
-from itertools import product
+from itertools import combinations_with_replacement, product
 from time import time
 
-from projects.ad_auctions.config_exp import (
-    LOGGING,
-    NUMBER_SAMPLES,
-    PATH_TO_CONFIGS,
-    PATH_TO_EXPERIMENTS,
-    ROUND_DECIMALS,
-    SAVE_STRAT,
-)
-from soda.util.experiment import Experiment
+from projects.ad_auctions.config_exp import *
+from soda.util.experiment import run_experiments
 
-NUMBER_RUNS = 10
-LEARNING = True
-SIMULATION = True
+LABEL_EXPERIMENT = "revenue_asym"
 
-EXPERIMENT_TAG = "revenue_asym"
 games_uniform = [
-    # first price
-    "revenue_asym/fp2_ql_ql.yaml",
-    "revenue_asym/fp2_ql_roi.yaml",
-    "revenue_asym/fp2_ql_ros.yaml",
-    "revenue_asym/fp2_roi_roi.yaml",
-    "revenue_asym/fp2_roi_ros.yaml",
-    "revenue_asym/fp2_ros_ros.yaml",
-    # second price
-    "revenue_asym/sp2_ql_ql.yaml",
-    "revenue_asym/sp2_ql_roi.yaml",
-    "revenue_asym/sp2_ql_ros.yaml",
-    "revenue_asym/sp2_roi_roi.yaml",
-    "revenue_asym/sp2_roi_ros.yaml",
-    "revenue_asym/sp2_ros_ros.yaml",
+    f"revenue_asym/{payment_rule}2_{util1}_{util2}.yaml"
+    for payment_rule in ["fp", "sp"]
+    for util1, util2 in (combinations_with_replacement(["ql", "roi", "ros"], 2))
+]
+games_gaussian = [
+    f"revenue_asym/{payment_rule}2_{util1}_{util2}_gaus.yaml"
+    for payment_rule in ["fp", "sp"]
+    for util1, util2 in (combinations_with_replacement(["ql", "roi", "ros"], 2))
 ]
 learner = [
     "sofw.yaml",
 ]
 
-experiment_list = list(product(games_uniform, learner))
+experiment_list = list(product(games_gaussian, learner))
 
 if __name__ == "__main__":
-    print(f"\nRunning {len(experiment_list)} Experiments".ljust(100, "."), "\n")
-    t0 = time()
-    successfull = 0
-    for config_game, config_learner in experiment_list:
-
-        exp_handler = Experiment(
-            PATH_TO_CONFIGS + "game/" + config_game,
-            PATH_TO_CONFIGS + "learner/" + config_learner,
-            NUMBER_RUNS,
-            LEARNING,
-            SIMULATION,
-            LOGGING,
-            SAVE_STRAT,
-            NUMBER_SAMPLES,
-            PATH_TO_EXPERIMENTS,
-            ROUND_DECIMALS,
-            EXPERIMENT_TAG,
-        )
-        exp_handler.run()
-        successfull += 1 - exp_handler.error
-    t1 = time()
-    print(
-        f"\n{successfull} out of {len(experiment_list)} experiments successfull ({(t1-t0)/60:.1f} min)".ljust(
-            100, "."
-        ),
-        "\n",
+    run_experiments(
+        experiment_list,
+        path_to_configs=PATH_TO_CONFIGS,
+        number_runs=NUMBER_RUNS,
+        label_experiment=LABEL_EXPERIMENT,
+        param_computation=PARAM_COMPUTATION,
+        param_simulation=PARAM_SIMULATION,
+        param_evaluation={"active": False},
+        param_logging=PARAM_LOGGING,
     )

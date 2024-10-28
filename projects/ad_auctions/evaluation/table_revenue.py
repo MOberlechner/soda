@@ -3,17 +3,17 @@ import os
 import numpy as np
 import pandas as pd
 
-from projects.ad_auctions.config_exp import PATH_SAVE, PATH_TO_EXPERIMENTS
+from projects.ad_auctions.config_exp import PATH_TO_EXPERIMENTS, PATH_TO_RESULTS
 
 
 def create_table_sim(experiment_tag: str, round_dec: int) -> pd.DataFrame:
 
     # Parameter
     file_learn = os.path.join(
-        PATH_TO_EXPERIMENTS, "log", experiment_tag, "log_learn_agg.csv"
+        PATH_TO_EXPERIMENTS, experiment_tag, "log", "computation_aggr.csv"
     )
     file_sim = os.path.join(
-        PATH_TO_EXPERIMENTS, "log", experiment_tag, "log_sim_agg.csv"
+        PATH_TO_EXPERIMENTS, experiment_tag, "log", "simulation_aggr.csv"
     )
     index_cols = ["setting", "mechanism", "learner", "agent"]
     metric_cols_learn = ["utility_loss"]
@@ -34,6 +34,8 @@ def create_table_sim(experiment_tag: str, round_dec: int) -> pd.DataFrame:
     df2 = df2.reset_index()
 
     # Create Table
+    print(df1)
+    print(df2)
     df = df1.merge(df2, how="outer", on=index_cols).reset_index()
     for c in metric_cols_learn + metric_cols_sim:
         for i in df.index:
@@ -53,7 +55,7 @@ if __name__ == "__main__":
     )
     print(f"\nTABLE REVENUE\n\n{table}\n")
 
-    # df.to_csv(os.path.join(PATH_SAVE, "table_revenue.csv"), index=False)
+    # df.to_csv(os.path.join(PATH_TO_RESULTS, "table_revenue.csv"), index=False)
 
     experiment_tag = "revenue_asym"
     df = create_table_sim(experiment_tag, round_dec=3)

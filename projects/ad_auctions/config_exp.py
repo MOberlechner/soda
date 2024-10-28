@@ -1,7 +1,7 @@
 # paths
 PATH_TO_CONFIGS = "projects/ad_auctions/configs/"
-PATH_TO_EXPERIMENTS = "experiments/ad_auctions/"
-PATH_TO_RESULTS = "projects/ad_auctions/results/"
+PATH_TO_EXPERIMENTS = "experiments/ad_auctions_test/"
+PATH_TO_RESULTS = "projects/ad_auctions/results_test/"
 
 # parameter to run experiment
 PARAM_LOGGING = {

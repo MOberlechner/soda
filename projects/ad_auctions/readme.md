@@ -13,7 +13,7 @@ The parameters for the experiments can be found in [config_exp](config_exp.py):
 - plots will be stored in<br> `PATH_SAVE = "projects/ad_auctions/results/"`
 
 ## Exp 1 - Revenue for FPSB and SPSB with QL, ROI, and ROSB
-*Number of settings: 48 (10 runs each), Runtime: 80 min*  <br>
+*Number of settings: 48 (10 runs each), Runtime: 80-100 min*  <br>
 **Computation**<br>
 Experiments to compute BNE for different utility models and compare expected revenue.
 We vary the number of agents (2, 3, 5, and 10) and the prior (uniform and truncated gaussian).
@@ -34,7 +34,7 @@ python projects/ad_auctions/evaluation/table_revenue.py
 Experiments to compute BNE for different utility models and compare expected revenue.
 We vary the number of agents (2, 3, 5, and 10) and the prior (uniform and truncated gaussian).
 ```bash
-python projects/ad_auctions/computation/run_revenue.py
+python projects/ad_auctions/computation/run_revenue_asym.py
 ```
 **Evaluation**<br>
 We create 3 figures (Figure 3) where we compare the difference in revenue between first- and second-price auctions, and one table (Table 2) in which we report metrics where we compare the computed strategies to known analytical BNE.

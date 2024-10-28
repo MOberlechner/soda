@@ -187,7 +187,7 @@ def plot_revenue_n_bidders(n_bidders, path_to_configs, path_to_experiments, path
 if __name__ == "__main__":
 
     EXPERIMENT_TAG = "revenue"
-    path_save = os.path.join(PATH_SAVE, EXPERIMENT_TAG)
+    path_save = os.path.join(PATH_TO_RESULTS, EXPERIMENT_TAG)
     os.makedirs(path_save, exist_ok=True)
     plot_strategies = False
 

@@ -16,8 +16,11 @@ from soda.util.evaluation import get_results
 cmap = matplotlib.colors.LinearSegmentedColormap.from_list("", [COLORS[0], "#ffffff"])
 
 
-def plot_revenue_asym(path_to_configs, path_to_exp, path_save, tag: str = "_"):
+def plot_revenue_asym(
+    path_to_configs, path_to_exp, path_save, prior: str = "uniform", tag: str = "_"
+):
     """create plot (matrix) for difference in utility for asymmetric utility functions"""
+    assert prior in ["uniform", "gaussian"]
     ## get data
     # import logfiles (remove duplicated since revenue is the same for agents)
     df = get_revenue(path_to_exp, "revenue_asym")
@@ -30,8 +33,14 @@ def plot_revenue_asym(path_to_configs, path_to_exp, path_save, tag: str = "_"):
     agents = list(combinations_with_replacement(util_type, 2))
     matrix = np.nan * np.zeros((3, 3))
     for agent1, agent2 in agents:
-        revenue_fp = df[df.setting == f"fp2_{agent1}_{agent2}"]["mean"].item()
-        revenue_sp = df[df.setting == f"sp2_{agent1}_{agent2}"]["mean"].item()
+        revenue_fp = df[
+            df.setting
+            == f"fp2_{agent1}_{agent2}" + ("_gaus" if prior == "gaussian" else "")
+        ]["mean"].item()
+        revenue_sp = df[
+            df.setting
+            == f"sp2_{agent1}_{agent2}" + ("_gaus" if prior == "gaussian" else "")
+        ]["mean"].item()
         matrix[util_type.index(agent1), util_type.index(agent2)] = (
             revenue_fp / revenue_sp - 1
         ) * 100
@@ -84,11 +93,12 @@ def plot_revenue_asym(path_to_configs, path_to_exp, path_save, tag: str = "_"):
         )
 
     # save plot
-    fig.savefig(f"{path_save}/revenue_asym{tag}.pdf", bbox_inches="tight")
+    fig.savefig(f"{path_save}/revenue_asym_{prior}{tag}.pdf", bbox_inches="tight")
 
 
 if __name__ == "__main__":
     EXPERIMENT_TAG = "revenue_asym"
-    path_save = os.path.join(PATH_SAVE, EXPERIMENT_TAG)
+    path_save = os.path.join(PATH_TO_RESULTS, EXPERIMENT_TAG)
     os.makedirs(path_save, exist_ok=True)
-    plot_revenue_asym(PATH_TO_CONFIGS, PATH_TO_EXPERIMENTS, path_save)
+    plot_revenue_asym(PATH_TO_CONFIGS, PATH_TO_EXPERIMENTS, path_save, prior="uniform")
+    plot_revenue_asym(PATH_TO_CONFIGS, PATH_TO_EXPERIMENTS, path_save, prior="gaussian")

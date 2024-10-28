@@ -45,6 +45,8 @@ def get_bids(game: Game, strategies: Dict[str, Strategy], agent: str):
 
 def get_revenue(path_to_experiments, experiment_tag):
     df = pd.read_csv(
-        os.path.join(path_to_experiments, f"log/{experiment_tag}/log_sim_agg.csv")
+        os.path.join(path_to_experiments, f"{experiment_tag}/log/simulation_aggr.csv")
     )
-    return df[df.metric == "revenue"].reset_index(drop=True)
+    return df[(df.metric == "revenue") & (df.agent == "mechanism")].reset_index(
+        drop=True
+    )
