@@ -194,13 +194,18 @@ class Logger:
         data_aggr = {}
         for statistic in ["mean", "std"]:
             data_aggr[statistic] = (
-                self.data[sub_exp].groupby(index_columns).agg(statistic).reset_index()
+                self.data[sub_exp]
+                .drop(columns="run")
+                .groupby(index_columns)
+                .agg(statistic)
+                .reset_index()
             ).melt(index_columns, var_name="metric", value_name=statistic)
 
         # store aggregated log files in self.data
         self.data[f"{sub_exp}_aggr"] = (
             data_aggr["mean"]
             .merge(data_aggr["std"], on=index_columns + ["metric"], how="outer")
+            .dropna(subset="mean")
             .sort_values(index_columns + ["metric"])
         )
 
