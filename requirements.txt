@@ -11,3 +11,4 @@ pathlib
 pytest
 pytest-cov
 ipykernel
+tabulate
