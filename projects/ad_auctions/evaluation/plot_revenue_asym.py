@@ -1,4 +1,8 @@
 import os
+import sys
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
+
 from itertools import combinations_with_replacement
 from typing import Dict
 
@@ -16,9 +20,14 @@ from soda.util.evaluation import get_results
 cmap = matplotlib.colors.LinearSegmentedColormap.from_list("", [COLORS[0], "#ffffff"])
 
 
-def plot_revenue_asym(
-    path_to_configs, path_to_exp, path_save, prior: str = "uniform", tag: str = "_"
-):
+def get_name_setting(payment_rule, agent1, agent2, prior) -> str:
+    assert prior in ["gaussian", "uniform"]
+    return f"{payment_rule}2_{agent1}_{agent2}" + (
+        "_gaus" if prior == "gaussian" else ""
+    )
+
+
+def plot_revenue_asym(path_to_exp, path_save, prior: str = "uniform"):
     """create plot (matrix) for difference in utility for asymmetric utility functions"""
     assert prior in ["uniform", "gaussian"]
     ## get data
@@ -29,18 +38,15 @@ def plot_revenue_asym(
     # compute rel. diff. in revenue
     util_type = ["ql", "roi", "ros"]
     labels = ["QL", "ROI", "ROSB"]
-    payment_rule = ["fp", "sp"]
     agents = list(combinations_with_replacement(util_type, 2))
     matrix = np.nan * np.zeros((3, 3))
     for agent1, agent2 in agents:
-        revenue_fp = df[
-            df.setting
-            == f"fp2_{agent1}_{agent2}" + ("_gaus" if prior == "gaussian" else "")
-        ]["mean"].item()
-        revenue_sp = df[
-            df.setting
-            == f"sp2_{agent1}_{agent2}" + ("_gaus" if prior == "gaussian" else "")
-        ]["mean"].item()
+        revenue_fp = df[df.setting == get_name_setting("fp", agent1, agent2, prior)][
+            "mean"
+        ].item()
+        revenue_sp = df[df.setting == get_name_setting("sp", agent1, agent2, prior)][
+            "mean"
+        ].item()
         matrix[util_type.index(agent1), util_type.index(agent2)] = (
             revenue_fp / revenue_sp - 1
         ) * 100
@@ -72,8 +78,12 @@ def plot_revenue_asym(
 
     # add numbers
     for agent1, agent2 in agents:
-        revenue_fp = df[df.setting == f"fp2_{agent1}_{agent2}"]["mean"].item()
-        revenue_sp = df[df.setting == f"sp2_{agent1}_{agent2}"]["mean"].item()
+        revenue_fp = df[df.setting == get_name_setting("fp", agent1, agent2, prior)][
+            "mean"
+        ].item()
+        revenue_sp = df[df.setting == get_name_setting("sp", agent1, agent2, prior)][
+            "mean"
+        ].item()
 
         ax.text(
             util_type.index(agent2),
@@ -93,12 +103,12 @@ def plot_revenue_asym(
         )
 
     # save plot
-    fig.savefig(f"{path_save}/revenue_asym_{prior}{tag}.pdf", bbox_inches="tight")
+    fig.savefig(f"{path_save}/revenue_asym_{prior}.pdf", bbox_inches="tight")
 
 
 if __name__ == "__main__":
-    EXPERIMENT_TAG = "revenue_asym"
-    path_save = os.path.join(PATH_TO_RESULTS, EXPERIMENT_TAG)
+    LABEL_EXPERIMENT = "revenue_asym"
+    path_save = os.path.join(PATH_TO_RESULTS, LABEL_EXPERIMENT)
     os.makedirs(path_save, exist_ok=True)
-    plot_revenue_asym(PATH_TO_CONFIGS, PATH_TO_EXPERIMENTS, path_save, prior="uniform")
-    plot_revenue_asym(PATH_TO_CONFIGS, PATH_TO_EXPERIMENTS, path_save, prior="gaussian")
+    plot_revenue_asym(PATH_TO_EXPERIMENTS, path_save, prior="uniform")
+    plot_revenue_asym(PATH_TO_EXPERIMENTS, path_save, prior="gaussian")

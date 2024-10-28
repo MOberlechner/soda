@@ -1,4 +1,8 @@
 import os
+import sys
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
+
 from typing import Dict
 
 import matplotlib.pyplot as plt
@@ -186,8 +190,8 @@ def plot_revenue_n_bidders(n_bidders, path_to_configs, path_to_experiments, path
 
 if __name__ == "__main__":
 
-    EXPERIMENT_TAG = "revenue"
-    path_save = os.path.join(PATH_TO_RESULTS, EXPERIMENT_TAG)
+    LABEL_EXPERIMENT = "revenue"
+    path_save = os.path.join(PATH_TO_RESULTS, LABEL_EXPERIMENT)
     os.makedirs(path_save, exist_ok=True)
     plot_strategies = False
 

@@ -1,4 +1,8 @@
 import os
+import sys
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
+
 from itertools import product
 from typing import Dict
 
@@ -6,9 +10,9 @@ import numpy as np
 import pandas as pd
 
 from projects.ad_auctions.config_exp import (
-    PATH_SAVE,
     PATH_TO_CONFIGS,
     PATH_TO_EXPERIMENTS,
+    PATH_TO_RESULTS,
 )
 from soda.game import Game
 from soda.strategy import Strategy
@@ -64,7 +68,7 @@ def create_table(games: list, learner: list) -> pd.DataFrame:
             config_learner,
             PATH_TO_CONFIGS,
             PATH_TO_EXPERIMENTS,
-            EXPERIMENT_TAG,
+            LABEL_EXPERIMENT,
             run=0,
         )
         rev = get_revenue(game, strategies)
@@ -81,8 +85,8 @@ def create_table(games: list, learner: list) -> pd.DataFrame:
 
 if __name__ == "__main__":
 
-    EXPERIMENT_TAG = "baseline"
-    os.makedirs(PATH_SAVE, exist_ok=True)
+    LABEL_EXPERIMENT = "baseline"
+    os.makedirs(PATH_TO_RESULTS, exist_ok=True)
 
     games = [
         "baseline/ql_fp_3.yaml",
@@ -103,4 +107,6 @@ if __name__ == "__main__":
     )
     print(f"\nTABLE BASELINE\n\n{table}\n")
 
-    df.to_csv(os.path.join(PATH_SAVE, "table_baseline.csv"), index=False)
+    df.to_csv(
+        os.path.join(PATH_TO_RESULTS, f"table_{LABEL_EXPERIMENT}.csv"), index=False
+    )

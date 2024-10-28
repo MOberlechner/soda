@@ -1,3 +1,8 @@
+import os
+import sys
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
+
 from itertools import combinations_with_replacement, product
 from time import time
 
@@ -20,7 +25,7 @@ learner = [
     "sofw.yaml",
 ]
 
-experiment_list = list(product(games_gaussian, learner))
+experiment_list = list(product(games_uniform + games_gaussian, learner))
 
 if __name__ == "__main__":
     run_experiments(

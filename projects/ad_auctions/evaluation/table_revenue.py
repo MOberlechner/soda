@@ -1,4 +1,7 @@
 import os
+import sys
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
 
 import numpy as np
 import pandas as pd
@@ -48,17 +51,18 @@ def create_table_sim(experiment_tag: str, round_dec: int) -> pd.DataFrame:
 
 if __name__ == "__main__":
 
-    experiment_tag = "revenue"
-    df = create_table_sim(experiment_tag, round_dec=3)
+    LABEL_EXPERIMENT = "revenue"
+    df = create_table_sim(LABEL_EXPERIMENT, round_dec=3)
     table = df.to_markdown(
         index=False, tablefmt="pipe", colalign=["center"] * len(df.columns)
     )
     print(f"\nTABLE REVENUE\n\n{table}\n")
+    df.to_csv(
+        os.path.join(PATH_TO_RESULTS, f"table_{LABEL_EXPERIMENT}.csv"), index=False
+    )
 
-    # df.to_csv(os.path.join(PATH_TO_RESULTS, "table_revenue.csv"), index=False)
-
-    experiment_tag = "revenue_asym"
-    df = create_table_sim(experiment_tag, round_dec=3)
+    LABEL_EXPERIMENT = "revenue_asym"
+    df = create_table_sim(LABEL_EXPERIMENT, round_dec=3)
     table = df.to_markdown(
         index=False, tablefmt="pipe", colalign=["center"] * len(df.columns)
     )

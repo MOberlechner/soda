@@ -1,3 +1,8 @@
+import os
+import sys
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
+
 from itertools import product
 from time import time
 
@@ -22,7 +27,7 @@ games = [
     "revenue_budget/ros_sp_2_b2.yaml",
 ]
 learner = [
-    "soda1_revenue.yaml",
+    "soda1.yaml",
 ]
 
 experiment_list = list(product(games, learner))
