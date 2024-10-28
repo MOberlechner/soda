@@ -10,6 +10,7 @@ from projects.soda.config_exp import *
 from soda.util.experiment import run_experiments
 
 LABEL_EXPERIMENT = "example"
+PARAM_LOGGING["save_strategy_init"] = True
 game = [
     "example/fpsb_2_discr020.yaml",
     # only used for visualization in appendix:
