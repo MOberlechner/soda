@@ -192,10 +192,11 @@ class Logger:
         # compute aggregated log files
         index_columns = ["setting", "mechanism", "learner", "agent"]
         data_aggr = {}
+        print(self.data[sub_exp])
         for statistic in ["mean", "std"]:
             data_aggr[statistic] = (
                 self.data[sub_exp]
-                .drop(columns="run")
+                .drop(columns=["run", "timestamp"])
                 .groupby(index_columns)
                 .agg(statistic)
                 .reset_index()
