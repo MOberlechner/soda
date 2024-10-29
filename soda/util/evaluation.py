@@ -126,13 +126,14 @@ def get_log_files(
 ) -> Dict[str, pd.DataFrame]:
     """Import aggregated log files from experiment"""
     sub_experiments = ["computation", "simulation", "evaluation"]
+    cols_index = ["setting", "mechanism", "learner", "agent"]
     logs = []
     for sub_exp in sub_experiments:
         file_agg = os.path.join(
             path_to_experiments, experiment_tag, "log", f"{sub_exp}_aggr.csv"
         )
         if os.path.exists(file_agg):
-            logs.append(pd.read_csv(file_agg))
+            logs.append(pd.read_csv(file_agg, dtype={col: str for col in cols_index}))
         else:
             logs.append(None)
     return dict(zip(sub_experiments, logs))
@@ -162,7 +163,7 @@ def get_runtimes(path_to_experiments: str, experiment_tag: str) -> pd.DataFrame:
     file_log_learn = os.path.join(
         path_to_experiments, experiment_tag, "log", "computation.csv"
     )
-    df = pd.read_csv(file_log_learn)
+    df = pd.read_csv(file_log_learn, dtype={col: str for col in cols_index})
     # get runtimes (min, max)
     df["time_total"] = df["time_init"] + df["time_run"]
     df = df.groupby(cols_index).agg(
