@@ -41,11 +41,8 @@ def get_results(
     label_setting = os.path.basename(config_game).replace(".yaml", "")
     name = f"{label_setting}_{label_learner}_run_{run}"
     filename = os.path.join(path_to_experiment, experiment_tag, "strategies", name)
-
     for i in strategies:
-        strategies[i] = Strategy(i, game)
         strategies[i].load(filename, load_init=False)
-
     return game, learner, strategies
 
 
