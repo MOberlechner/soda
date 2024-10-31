@@ -25,8 +25,12 @@ def run_experiments(
     t0 = time()
     iter, successfull = 1, 0
     for config_game, config_learner in experiment_list:
+        t1 = time()
         print(f"".ljust(75, "-"))
-        print(f"Experiment {iter}/{len(experiment_list)} ".ljust(75))
+        print(
+            f"Experiment {iter}/{len(experiment_list)} ".ljust(50)
+            + f"Total time {(t1-t0)/60:.1f} min".rjust(25)
+        )
         exp_handler = Experiment(
             path_to_configs + "game/" + config_game,
             path_to_configs + "learner/" + config_learner,
@@ -40,13 +44,13 @@ def run_experiments(
         exp_handler.run()
         successfull += 1 - exp_handler.error
         iter += 1
-    t1 = time()
+    t2 = time()
+    print("".ljust(75, "-"))
     print(
-        f"\n{successfull} out of {len(experiment_list)} experiments successfull ({(t1-t0)/60:.1f} min)".ljust(
-            75, "-"
-        ),
-        "\n",
+        f"{successfull}/{len(experiment_list)} Experiments successfull ".ljust(50)
+        + f"Total time {(t2-t0)/60:.1f} min".rjust(25)
     )
+    print("".ljust(75, "-") + "\n")
 
 
 class Experiment:
