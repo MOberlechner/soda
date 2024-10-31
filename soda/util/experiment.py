@@ -22,11 +22,11 @@ def run_experiments(
     param_logging: dict,
 ):
     """Method to run several experiments using the Experiment class"""
-
-    print(f"\nRunning {len(experiment_list)} Experiments".ljust(100, "."), "\n")
     t0 = time()
-    successfull = 0
+    iter, successfull = 1, 0
     for config_game, config_learner in experiment_list:
+        print(f"".ljust(75, "-"))
+        print(f"Experiment {iter}/{len(experiment_list)} ".ljust(75))
         exp_handler = Experiment(
             path_to_configs + "game/" + config_game,
             path_to_configs + "learner/" + config_learner,
@@ -39,10 +39,11 @@ def run_experiments(
         )
         exp_handler.run()
         successfull += 1 - exp_handler.error
+        iter += 1
     t1 = time()
     print(
         f"\n{successfull} out of {len(experiment_list)} experiments successfull ({(t1-t0)/60:.1f} min)".ljust(
-            100, "."
+            75, "-"
         ),
         "\n",
     )
@@ -113,7 +114,7 @@ class Experiment:
         self.evaluation = param_evaluation["active"]
         self.error = False
 
-        print(f"Experiment started".ljust(100, "."))
+        print(f"".ljust(75, "-"))
         print(f" - game   : {self.config_game}\n - learner: {self.config_learner}")
 
         try:
@@ -180,7 +181,7 @@ class Experiment:
                 print("   Error in Evaluation!")
                 self.error = True
 
-        print(f"Done ".ljust(100, ".") + "\n")
+        print(f"".ljust(75, "-"))
 
     def run_compuation(self) -> None:
         """run computation of strategies"""
