@@ -67,9 +67,8 @@ class Learner:
         self,
         game: Game,
         strategies: Dict[str, Strategy],
-        disable_tqdm_bool: bool = True,
-        print_result_bool: bool = False,
-        save_history_bool: bool = False,
+        print_result: bool = False,
+        save_history: bool = False,
     ) -> None:
         """Run learning algorithm
 
@@ -77,8 +76,8 @@ class Learner:
             game (class): discretized approximation game
             strategies (dict): strategy profile
             disable_tqdm_bool (bool): Disable progess bar. Defaults to True
-            print_result_bool (bool): Print result. Defaults to False
-            save_history_bool (bool): Save history of iterates (apart from first iteration). Defaults to False
+            print_result (bool): Print result. Defaults to False
+            save_history (bool): Save history of iterates (apart from first iteration). Defaults to False
         """
 
         # prepare gradients, i.e., compute path and indices
@@ -87,7 +86,7 @@ class Learner:
 
         # prepare strategies
         for i in strategies:
-            strategies[i].prepare_history(self.max_iter, save_history_bool)
+            strategies[i].prepare_history(self.max_iter, save_history)
 
         # init parameters
         min_max_value = 999
@@ -97,7 +96,8 @@ class Learner:
             range(self.max_iter),
             unit_scale=True,
             bar_format="{l_bar}{bar:20}{r_bar}{bar:-10b}",
-            disable=disable_tqdm_bool,
+            disable=not print_result,
+            colour="green",
         ):
 
             # compute gradients
@@ -121,8 +121,8 @@ class Learner:
                 self.update_strategy(strategies[i], strategies[i].gradient, t)
 
         # print result
-        if print_result_bool:
-            self.print_result(self.convergence, min_max_value, max_value, t_max)
+        if print_result:
+            self.write_result(self.convergence, min_max_value, max_value, t_max)
 
     def update_strategy(self, strategy: Strategy, gradient: np.ndarray, t: int):
         """Update strategy according to update rule from specific learning method
@@ -176,7 +176,7 @@ class Learner:
         self.iter = t
         return min_max_value, max_value
 
-    def print_result(
+    def write_result(
         self, convergence: bool, min_max_value: float, max_value: float, t_max: int
     ) -> None:
         """Print result of run
@@ -187,17 +187,13 @@ class Learner:
             max_value (float): current value of stopping critertion of worst agent
             t_max (int): number of iteration until convergence (0 if no convergence)
         """
-
         if convergence:
             print(f"Convergence after {t_max} iterations")
-            print(
-                f"Value of stopping criterion ({self.stop_criterion})",
-                round(min_max_value, 5),
-            )
         else:
-            print("No convergence with stopping criterion")
-            print(f"Current value of ({self.stop_criterion}): {max_value:.5f}")
-            print(f"Best value of ({self.stop_criterion})   : {min_max_value:.5f})")
+            print(f"No convergence after {self.max_iter} iterations")
+        print(f"Stopping criterion: {self.stop_criterion}")
+        print(f" - current value: {max_value:.5f}")
+        print(f" - best value:    {min_max_value:.5f}")
 
 
 # Additional Functions used by several learning algorithms

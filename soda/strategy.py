@@ -93,7 +93,7 @@ class Strategy:
 
         """
         # overwrite old history
-        self.prepare_history(max_iter=2, save_history_bool=True)
+        self.prepare_history(max_iter=2, save_history=True)
 
         if init_method == "random":
             sigma = np.random.uniform(0, 1, size=self.x.shape)
@@ -239,7 +239,7 @@ class Strategy:
         if iter == 1 or (len(self.history) == 0):
             return self.x
         # return mean over all iterates
-        elif self.save_history_bool:
+        elif self.save_history:
             if iter == -1:
                 return np.nanmean(self.history, axis=0)
             elif iter > 1:
@@ -247,9 +247,7 @@ class Strategy:
             else:
                 raise ValueError
         else:
-            raise ValueError(
-                "Empirical mean only available if save_history_bool is True"
-            )
+            raise ValueError("Empirical mean only available if save_history is True")
 
     # --------------------------------------- METHODS USED TO UPDATE METRICS ---------------------------------------- #
     def get_utility(self):
@@ -268,27 +266,27 @@ class Strategy:
 
     def update_dist_prev_iter(self, t: iter):
         """Compute and save Euclidean distance to previous iteration
-        If history of strategies is not save (i.d., save_history_bool is False),
+        If history of strategies is not save (i.d., save_history is False),
         then we only store the the initial and the last strategy in self.history
 
         Args:
             t (iter): current iteration
         """
         if t > 0:
-            if self.save_history_bool:
+            if self.save_history:
                 self.dist_prev_iter[t] = np.linalg.norm(self.x - self.history[t - 1])
             else:
                 self.dist_prev_iter[t] = np.linalg.norm(self.x - self.history[1])
 
     def update_history_strategy(self, t: int):
         """Save current stratety
-        If save_history_bool if False, we only story the initial and the last strategy
+        If save_history if False, we only story the initial and the last strategy
         in a list of length 2
 
         Args:
             t (int): current iteration
         """
-        t = t if self.save_history_bool else min(t, 1)
+        t = t if self.save_history else min(t, 1)
         self.history[t] = self.x
 
     def update_history_dual(self, t: int):
@@ -298,7 +296,7 @@ class Strategy:
         Args:
             t (int): currnet iteration
         """
-        t = t if self.save_history_bool else min(t, 1)
+        t = t if self.save_history else min(t, 1)
         self.history_dual[t] = self.y
 
     def update_history_gradient(self, t: int):
@@ -308,7 +306,7 @@ class Strategy:
             t (int): currnet iteration
             gradient (np.ndarray): current gradient
         """
-        t = t if self.save_history_bool else min(t, 1)
+        t = t if self.save_history else min(t, 1)
         self.history_gradient[t] = self.gradient
 
     def update_history(self, t: int):
@@ -317,7 +315,7 @@ class Strategy:
         Args:
             t (int): iteration
             gradient (np.ndarray): current gradient
-            save_history_bool (bool): save history of strategies, gradients, ...
+            save_history (bool): save history of strategies, gradients, ...
         """
         self.utility[t] = self.get_utility()
         self.utility_loss[t] = self.get_utility_loss()
@@ -331,20 +329,20 @@ class Strategy:
         self.update_history_dual(t)
         self.update_history_gradient(t)
 
-    def prepare_history(self, max_iter: int, save_history_bool: bool) -> None:
+    def prepare_history(self, max_iter: int, save_history: bool) -> None:
         """Create arrays to store history.
         Allocation the memory at the beginning should make this faster
 
         Args:
-            save_history_bool (bool): save history of gradients/strategies as well
+            save_history (bool): save history of gradients/strategies as well
         """
-        self.save_history_bool = save_history_bool
+        self.save_history = save_history
         (self.utility, self.utility_loss, self.dist_prev_iter,) = (
             np.nan * np.ones(max_iter),
             np.nan * np.ones(max_iter),
             np.nan * np.ones(max_iter),
         )
-        iterations = max_iter if save_history_bool else 2
+        iterations = max_iter if save_history else 2
 
         (
             self.history,
