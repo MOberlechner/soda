@@ -38,25 +38,25 @@ class Crowdsourcing(Mechanism):
         self.check_own_gradient()
 
     def utility(
-        self, obs_profile: np.ndarray, bids_profile: np.ndarray, index_agent: int
+        self, obs_profile: np.ndarray, bids_profile: np.ndarray, index_bidder: int
     ) -> np.ndarray:
         """utility for crowdsourcing contest with prices (decreasing, sum to 1)
 
         Args:
             obs_profile (np.ndarray): observation of all agents (can be related to values or cost)
             bids_profile (np.ndarray): bids of all agents
-            index_agent (int): index of agent
+            index_bidder (int): index of agent
 
         Returns:
-            np.ndarry: utilities of agent (with index index_agent)
+            np.ndarry: utilities of agent (with index index_bidder)
         """
-        self.test_input_utility(obs_profile, bids_profile, index_agent)
+        self.test_input_utility(obs_profile, bids_profile, index_bidder)
         type = self.get_valuation(
-            obs_profile, index_agent
+            obs_profile, index_bidder
         )  # type can either be valuation or cost
 
-        allocation = self.get_allocation(bids_profile, index_agent)
-        payment = self.get_payment(bids_profile, allocation, index_agent)
+        allocation = self.get_allocation(bids_profile, index_bidder)
+        payment = self.get_payment(bids_profile, allocation, index_bidder)
         payoff = self.get_payoff(allocation, type, payment)
 
         return payoff

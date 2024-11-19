@@ -1,9 +1,9 @@
-learner: soda.learner.dual_averaging.SODA
+learner: soda.learner.mirror_descent.SOMA
 max_iter: 1000
 tol: 1e-4
 stop_criterion: 'util_loss'
 parameter:
-  regularizer: 'euclidean'
+  mirror_map: 'euclidean'
   steprule_bool: True
   eta: 0.50
   beta: 0.50

@@ -1,5 +1,5 @@
 learner: soda.learner.dual_averaging.SODA
-max_iter: 5000
+max_iter: 10_000
 tol: 1e-4
 stop_criterion: 'util_loss'
 parameter:
@@ -7,4 +7,3 @@ parameter:
   steprule_bool: True
   eta: 10.
   beta: 0.05
-init_method: 'random'

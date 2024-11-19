@@ -1,9 +1,14 @@
+import os
+import sys
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
+
 from itertools import product
-from time import time
 
 from projects.contests.config_exp import *
-from soda.util.experiment import Experiment
+from soda.util.experiment import run_experiments
 
+label_experiment = "crowdsourcing"
 game_contests = [
     # 3 bidders, 2 prizes
     "crowdsourcing/bidder3_price1.yaml",
@@ -23,34 +28,14 @@ learner_contests = [
 ]
 experiment_list = list(product(game_contests, learner_contests))
 
-SIMULATION = True
-NUMBER_RUNS = 10
-
 if __name__ == "__main__":
-    print(f"\nRunning {len(experiment_list)} Experiments".ljust(100, "."), "\n")
-    t0 = time()
-    successfull = 0
-    for config_game, config_learner in experiment_list:
-
-        exp_handler = Experiment(
-            PATH_TO_CONFIGS + "game/" + config_game,
-            PATH_TO_CONFIGS + "learner/" + config_learner,
-            NUMBER_RUNS,
-            LEARNING,
-            SIMULATION,
-            LOGGING,
-            SAVE_STRAT,
-            NUMBER_SAMPLES,
-            PATH_TO_EXPERIMENTS,
-            ROUND_DECIMALS,
-            experiment_tag="crowdsourcing",
-        )
-        exp_handler.run()
-        successfull += 1 - exp_handler.error
-    t1 = time()
-    print(
-        f"\n{successfull} out of {len(experiment_list)} experiments successfull ({(t1-t0)/60:.1f} min)".ljust(
-            100, "."
-        ),
-        "\n",
+    run_experiments(
+        experiment_list,
+        path_to_configs=PATH_TO_CONFIGS,
+        number_runs=NUMBER_RUNS,
+        label_experiment=label_experiment,
+        param_computation=PARAM_COMPUTATION,
+        param_simulation=PARAM_SIMULATION,
+        param_evaluation={"active": False},
+        param_logging=PARAM_LOGGING,
     )

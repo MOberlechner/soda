@@ -1,4 +1,8 @@
 import os
+import sys
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
+
 from typing import Dict
 
 import matplotlib.pyplot as plt
@@ -60,12 +64,9 @@ def plot_strategies_revenue(
     )
 
 
-def plot_revenue(
-    budget: int, n_bidder: int, path_to_configs, path_to_experiments, path_save
-):
+def plot_revenue(budget: int, n_bidder: int, path_to_experiments, path_save):
 
     labels = ["QLB", "ROIB", "ROSB"]
-    learner = "soda1_revenue"
 
     df = get_revenue(path_to_experiments, "revenue_budget")
     revenue = {}
@@ -75,8 +76,7 @@ def plot_revenue(
             for util in ["ql", "roi", "ros"]
         ]
         revenue[payment_rule] = [
-            df.loc[(df.setting == s) & (df.learner == learner), "mean"].item()
-            for s in settings
+            df.loc[(df.setting == s), "mean"].item() for s in settings
         ]
 
     fig, ax = set_axis("Utility Model", "Revenue")
@@ -106,17 +106,16 @@ def plot_revenue(
 
 if __name__ == "__main__":
 
-    EXPERIMENT_TAG = "revenue_budget"
-    path_save = os.path.join(PATH_SAVE, EXPERIMENT_TAG)
+    LABEL_EXPERIMENT = "revenue_budget"
+    path_save = os.path.join(PATH_TO_RESULTS, LABEL_EXPERIMENT)
     os.makedirs(path_save, exist_ok=True)
-    plot_strategies = False
 
-    config_learner = "soda1_revenue.yaml"
+    plot_strategies = False
 
     n_bidder = 2
     for budget in [1, 2]:
         # plot revenue
-        plot_revenue(budget, n_bidder, PATH_TO_CONFIGS, PATH_TO_EXPERIMENTS, path_save)
+        plot_revenue(budget, n_bidder, PATH_TO_EXPERIMENTS, path_save)
         # plot strategies
         if plot_strategies:
             for payment_rule in ["fp", "sp"]:

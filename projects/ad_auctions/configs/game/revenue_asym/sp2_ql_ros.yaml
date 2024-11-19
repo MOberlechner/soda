@@ -1,0 +1,19 @@
+mechanism: soda.mechanism.single_item.SingleItemAuctionAsymmetric
+bidder: ['ql', 'ros']
+o_space:
+  'ql': [0.0 ,1.0]
+  'ros': [0.0 ,1.0]
+a_space:
+  'ql': [0.0 ,1.0]
+  'ros': [0.0 ,1.0]
+param_prior:
+  distribution: 'uniform'
+param_util:
+  payment_rule: 'second_price'
+  tie_breaking: 'lose'
+  reserve_price: 0.05
+  utility_type: ['QL', 'ROS']
+  'budget': [None, 1.01]
+  'budget_parameter': [0.0, 1.0]
+n: 64
+m: 64

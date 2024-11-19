@@ -1,4 +1,8 @@
 import os
+import sys
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
+
 from typing import Dict
 
 import matplotlib
@@ -20,7 +24,6 @@ COLORS_ROIS = [cmap(p) for p in parameter]
 def plot_revenue(path_to_configs, path_to_experiments, path_save):
 
     labels = ["0 (ROI)", "1/4", "1/2", "3/4", "1 (ROS)"]
-    learner = "soda1_revenue"
     n_bidder = 2
 
     df = get_revenue(path_to_experiments, "revenue_rois")
@@ -28,11 +31,10 @@ def plot_revenue(path_to_configs, path_to_experiments, path_save):
     for payment_rule in ["fp", "sp"]:
         settings = [f"rois{k+1}_{payment_rule}_{n_bidder}" for k in range(5)]
         revenue[payment_rule] = [
-            df.loc[(df.setting == s) & (df.learner == learner), "mean"].item()
-            for s in settings
+            df.loc[(df.setting == s), "mean"].item() for s in settings
         ]
 
-    fig, ax = set_axis("Parameter $\mu$", "Revenue")
+    fig, ax = set_axis(r"Parameter $\mu$", "Revenue")
     ax.set_xlim(-0.15, 1.15)
     ax.set_ylim(0, 1.01)
     # plot revenue
@@ -56,8 +58,8 @@ def plot_revenue(path_to_configs, path_to_experiments, path_save):
 
 if __name__ == "__main__":
 
-    EXPERIMENT_TAG = "revenue_rois"
-    path_save = os.path.join(PATH_SAVE, EXPERIMENT_TAG)
+    LABEL_EXPERIMENT = "revenue_rois"
+    path_save = os.path.join(PATH_TO_RESULTS, LABEL_EXPERIMENT)
     os.makedirs(path_save, exist_ok=True)
 
     config_learner = "soda1_revenue.yaml"

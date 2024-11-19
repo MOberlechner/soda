@@ -1,5 +1,8 @@
 import os
+import sys
 from typing import Dict
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -77,16 +80,16 @@ def generate_plots_example():
     config_learner = os.path.join(PATH_TO_CONFIGS, "learner", "soda1_eta20_beta05.yaml")
     config = Config(config_game, config_learner)
     game, learner = config.create_setting()
-    strategies = config.create_strategies(game)
+    strategies = config.create_strategies(game, init_method="nan")
 
     # import computed strategies
     learner_name = os.path.basename(config_learner).replace(".yaml", "")
     game_name = os.path.basename(config_game).replace(".yaml", "")
-    name = f"{learner_name}_{game_name}_run_0"
-    path = os.path.join(PATH_TO_EXPERIMENTS, "strategies", "example")
+    name = f"{game_name}_{learner_name}_run_0"
+    filename = os.path.join(PATH_TO_EXPERIMENTS, "example", "strategies", name)
 
     # initial strategy
-    strategies["1"].load(name, path, load_init=True)
+    strategies["1"].load(filename, load_init=True)
     fig, ax = set_axis((0, 1), (0, 1), f"Random Initial Strategy")
     ax.imshow(
         strategies["1"].x.T,
@@ -96,11 +99,11 @@ def generate_plots_example():
         cmap="Greys",
         zorder=2,
     )
-    path_save = os.path.join(PATH_TO_EXPERIMENTS, "plots", f"figure_1_1")
+    path_save = os.path.join(PATH_TO_RESULTS, "plots", f"figure_1_1")
     fig.savefig(f"{path_save}.{FORMAT}", bbox_inches="tight")
 
     # computed strategy
-    strategies["1"].load(name, path, load_init=False)
+    strategies["1"].load(filename, load_init=False)
     fig, ax = set_axis((0, 1), (0, 1), f"Computed Strategy")
     ax.imshow(
         strategies["1"].x.T,
@@ -110,7 +113,7 @@ def generate_plots_example():
         cmap="Greys",
         zorder=2,
     )
-    path_save = os.path.join(PATH_TO_EXPERIMENTS, "plots", f"figure_1_2")
+    path_save = os.path.join(PATH_TO_RESULTS, "plots", f"figure_1_2")
     fig.savefig(f"{path_save}.{FORMAT}", bbox_inches="tight")
 
     # sampled bids
@@ -120,7 +123,7 @@ def generate_plots_example():
     plot_scatter(ax, obs, bids_bne, 1, label_legend="analyt. BNE")
     plot_scatter(ax, obs, bids, 0, label_legend=r"$SODA_1$")
     ax.legend(fontsize=FONTSIZE_LEGEND, loc=2)
-    path_save = os.path.join(PATH_TO_EXPERIMENTS, "plots", f"figure_1_3")
+    path_save = os.path.join(PATH_TO_RESULTS, "plots", f"figure_1_3")
     fig.savefig(f"{path_save}.{FORMAT}", bbox_inches="tight")
 
 
@@ -140,7 +143,7 @@ def generate_plots_interdependent():
         fig, ax = set_axis((0, 2), (0, 1.5), labels[i])
 
         # plot strategy & BNE
-        ax = plot_scatter(ax, obs, bids, index=0, label_legend="$\mathrm{SODA}_1$")
+        ax = plot_scatter(ax, obs, bids, index=0, label_legend=r"$\mathrm{SODA}_1$")
         ax.plot(x, bne, color=COLORS[0], linestyle="-", zorder=1, alpha=0.9)
 
         # legend
@@ -148,7 +151,7 @@ def generate_plots_interdependent():
             [], [], label="analyt. BNE", color=COLORS[0], linestyle="-", linewidth=2
         )
         ax.legend(fontsize=FONTSIZE_LEGEND, loc=2)
-        path_save = os.path.join(PATH_TO_EXPERIMENTS, "plots", f"figure_2_{i+1}")
+        path_save = os.path.join(PATH_TO_RESULTS, "plots", f"figure_2_{i+1}")
         fig.savefig(f"{path_save}.{FORMAT}", bbox_inches="tight")
 
 
@@ -177,10 +180,10 @@ def generate_plots_llg():
                 linestyle="-",
                 linewidth=2,
                 zorder=1,
-                label=f"$\gamma={gammas[i]}$",
+                label=rf"$\gamma={gammas[i]}$",
             )
         ax.legend(fontsize=FONTSIZE_LEGEND, loc=2)
-        path_save = os.path.join(PATH_TO_EXPERIMENTS, "plots", f"figure_3_{j+1}")
+        path_save = os.path.join(PATH_TO_RESULTS, "plots", f"figure_3_{j+1}")
         fig.savefig(f"{path_save}.{FORMAT}", bbox_inches="tight")
 
 
@@ -188,7 +191,7 @@ def generate_plots_llg_fp():
     """Generate plots for Figure 4 (LLG Auction First-Price)"""
     gammas = [0.1, 0.5, 0.9]
     for j in range(3):
-        fig, ax = set_axis((0, 2), (0, 1), f"Correlation $\gamma = {gammas[j]}$")
+        fig, ax = set_axis((0, 2), (0, 1), rf"Correlation $\gamma = {gammas[j]}$")
         ax.set_aspect(2)
         for i, agent in enumerate(["L", "G"]):
             obs, bids, x, bne = get_data(
@@ -203,7 +206,7 @@ def generate_plots_llg_fp():
             ax = plot_scatter(ax, obs, bids, i, label_legend)
 
         ax.legend(fontsize=FONTSIZE_LEGEND, loc=2)
-        path_save = os.path.join(PATH_TO_EXPERIMENTS, "plots", f"figure_4_{j+1}")
+        path_save = os.path.join(PATH_TO_RESULTS, "plots", f"figure_4_{j+1}")
         fig.savefig(f"{path_save}.{FORMAT}", bbox_inches="tight")
 
 
@@ -232,7 +235,7 @@ def generate_plots_split_award():
         ax.set_aspect(0.75 * 0.4 / 2.5)
 
         # plot strategy and BNE
-        ax = plot_scatter(ax, obs, bids[i], index=0, label_legend="$\mathrm{SODA}_1$")
+        ax = plot_scatter(ax, obs, bids[i], index=0, label_legend=r"$\mathrm{SODA}_1$")
         ax.fill_between(
             x,
             bne_pool_lower[i],
@@ -250,7 +253,7 @@ def generate_plots_split_award():
         )
         ax.legend(fontsize=FONTSIZE_LEGEND, loc=2)
 
-        path_save = os.path.join(PATH_TO_EXPERIMENTS, "plots", f"figure_5_{i+1}")
+        path_save = os.path.join(PATH_TO_RESULTS, "plots", f"figure_5_{i+1}")
         fig.savefig(f"{path_save}.{FORMAT}", bbox_inches="tight")
 
 
@@ -272,7 +275,7 @@ def generate_plots_risk():
         ax.plot(x, bne, color=COLORS[i], linestyle="-", zorder=1)
     ax.plot(x, 0.5 * x, color="k", linestyle="--", label="risk-neutral")
     ax.legend(fontsize=FONTSIZE_LEGEND, loc=2)
-    path_save = os.path.join(PATH_TO_EXPERIMENTS, "plots", f"figure_6_1")
+    path_save = os.path.join(PATH_TO_RESULTS, "plots", f"figure_6_1")
     fig.savefig(f"{path_save}.{FORMAT}", bbox_inches="tight")
 
     # All-Pay
@@ -289,14 +292,14 @@ def generate_plots_risk():
         ax = plot_scatter(ax, obs, bids, i, r"$\rho$" + f" = {r}")
     ax.plot(x, 0.5 * x**2, color="k", linestyle="--", label="risk-neutral")
     ax.legend(fontsize=FONTSIZE_LEGEND, loc=2)
-    path_save = os.path.join(PATH_TO_EXPERIMENTS, "plots", f"figure_6_2")
+    path_save = os.path.join(PATH_TO_RESULTS, "plots", f"figure_6_2")
     fig.savefig(f"{path_save}.{FORMAT}", bbox_inches="tight")
 
     # Revenue
     risk = [0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
-    _, df_sim = get_log_files(PATH_TO_EXPERIMENTS, "risk")
+    log_files = get_log_files(PATH_TO_EXPERIMENTS, "risk")
     cols_index = ["mechanism", "setting", "learner", "agent"]
-    df = aggregate_metrics_over_runs(df_sim, cols_index, ["revenue"])
+    df = aggregate_metrics_over_runs(log_files["simulation"], cols_index, ["revenue"])
     df = df.sort_values(["mechanism", "setting"]).reset_index(drop=True)
 
     fig, ax = set_axis(
@@ -332,7 +335,7 @@ def generate_plots_risk():
         label="All-Pay",
     )
     ax.legend(fontsize=FONTSIZE_LEGEND, loc=2)
-    path_save = os.path.join(PATH_TO_EXPERIMENTS, "plots", f"figure_6_3")
+    path_save = os.path.join(PATH_TO_RESULTS, "plots", f"figure_6_3")
     fig.savefig(f"{path_save}.{FORMAT}", bbox_inches="tight")
 
 
@@ -355,7 +358,7 @@ def generate_plots_contests():
         ax = plot_scatter(ax, obs, bids, i, f"r = {r}")
 
     ax.legend(fontsize=FONTSIZE_LEGEND, loc=2)
-    path_save = os.path.join(PATH_TO_EXPERIMENTS, "plots", f"figure_7_1")
+    path_save = os.path.join(PATH_TO_RESULTS, "plots", f"figure_7_1")
     fig.savefig(f"{path_save}.{FORMAT}", bbox_inches="tight")
 
     # asymmetric
@@ -374,16 +377,16 @@ def generate_plots_contests():
             ax = plot_scatter(ax, obs, bids, i, f"r = {r}")
 
         ax.legend(fontsize=FONTSIZE_LEGEND, loc=2)
-        path_save = os.path.join(PATH_TO_EXPERIMENTS, "plots", f"figure_7_{j+2}")
+        path_save = os.path.join(PATH_TO_RESULTS, "plots", f"figure_7_{j+2}")
         fig.savefig(f"{path_save}.{FORMAT}", bbox_inches="tight")
 
 
 if __name__ == "__main__":
-    os.makedirs(os.path.join(PATH_TO_EXPERIMENTS, "plots"), exist_ok=True)
+    os.makedirs(os.path.join(PATH_TO_RESULTS, "plots"), exist_ok=True)
     generate_plots_example()
-    generate_plots_interdependent()
-    generate_plots_llg()
-    generate_plots_llg_fp()
-    generate_plots_split_award()
+    # generate_plots_interdependent()
+    # generate_plots_llg()
+    # generate_plots_llg_fp()
+    # generate_plots_split_award()
     generate_plots_risk()
     generate_plots_contests()

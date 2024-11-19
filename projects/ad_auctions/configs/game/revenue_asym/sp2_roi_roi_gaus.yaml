@@ -1,0 +1,17 @@
+mechanism: soda.mechanism.single_item.SingleItemAuctionAsymmetric
+bidder: ['roi', 'roi']
+o_space:
+  'roi': [0.0 ,1.0]
+a_space:
+  'roi': [0.0 ,1.0]
+param_prior:
+  distribution: 'gaussian_trunc'
+  mu: 0.5
+  sigma: 0.3
+param_util:
+  payment_rule: 'second_price'
+  tie_breaking: 'lose'
+  utility_type: ['ROI', 'ROI']
+  reserve_price: 0.05
+n: 64
+m: 64
