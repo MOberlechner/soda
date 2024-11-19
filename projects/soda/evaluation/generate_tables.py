@@ -3,15 +3,19 @@ import os
 import numpy as np
 import pandas as pd
 
-from projects.soda.config_exp import PATH_TO_EXPERIMENTS, ROUND_DECIMALS_TABLE
+from projects.soda.config_exp import (
+    PATH_TO_EXPERIMENTS,
+    PATH_TO_RESULTS,
+    ROUND_DECIMALS_TABLE,
+)
 from soda.util.evaluation import create_table
 
 
 def check_log_exists(experiment_tag: str) -> bool:
-    files = ["log_learn_agg.csv", "log_learn.csv", "log_sim_agg.csv"]
+    files = ["computation_aggr.csv", "computation_aggr.csv", "simulation_aggr.csv"]
     return np.all(
         [
-            os.path.exists(os.path.join(PATH_TO_EXPERIMENTS, "log", experiment_tag))
+            os.path.exists(os.path.join(PATH_TO_EXPERIMENTS, experiment_tag, "log"))
             for f in files
         ]
     )
@@ -22,7 +26,7 @@ def save_table(df, table_nummer: int, label: str = "") -> None:
         index=False, tablefmt="pipe", colalign=["center"] * len(df.columns)
     )
     path_table = os.path.join(
-        os.path.join(PATH_TO_EXPERIMENTS, "tables", f"table_{table_nummer:02.0f}.txt")
+        os.path.join(PATH_TO_RESULTS, "tables", f"table_{table_nummer:02.0f}.txt")
     )
     f = open(path_table, "w")
     f.write(table)
@@ -93,7 +97,7 @@ def generate_table_discretization():
 
 
 if __name__ == "__main__":
-    os.makedirs(os.path.join(PATH_TO_EXPERIMENTS, "tables"), exist_ok=True)
+    os.makedirs(os.path.join(PATH_TO_RESULTS, "tables"), exist_ok=True)
 
     generate_table_interdependent()
     generate_table_llg()

@@ -152,7 +152,7 @@ def generate_plots_vs():
             linewidths=2,
         )
         ax.legend(fontsize=FONTSIZE_LEGEND, loc=2)
-        path_save = os.path.join(PATH_TO_EXPERIMENTS, "plots", f"figure_13_{i+1}")
+        path_save = os.path.join(PATH_TO_RESULTS, "plots", f"figure_13_{i+1}")
         fig.savefig(f"{path_save}.{FORMAT}", bbox_inches="tight")
 
     # Plot Counterexample VS (Collusive strategy)
@@ -188,11 +188,11 @@ def generate_plots_vs():
         linewidths=2,
     )
     ax.legend(fontsize=FONTSIZE_LEGEND, loc=2)
-    path_save = os.path.join(PATH_TO_EXPERIMENTS, "plots", f"figure_13_3")
+    path_save = os.path.join(PATH_TO_RESULTS, "plots", f"figure_13_3")
     fig.savefig(f"{path_save}.{FORMAT}", bbox_inches="tight")
 
 
 if __name__ == "__main__":
-    os.makedirs(os.path.join(PATH_TO_EXPERIMENTS, "plots"), exist_ok=True)
+    os.makedirs(os.path.join(PATH_TO_RESULTS, "plots"), exist_ok=True)
     generate_plots_vs()
     generate_plots_discretization()

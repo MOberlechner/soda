@@ -35,17 +35,14 @@ def get_results(
 
     config = Config(config_game, config_learner)
     game, learner = config.create_setting()
-    strategies = config.create_strategies(game)
+    strategies = config.create_strategies(game, init_method="nan")
 
-    learner_name = os.path.basename(config_learner).replace(".yaml", "")
-    game_name = os.path.basename(config_game).replace(".yaml", "")
-    name = f"{learner_name}_{game_name}_run_{run}"
-    path = os.path.join(path_to_experiment, "strategies", experiment_tag)
-
+    label_learner = os.path.basename(config_learner).replace(".yaml", "")
+    label_setting = os.path.basename(config_game).replace(".yaml", "")
+    name = f"{label_setting}_{label_learner}_run_{run}"
+    filename = os.path.join(path_to_experiment, experiment_tag, "strategies", name)
     for i in strategies:
-        strategies[i] = Strategy(i, game)
-        strategies[i].load(name, path, load_init=False)
-
+        strategies[i].load(filename, load_init=False)
     return game, learner, strategies
 
 
@@ -78,32 +75,35 @@ def create_table(
         pd.DataFrame
     """
     cols_index = ["mechanism", "setting", "learner", "agent"]
-    cols_metrics_sim = ["util_loss", "l2_norm"]
-    cols_metrics_learn = ["utility_loss"]
+    cols_metrics_sim = ["utility_loss_vs_bne", "l2_norm"]
+    cols_metrics_com = ["utility_loss"]
 
     # get log files
-    df_learn, df_sim = get_log_files(path_to_experiments, experiment_tag)
+    logs = get_log_files(path_to_experiments, experiment_tag)
 
-    if df_learn is None:
-        print(f"log files for experiment '{experiment_tag}' are missing!")
+    if logs["computation"] is None:
+        print(f"computation log files for experiment '{experiment_tag}' are missing!")
         return None
 
-    df_learn = aggregate_metrics_over_runs(df_learn, cols_index, cols_metrics_learn)
+    df_learn = aggregate_metrics_over_runs(
+        logs["computation"], cols_index, cols_metrics_com
+    )
     df_learn = create_str_col(
         df_learn, "util_loss_discr", "utility_loss", num_decimals=num_decimals
     )
 
-    if df_sim is None:
+    if logs["simulation"] is None:
         df = df_learn[cols_index + ["util_loss_discr"]]
     else:
         # add results from simulation to taoble
-        df_sim = aggregate_metrics_over_runs(df_sim, cols_index, cols_metrics_sim)
-        df_sim = create_str_col(df_sim, "util_loss", "util_loss")
+        df_sim = aggregate_metrics_over_runs(
+            logs["simulation"], cols_index, cols_metrics_sim
+        )
+        df_sim = create_str_col(df_sim, "util_loss", "utility_loss_vs_bne")
         df_sim = create_str_col(df_sim, "l2_norm", "l2_norm")
-        df = df_sim[cols_index + cols_metrics_sim].merge(
+        df = df_sim[cols_index + ["util_loss", "l2_norm"]].merge(
             df_learn[cols_index + ["util_loss_discr"]], on=cols_index, how="outer"
         )
-
     # merge runtime into table
     runtime = get_runtimes(path_to_experiments, experiment_tag)
     df = df.merge(runtime[cols_index + ["time"]], on=cols_index, how="outer")
@@ -118,26 +118,22 @@ def create_table(
     return df.reset_index(drop=True).fillna("-")
 
 
-def get_log_files(path_to_experiments: str, experiment_tag: str) -> pd.DataFrame:
-    """Import log files from experiment"""
-    # log_learn_agg.csv
-    file_log_learn_agg = os.path.join(
-        path_to_experiments, "log", experiment_tag, "log_learn_agg.csv"
-    )
-    if os.path.exists(file_log_learn_agg):
-        df_learn = pd.read_csv(file_log_learn_agg)
-    else:
-        df_learn = None
-    # log_sim_agg.csv
-    file_log_sim_agg = os.path.join(
-        path_to_experiments, "log", experiment_tag, "log_sim_agg.csv"
-    )
-    if os.path.exists(file_log_learn_agg):
-        df_sim = pd.read_csv(file_log_sim_agg)
-    else:
-        df_sim = None
-
-    return df_learn, df_sim
+def get_log_files(
+    path_to_experiments: str, experiment_tag: str
+) -> Dict[str, pd.DataFrame]:
+    """Import aggregated log files from experiment"""
+    sub_experiments = ["computation", "simulation", "evaluation"]
+    cols_index = ["setting", "mechanism", "learner", "agent"]
+    logs = []
+    for sub_exp in sub_experiments:
+        file_agg = os.path.join(
+            path_to_experiments, experiment_tag, "log", f"{sub_exp}_aggr.csv"
+        )
+        if os.path.exists(file_agg):
+            logs.append(pd.read_csv(file_agg, dtype={col: str for col in cols_index}))
+        else:
+            logs.append(None)
+    return dict(zip(sub_experiments, logs))
 
 
 def aggregate_metrics_over_runs(df: pd.DataFrame, cols_index: list, cols_metrics: list):
@@ -162,9 +158,9 @@ def get_runtimes(path_to_experiments: str, experiment_tag: str) -> pd.DataFrame:
     cols_index = ["setting", "mechanism", "learner", "agent"]
     # import file
     file_log_learn = os.path.join(
-        path_to_experiments, "log", experiment_tag, "log_learn.csv"
+        path_to_experiments, experiment_tag, "log", "computation.csv"
     )
-    df = pd.read_csv(file_log_learn)
+    df = pd.read_csv(file_log_learn, dtype={col: str for col in cols_index})
     # get runtimes (min, max)
     df["time_total"] = df["time_init"] + df["time_run"]
     df = df.groupby(cols_index).agg(
@@ -198,17 +194,19 @@ def time_to_str(t_min, t_max) -> str:
             return f"{t_min/60:.0f}-{np.ceil(t_max/60):.0f} min"
 
 
-def metric_to_str(mean: float, std: float, num_decimals: int = 3) -> str:
-    return f"{mean:.{num_decimals}f} ({std:.{num_decimals}f})"
-
-
 def create_str_col(
     df: pd.DataFrame, new_column: str, column: str, num_decimals: int = 3
 ) -> pd.DataFrame:
+    """add new column that contains 'mean (std)' in a single column"""
     df[new_column] = [
-        metric_to_str(df[f"mean_{column}"][i], df[f"std_{column}"][i]) for i in df.index
+        metric_to_str(df[f"mean_{column}"][i], df[f"std_{column}"][i], num_decimals)
+        for i in df.index
     ]
     return df
+
+
+def metric_to_str(mean: float, std: float, num_decimals: int = 3) -> str:
+    return f"{mean:.{num_decimals}f} ({std:.{num_decimals}f})"
 
 
 def custom_sort_learner(val: str):

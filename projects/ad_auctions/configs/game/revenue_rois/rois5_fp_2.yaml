@@ -11,6 +11,6 @@ param_util:
   tie_breaking: 'lose'
   utility_type: 'ROIS'
   reserve_price: 0.05
-  rois_parameter: 1.0
+  utility_type_parameter: 1.0
 n: 64
 m: 64

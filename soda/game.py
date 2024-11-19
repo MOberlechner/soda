@@ -12,7 +12,7 @@ from soda.prior import compute_weights, marginal_prior_pdf
 
 
 class Game:
-    """Game represents an approximatiion of the mechanism by discretization of the spaces
+    """Game represents an approximation of the mechanism by discretization of the spaces
 
     Attributes:
         General
@@ -87,13 +87,13 @@ class Game:
         observations/valuations and bid profiles
         """
         for i in self.set_bidder:
-            index_agent = self.bidder.index(i)
+            index_bidder = self.bidder.index(i)
             bids = self.create_all_bid_profiles()
             valuations = self.get_obs_profile_reshaped()
             shape_utilities = self.get_shape_utilities()
 
             self.utility[i] = (
-                self.mechanism.utility(valuations, bids, index_agent)
+                self.mechanism.utility(valuations, bids, index_bidder)
                 .transpose()
                 .reshape(shape_utilities)
             )

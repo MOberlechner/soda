@@ -93,10 +93,13 @@ class Strategy:
 
         """
         # overwrite old history
-        self.prepare_history(max_iter=2, save_history_bool=True)
+        self.prepare_history(max_iter=2, save_history=True)
 
         if init_method == "random":
             sigma = np.random.uniform(0, 1, size=self.x.shape)
+
+        elif init_method == "nan":
+            sigma = np.nan * np.ones(self.x.shape)
 
         elif init_method == "random_no_overbid":
             if self.dim_o == self.dim_a == 1:
@@ -236,7 +239,7 @@ class Strategy:
         if iter == 1 or (len(self.history) == 0):
             return self.x
         # return mean over all iterates
-        elif self.save_history_bool:
+        elif self.save_history:
             if iter == -1:
                 return np.nanmean(self.history, axis=0)
             elif iter > 1:
@@ -244,9 +247,7 @@ class Strategy:
             else:
                 raise ValueError
         else:
-            raise ValueError(
-                "Empirical mean only available if save_history_bool is True"
-            )
+            raise ValueError("Empirical mean only available if save_history is True")
 
     # --------------------------------------- METHODS USED TO UPDATE METRICS ---------------------------------------- #
     def get_utility(self):
@@ -265,27 +266,27 @@ class Strategy:
 
     def update_dist_prev_iter(self, t: iter):
         """Compute and save Euclidean distance to previous iteration
-        If history of strategies is not save (i.d., save_history_bool is False),
+        If history of strategies is not save (i.d., save_history is False),
         then we only store the the initial and the last strategy in self.history
 
         Args:
             t (iter): current iteration
         """
         if t > 0:
-            if self.save_history_bool:
+            if self.save_history:
                 self.dist_prev_iter[t] = np.linalg.norm(self.x - self.history[t - 1])
             else:
                 self.dist_prev_iter[t] = np.linalg.norm(self.x - self.history[1])
 
     def update_history_strategy(self, t: int):
         """Save current stratety
-        If save_history_bool if False, we only story the initial and the last strategy
+        If save_history if False, we only story the initial and the last strategy
         in a list of length 2
 
         Args:
             t (int): current iteration
         """
-        t = t if self.save_history_bool else min(t, 1)
+        t = t if self.save_history else min(t, 1)
         self.history[t] = self.x
 
     def update_history_dual(self, t: int):
@@ -295,7 +296,7 @@ class Strategy:
         Args:
             t (int): currnet iteration
         """
-        t = t if self.save_history_bool else min(t, 1)
+        t = t if self.save_history else min(t, 1)
         self.history_dual[t] = self.y
 
     def update_history_gradient(self, t: int):
@@ -305,7 +306,7 @@ class Strategy:
             t (int): currnet iteration
             gradient (np.ndarray): current gradient
         """
-        t = t if self.save_history_bool else min(t, 1)
+        t = t if self.save_history else min(t, 1)
         self.history_gradient[t] = self.gradient
 
     def update_history(self, t: int):
@@ -314,7 +315,7 @@ class Strategy:
         Args:
             t (int): iteration
             gradient (np.ndarray): current gradient
-            save_history_bool (bool): save history of strategies, gradients, ...
+            save_history (bool): save history of strategies, gradients, ...
         """
         self.utility[t] = self.get_utility()
         self.utility_loss[t] = self.get_utility_loss()
@@ -328,20 +329,20 @@ class Strategy:
         self.update_history_dual(t)
         self.update_history_gradient(t)
 
-    def prepare_history(self, max_iter: int, save_history_bool: bool) -> None:
+    def prepare_history(self, max_iter: int, save_history: bool) -> None:
         """Create arrays to store history.
         Allocation the memory at the beginning should make this faster
 
         Args:
-            save_history_bool (bool): save history of gradients/strategies as well
+            save_history (bool): save history of gradients/strategies as well
         """
-        self.save_history_bool = save_history_bool
+        self.save_history = save_history
         (self.utility, self.utility_loss, self.dist_prev_iter,) = (
             np.nan * np.ones(max_iter),
             np.nan * np.ones(max_iter),
             np.nan * np.ones(max_iter),
         )
-        iterations = max_iter if save_history_bool else 2
+        iterations = max_iter if save_history else 2
 
         (
             self.history,
@@ -453,6 +454,7 @@ class Strategy:
         beta: np.ndarray = None,
         iter: int = None,
         save: bool = False,
+        save_path: str = "strategy",
     ):
         """Visualize Strategy
 
@@ -462,6 +464,7 @@ class Strategy:
             beta (np.ndarray, optional): plot function over strategy. Defaults to None.
             iter (int, optional): show intermediate strategy. Defaults to None.
             save (bool, optional): save plot. Defaults to False.
+            save_path (bool, optional): path to save_plot. Defaults to
 
         Raises:
             NotImplementedError: plot not available for multi-dim strategies
@@ -529,11 +532,12 @@ class Strategy:
         # save figure
         if save:
             plt.savefig(
-                f"plot_strategy_{self.agent}.png",
+                f"{save_path}.png",
                 facecolor="white",
                 transparent=False,
-                dpi=150,
+                dpi=75,
             )
+            plt.close(fig)
 
     def _get_elements_from_history(self, iter: int, grad: bool) -> tuple:
         """Get Strategy and Gradient (opt.) from history to plot
@@ -893,30 +897,29 @@ class Strategy:
 
     # -------------------------------------- METHODS USED TO SAVE AND LOAD --------------------------------------- #
 
-    def save(self, name: str, path: str, save_init: bool = False):
+    def save(self, filename: str, save_init: bool = False):
         """Save strategy
 
         Args:
-            name (str): name of strategy
-            path (str): path to strategy-directory
+            filename (str): filename (incl. path) of strategy
             save_init (bool, optional): Save initial strategy. Defaults to False.
         """
-        filename = os.path.join(path, name + f"_agent_{self.agent}")
-        np.save(filename + ".npy", self.x)
+        np.save(f"{filename}_agent_{self.agent}.npy", self.x)
         if save_init:
-            np.save(filename + "_init.npy", self.history[0])
+            np.save(f"{filename}_agent_{self.agent}_init.npy", self.history[0])
 
-    def load(self, name: str, path: str, load_init: bool = False) -> None:
+    def load(self, filename: str, load_init: bool = False) -> None:
         """Load saved strategy
 
         Args:
-            name (str): name of strategy
+            filename (str): filename of strategy
             path (str): path to experiment directory
         """
-        filename = os.path.join(path, name + f"_agent_{self.agent}")
         try:
-            if not load_init:
-                self.x = np.load(filename + ("_init.npy" if load_init else ".npy"))
+            filename = f"{filename}_agent_{self.agent}" + (
+                "_init.npy" if load_init else ".npy"
+            )
+            self.x = np.load(filename)
         except:
             print(f"File {filename} not found.")
             self.x = None
@@ -928,7 +931,7 @@ class Strategy:
             name (str): name of saved strategy
             path (str): path to experiment directory
             n_scaled (int): discretization (type) in the larger setting
-            m_scaled (_type_): discretization (action) in the larger setting
+            m_scaled (int): discretization (action) in the larger setting
 
         Raises:
             ValueError: _description_

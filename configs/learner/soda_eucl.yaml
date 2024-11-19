@@ -7,4 +7,3 @@ parameter:
   steprule_bool: True
   eta: 1.
   beta: 0.5
-init_method: 'random'

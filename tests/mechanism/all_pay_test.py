@@ -31,7 +31,7 @@ def get_mechanism():
             "tie_breaking": tie_breaking,
             "type": "value",
             "utility_type": utility_type,
-            "risk_parameter": 0.5,
+            "utility_type_parameter": 0.5,
         }
         return AllPayAuction(bidder, o_space, a_space, param_prior, param_util)
 
